@@ -1,14 +1,14 @@
-# Use an optimized PHP + Nginx image
-FROM richarvey/nginx-php-fpm:latest
+# Use an optimized PHP 8.3 + Nginx image
+FROM richarvey/nginx-php-fpm:php8.3
 
 # Set working directory
 WORKDIR /var/www/html
 
+# Allow composer to run as superuser
+ENV COMPOSER_ALLOW_SUPERUSER 1
+
 # Copy project files
 COPY . .
-
-# Install system dependencies if needed (most are included in richarvey image)
-# RUN apk add --no-cache ...
 
 # Install PHP dependencies
 RUN composer install --no-dev --optimize-autoloader
@@ -24,7 +24,6 @@ ENV PHP_UPLOAD_MAX_FILESIZE 100M
 ENV PHP_POST_MAX_SIZE 100M
 
 # Script to run on container start
-# We'll use a custom script for migrations and caching
 COPY scripts/00-laravel-deploy.sh /var/www/html/scripts/00-laravel-deploy.sh
 RUN chmod +x /var/www/html/scripts/00-laravel-deploy.sh
 
