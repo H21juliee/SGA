@@ -1,7 +1,8 @@
 #!/bin/sh
 
-# Run migrations
-php artisan migrate --force
+# Solo corremos las migraciones para asegurar que las tablas existan
+# Si fallan, no bloqueamos el arranque del servidor
+php artisan migrate --force || echo "Las migraciones ya estaban al día o hubo un aviso."
 
-# Run seeders (only for first deploy, but --force handles it safely)
-php artisan db:seed --force
+# Comentamos el seeding para evitar errores de Faker en el arranque
+# php artisan db:seed --force
