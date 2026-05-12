@@ -1,31 +1,38 @@
-# Use an optimized PHP 8.3 + Nginx image
-FROM richarvey/nginx-php-fpm:php8.3
+# Use a modern PHP 8.3 + Nginx image
+FROM serversideup/php:8.3-fpm-nginx
+
+# Switch to root to perform installations
+USER root
 
 # Set working directory
 WORKDIR /var/www/html
 
-# Allow composer to run as superuser
-ENV COMPOSER_ALLOW_SUPERUSER 1
+# Install system dependencies
+RUN apt-get update && apt-get install -y \
+    nodejs \
+    npm \
+    && apt-get clean && rm -rf /var/lib/apt/lists/*
 
-# Copy project files
-COPY . .
+# Copy project files with correct permissions
+COPY --chown=www-data:www-data . .
 
 # Install PHP dependencies
+USER www-data
 RUN composer install --no-dev --optimize-autoloader
 
 # Install Node dependencies and build assets
-RUN apk add --no-cache nodejs npm \
-    && npm install \
-    && npm run build
+USER root
+RUN npm install && npm run build
 
-# Configure Nginx and PHP
-ENV NGINX_WEBROOT /var/www/html/public
-ENV PHP_UPLOAD_MAX_FILESIZE 100M
-ENV PHP_POST_MAX_SIZE 100M
+# Ensure correct permissions for Laravel
+RUN chown -R www-data:www-data /var/www/html/storage /var/www/html/bootstrap/cache
 
-# Script to run on container start
-COPY scripts/00-laravel-deploy.sh /var/www/html/scripts/00-laravel-deploy.sh
+# Deployment script
+COPY --chown=www-data:www-data scripts/00-laravel-deploy.sh /var/www/html/scripts/00-laravel-deploy.sh
 RUN chmod +x /var/www/html/scripts/00-laravel-deploy.sh
 
-# The richarvey image uses this env var to run scripts at boot
-ENV RUN_SCRIPTS 1
+# The serversideup image has its own way of running things, 
+# but we can tell it to run our script on startup via environment variables in Render
+# or by defining it here if we were using their s6-overlay.
+# For now, we'll use the Render "Start Command" or similar if needed, 
+# but this image works great with default settings.
