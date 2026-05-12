@@ -1,0 +1,14 @@
+/node_modules
+/vendor
+/.git
+.env
+Dockerfile
+render.yaml
+phpunit.xml
+/tests
+.editorconfig
+.gitattributes
+/storage/*.key
+/public/build
+/public/hot
+/storage/pail
