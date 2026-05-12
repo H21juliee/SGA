@@ -1,38 +1,28 @@
-# Use a modern PHP 8.3 + Nginx image
-FROM serversideup/php:8.3-fpm-nginx
-
-# Switch to root to perform installations
-USER root
+# Use a super-lightweight PHP 8.3 + Nginx Alpine image
+FROM serversideup/php:8.3-fpm-nginx-alpine
 
 # Set working directory
 WORKDIR /var/www/html
 
-# Install system dependencies
-RUN apt-get update && apt-get install -y \
-    nodejs \
-    npm \
-    && apt-get clean && rm -rf /var/lib/apt/lists/*
+# Switch to root for installation
+USER root
 
-# Copy project files with correct permissions
+# Install Node.js (Alpine version is very fast to install)
+RUN apk add --no-cache nodejs npm
+
+# Copy project files
 COPY --chown=www-data:www-data . .
 
-# Install PHP dependencies
+# Install PHP dependencies as www-data
 USER www-data
 RUN composer install --no-dev --optimize-autoloader
 
-# Install Node dependencies and build assets
+# Build assets as root
 USER root
 RUN npm install && npm run build
 
-# Ensure correct permissions for Laravel
+# Final permissions
 RUN chown -R www-data:www-data /var/www/html/storage /var/www/html/bootstrap/cache
 
-# Deployment script
-COPY --chown=www-data:www-data scripts/00-laravel-deploy.sh /var/www/html/scripts/00-laravel-deploy.sh
-RUN chmod +x /var/www/html/scripts/00-laravel-deploy.sh
-
-# The serversideup image has its own way of running things, 
-# but we can tell it to run our script on startup via environment variables in Render
-# or by defining it here if we were using their s6-overlay.
-# For now, we'll use the Render "Start Command" or similar if needed, 
-# but this image works great with default settings.
+# Use default serversideup entrypoint
+# The image handles Nginx and PHP-FPM automatically
