@@ -19,13 +19,15 @@ class DatabaseSeeder extends Seeder
         ]);
 
         // Crear SuperAdmin por defecto
-        $admin = User::create([
-            'name' => 'Administrador SGE',
-            'email' => 'admin@sge.test',
-            'password' => bcrypt('password'),
-            'cedula' => 'V-00000000',
-            'is_active' => true,
-        ]);
+        $admin = User::updateOrCreate(
+            ['email' => 'admin@sge.test'],
+            [
+                'name' => 'Administrador SGE',
+                'password' => bcrypt('password'),
+                'cedula' => 'V-00000000',
+                'is_active' => true,
+            ]
+        );
         $admin->assignRole('SuperAdmin');
 
         // Crear Docente de prueba

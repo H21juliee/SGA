@@ -40,21 +40,21 @@ class RolePermissionSeeder extends Seeder
         ];
 
         foreach ($permissions as $permission) {
-            Permission::create(['name' => $permission]);
+            Permission::firstOrCreate(['name' => $permission]);
         }
 
         // SuperAdmin — todos los permisos
-        $superAdmin = Role::create(['name' => 'SuperAdmin']);
+        $superAdmin = Role::firstOrCreate(['name' => 'SuperAdmin']);
         $superAdmin->givePermissionTo(Permission::all());
 
         // Administrador — todo excepto gestión de roles
-        $admin = Role::create(['name' => 'Administrador']);
+        $admin = Role::firstOrCreate(['name' => 'Administrador']);
         $admin->givePermissionTo(
             collect($permissions)->reject(fn($p) => $p === 'roles.manage')->toArray()
         );
 
         // Docente — solo su carga académica (filtrado por Policies)
-        $docente = Role::create(['name' => 'Docente']);
+        $docente = Role::firstOrCreate(['name' => 'Docente']);
         $docente->givePermissionTo([
             'grades.view',
             'grades.edit',
@@ -65,7 +65,7 @@ class RolePermissionSeeder extends Seeder
         ]);
 
         // Secretaria — gestión administrativa
-        $secretaria = Role::create(['name' => 'Secretaria']);
+        $secretaria = Role::firstOrCreate(['name' => 'Secretaria']);
         $secretaria->givePermissionTo([
             'students.view',
             'students.create',
