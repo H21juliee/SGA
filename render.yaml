@@ -3,6 +3,7 @@ services:
   - type: web
     name: sga-app
     runtime: docker
+    plan: free
     envVars:
       - key: APP_KEY
         generateValue: true
