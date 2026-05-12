@@ -4,25 +4,12 @@ services:
     name: sga-app
     runtime: docker
     plan: free
-    preDeployCommand: php artisan migrate --force
     envVars:
       - key: APP_KEY
         generateValue: true
-      - key: APP_ENV
-        value: production
-      - key: APP_DEBUG
-        value: false
       - key: DB_CONNECTION
         value: pgsql
-      - key: DATABASE_URL
-        fromDatabase:
-          name: sga-db
-          property: connectionString
-      - key: LOG_CHANNEL
-        value: errorlog
-
-databases:
-  - name: sga-db
-    databaseName: sga_db
-    user: sga_user
-    plan: free # Change to a paid plan for production
+      - key: SESSION_DRIVER
+        value: file
+      - key: CACHE_STORE
+        value: file
