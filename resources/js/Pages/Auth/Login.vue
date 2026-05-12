@@ -43,7 +43,7 @@ function submit() {
                     </div>
                 </div>
                 <h1 class="text-3xl font-black text-slate-800 tracking-tight leading-tight">
-                    Sistema de <span class="gradient-text">Gestión Escolar</span>
+                    Sistema de <span class="gradient-text">Gestión Académica</span>
                 </h1>
                 <p class="text-slate-400 font-bold text-sm mt-3 uppercase tracking-widest">Panel de Acceso</p>
             </div>
@@ -129,7 +129,7 @@ function submit() {
             <!-- Footer -->
             <div class="text-center mt-10 space-y-4">
                 <p class="text-slate-400 font-bold text-[10px] uppercase tracking-[0.2em]">
-                    SGE © 2026 — Plataforma Educativa de Alto Rendimiento
+                    SGA © 2026 — Plataforma Educativa de Alto Rendimiento
                 </p>
                 <div class="flex items-center justify-center gap-6">
                     <span class="w-8 h-[1px] bg-slate-200"></span>
