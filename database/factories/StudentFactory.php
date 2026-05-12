@@ -12,15 +12,15 @@ class StudentFactory extends Factory
     public function definition(): array
     {
         return [
-            'first_name' => $this->faker->firstName(),
-            'last_name' => $this->faker->lastName(),
-            'cedula' => 'V-' . $this->faker->unique()->numberBetween(10000000, 35000000),
-            'birth_date' => $this->faker->date('Y-m-d', '-10 years'),
-            'gender' => $this->faker->randomElement(['M', 'F']),
-            'address' => $this->faker->address(),
-            'guardian_name' => $this->faker->name(),
-            'guardian_phone' => $this->faker->phoneNumber(),
-            'guardian_email' => $this->faker->safeEmail(),
+            'first_name' => fake()->firstName(),
+            'last_name' => fake()->lastName(),
+            'cedula' => 'V-' . fake()->unique()->numberBetween(10000000, 35000000),
+            'birth_date' => fake()->date('Y-m-d', '-10 years'),
+            'gender' => fake()->randomElement(['M', 'F']),
+            'address' => fake()->address(),
+            'guardian_name' => fake()->name(),
+            'guardian_phone' => fake()->phoneNumber(),
+            'guardian_email' => fake()->safeEmail(),
             'is_active' => true,
         ];
     }

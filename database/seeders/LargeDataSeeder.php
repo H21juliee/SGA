@@ -16,13 +16,21 @@ class LargeDataSeeder extends Seeder
     {
         $activeYear = SchoolYear::active()->first();
 
+        // Evitar duplicar datos si el seeder ya corrió parcialmente
+        if (Student::count() >= 100) {
+            $this->command->info('Los datos masivos ya parecen estar cargados. Saltando...');
+            return;
+        }
+
         if (!$activeYear) {
-            $activeYear = SchoolYear::create([
-                'name' => '2025-2026',
-                'start_date' => '2025-09-01',
-                'end_date' => '2026-07-15',
-                'is_active' => true,
-            ]);
+            $activeYear = SchoolYear::firstOrCreate(
+                ['name' => '2025-2026'],
+                [
+                    'start_date' => '2025-09-01',
+                    'end_date' => '2026-07-15',
+                    'is_active' => true,
+                ]
+            );
             
             // Create lapses for this year
             for ($i = 1; $i <= 3; $i++) {
