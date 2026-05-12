@@ -4,6 +4,7 @@ services:
     name: sga-app
     runtime: docker
     plan: free
+    preDeployCommand: php artisan migrate --force
     envVars:
       - key: APP_KEY
         generateValue: true
