@@ -14,9 +14,15 @@ const props = defineProps({
 const gradeLevelId = ref(props.filters.grade_level_id || '')
 
 function loadFiltered() {
-    router.get('/reports', { 
+    router.get('/reports', {
         grade_level_id: gradeLevelId.value,
     }, { preserveState: true })
+}
+
+function printStudents(sectionId) {
+    const yearId = props.activeYear.id
+    const url = `/reports/print-students/${yearId}/${sectionId}`
+    window.open(url, '_blank')
 }
 
 function selectSection(id) {
@@ -108,6 +114,13 @@ function download(enrollmentId) {
                             >
                                 <i class="fas fa-users text-xs"></i>
                                 Ver Estudiantes
+                            </button>
+                            <button
+                                @click="printStudents(section.id)"
+                                class="w-full flex items-center justify-center gap-2 py-3.5 bg-primary-600 text-white text-[11px] font-black uppercase tracking-widest rounded-2xl shadow-md mt-2 hover:bg-primary-700 transition-all"
+                            >
+                                <i class="fas fa-print text-xs"></i>
+                                Lista de Estudiantes
                             </button>
                         </div>
                     </div>

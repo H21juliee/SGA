@@ -135,7 +135,7 @@ function destroy(id) {
                         <div class="space-y-2">
                             <label class="text-[11px] font-black text-slate-400 uppercase tracking-widest ml-1">Docente</label>
                             <div class="relative">
-                                <select v-model="form.teacher_id" class="w-full bg-slate-50 border-2 border-slate-50 rounded-2xl px-4 py-3 text-slate-700 text-sm font-bold focus:border-primary-400 focus:bg-white focus:ring-0 outline-none transition-all appearance-none cursor-pointer" required>
+                                <select v-model="form.teacher_id" class="w-full bg-slate-50 border-2 border-slate-400 rounded-2xl px-4 py-3 text-slate-700 text-sm font-bold focus:border-primary-400 focus:bg-white focus:ring-0 outline-none transition-all appearance-none cursor-pointer" required>
                                     <option value="" disabled>Seleccionar docente...</option>
                                     <option v-for="t in teachers" :key="t.id" :value="t.id">{{ t.name }}</option>
                                 </select>
@@ -146,7 +146,7 @@ function destroy(id) {
                         <div class="space-y-2">
                             <label class="text-[11px] font-black text-slate-400 uppercase tracking-widest ml-1">Nivel Académico</label>
                             <div class="relative">
-                                <select v-model="form.grade_level_id" class="w-full bg-slate-50 border-2 border-slate-50 rounded-2xl px-4 py-3 text-slate-700 text-sm font-bold focus:border-primary-400 focus:bg-white focus:ring-0 outline-none transition-all appearance-none cursor-pointer" required @change="form.section_id = ''; form.subject_id = ''">
+                                <select v-model="form.grade_level_id" class="w-full bg-slate-50 border-2 border-slate-400 rounded-2xl px-4 py-3 text-slate-700 text-sm font-bold focus:border-primary-400 focus:bg-white focus:ring-0 outline-none transition-all appearance-none cursor-pointer" required @change="form.section_id = ''; form.subject_id = ''">
                                     <option value="" disabled>Seleccionar nivel...</option>
                                     <option v-for="lvl in levels" :key="lvl.id" :value="lvl.id">{{ lvl.name }}</option>
                                 </select>
@@ -158,7 +158,7 @@ function destroy(id) {
                             <div class="space-y-2">
                                 <label class="text-[11px] font-black text-slate-400 uppercase tracking-widest ml-1">Sección</label>
                                 <div class="relative">
-                                    <select v-model="form.section_id" class="w-full bg-slate-50 border-2 border-slate-50 rounded-2xl px-4 py-3 text-slate-700 text-sm font-bold focus:border-primary-400 focus:bg-white focus:ring-0 outline-none transition-all appearance-none cursor-pointer disabled:opacity-50" required :disabled="!form.grade_level_id">
+                                    <select v-model="form.section_id" class="w-full bg-slate-50 border-2 border-slate-400 rounded-2xl px-4 py-3 text-slate-700 text-sm font-bold focus:border-primary-400 focus:bg-white focus:ring-0 outline-none transition-all appearance-none cursor-pointer disabled:opacity-50" required :disabled="!form.grade_level_id">
                                         <option value="" disabled>Sección...</option>
                                         <option v-for="s in availableSections" :key="s.id" :value="s.id">{{ s.name }}</option>
                                     </select>
@@ -168,7 +168,7 @@ function destroy(id) {
                             <div class="space-y-2">
                                 <label class="text-[11px] font-black text-slate-400 uppercase tracking-widest ml-1">Materia</label>
                                 <div class="relative">
-                                    <select v-model="form.subject_id" class="w-full bg-slate-50 border-2 border-slate-50 rounded-2xl px-4 py-3 text-slate-700 text-sm font-bold focus:border-primary-400 focus:bg-white focus:ring-0 outline-none transition-all appearance-none cursor-pointer disabled:opacity-50" required :disabled="!form.grade_level_id">
+                                    <select v-model="form.subject_id" class="w-full bg-slate-50 border-2 border-slate-400 rounded-2xl px-4 py-3 text-slate-700 text-sm font-bold focus:border-primary-400 focus:bg-white focus:ring-0 outline-none transition-all appearance-none cursor-pointer disabled:opacity-50" required :disabled="!form.grade_level_id">
                                         <option value="" disabled>Materia...</option>
                                         <option v-for="sub in availableSubjects" :key="sub.id" :value="sub.id">{{ sub.name }}</option>
                                     </select>

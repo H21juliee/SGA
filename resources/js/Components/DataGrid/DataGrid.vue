@@ -51,7 +51,7 @@ function navigateCell(direction, currentRow, currentCol) {
 <template>
     <div class="datagrid-wrapper">
         <!-- Toolbar -->
-        <div class="flex items-center justify-between mb-4">
+        <div class="flex items-center justify-between mb-4 mt-4 ml-2 mr-2">
             <div class="flex items-center gap-2 text-sm text-slate-500">
                 <i class="fas fa-table"></i>
                 <span>{{ rows.length }} registro{{ rows.length !== 1 ? 's' : '' }}</span>

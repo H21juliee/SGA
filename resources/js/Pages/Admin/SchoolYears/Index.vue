@@ -205,19 +205,19 @@ function toggleLapse(lapse) {
                 <form @submit.prevent="submit" class="space-y-6">
                     <div class="space-y-2">
                         <label class="text-[11px] font-black text-slate-400 uppercase tracking-widest ml-1">Nombre (ej. 2026-2027)</label>
-                        <input v-model="form.name" type="text" class="w-full bg-slate-50 border-2 border-slate-50 rounded-2xl px-4 py-3 text-slate-700 text-sm font-bold focus:border-primary-400 focus:bg-white focus:ring-0 outline-none transition-all" required>
+                        <input v-model="form.name" type="text" class="w-full bg-slate-50 border-2 border-slate-400 rounded-2xl px-4 py-3 text-slate-700 text-sm font-bold focus:border-primary-400 focus:bg-white focus:ring-0 outline-none transition-all" required>
                         <p v-if="form.errors.name" class="text-xs text-red-500 font-bold mt-1 ml-1">{{ form.errors.name }}</p>
                     </div>
 
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                         <div class="space-y-2">
                             <label class="text-[11px] font-black text-slate-400 uppercase tracking-widest ml-1">Fecha de Inicio</label>
-                            <input v-model="form.start_date" type="date" class="w-full bg-slate-50 border-2 border-slate-50 rounded-2xl px-4 py-3 text-slate-700 text-sm font-bold focus:border-primary-400 focus:bg-white focus:ring-0 outline-none transition-all" required>
+                            <input v-model="form.start_date" type="date" class="w-full bg-slate-50 border-2 border-slate-400 rounded-2xl px-4 py-3 text-slate-700 text-sm font-bold focus:border-primary-400 focus:bg-white focus:ring-0 outline-none transition-all" required>
                             <p v-if="form.errors.start_date" class="text-xs text-red-500 font-bold mt-1 ml-1">{{ form.errors.start_date }}</p>
                         </div>
                         <div class="space-y-2">
                             <label class="text-[11px] font-black text-slate-400 uppercase tracking-widest ml-1">Fecha de Fin</label>
-                            <input v-model="form.end_date" type="date" class="w-full bg-slate-50 border-2 border-slate-50 rounded-2xl px-4 py-3 text-slate-700 text-sm font-bold focus:border-primary-400 focus:bg-white focus:ring-0 outline-none transition-all" required>
+                            <input v-model="form.end_date" type="date" class="w-full bg-slate-50 border-2 border-slate-400 rounded-2xl px-4 py-3 text-slate-700 text-sm font-bold focus:border-primary-400 focus:bg-white focus:ring-0 outline-none transition-all" required>
                             <p v-if="form.errors.end_date" class="text-xs text-red-500 font-bold mt-1 ml-1">{{ form.errors.end_date }}</p>
                         </div>
                     </div>
@@ -260,7 +260,7 @@ function toggleLapse(lapse) {
                         <div class="relative">
                             <select 
                                 v-model="promoteForm.next_school_year_id" 
-                                class="w-full bg-slate-50 border-2 border-slate-50 rounded-2xl px-4 py-4 text-slate-700 text-sm font-bold focus:border-red-400 focus:bg-white focus:ring-0 outline-none transition-all appearance-none cursor-pointer shadow-sm"
+                                class="w-full bg-slate-50 border-2 border-slate-400 rounded-2xl px-4 py-4 text-slate-700 text-sm font-bold focus:border-red-400 focus:bg-white focus:ring-0 outline-none transition-all appearance-none cursor-pointer shadow-sm"
                                 required
                             >
                                 <option value="">Seleccione el año siguiente...</option>

@@ -143,7 +143,7 @@ function destroy(id) {
                             v-model="searchStudent" 
                             type="text" 
                             placeholder="Buscar por nombre o cédula..." 
-                            class="w-full pl-12 pr-4 py-4 bg-slate-50 border-2 border-slate-50 rounded-2xl text-slate-700 text-sm font-bold focus:border-primary-400 focus:bg-white focus:ring-0 outline-none transition-all"
+                            class="w-full pl-12 pr-4 py-4 bg-slate-50 border-2 border-slate-400 rounded-2xl text-slate-700 text-sm font-bold focus:border-primary-400 focus:bg-white focus:ring-0 outline-none transition-all"
                         >
                         <i class="fas fa-search absolute left-4 top-1/2 -translate-y-1/2 text-slate-300 group-focus-within:text-primary-500 transition-colors"></i>
                     </div>

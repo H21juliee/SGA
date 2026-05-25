@@ -52,6 +52,7 @@ Route::middleware('auth')->group(function () {
     Route::prefix('reports')->name('reports.')->group(function () {
         Route::get('/', [\App\Http\Controllers\ReportController::class, 'index'])->name('index');
         Route::get('/download/{enrollment}', [\App\Http\Controllers\ReportController::class, 'downloadReportCard'])->name('download');
+        Route::get('/print-students/{year}/{section}', [\App\Http\Controllers\ReportController::class, 'printStudents'])->name('students.print');
     });
 
     // Módulo de Administración (Solo roles autorizados)

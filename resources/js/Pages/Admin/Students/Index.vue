@@ -22,6 +22,16 @@ const form = useForm({
     is_active: true,
 })
 
+function formatDate(dateStr) {
+    if (!dateStr) return '—'
+    const dateOnly = dateStr.split('T')[0]
+    const parts = dateOnly.split('-')
+    if (parts.length === 3) {
+        return `${parts[2]}-${parts[1]}-${parts[0]}`
+    }
+    return dateStr
+}
+
 function doSearch() {
     router.get('/admin/students', { search: search.value }, { preserveState: true, replace: true })
 }
@@ -122,7 +132,7 @@ function submit() {
                             </td>
                             <td class="px-8 py-5 text-slate-400 font-medium">
                                 <i class="far fa-calendar-alt mr-2 opacity-50"></i>
-                                {{ student.birth_date }}
+                                {{ formatDate(student.birth_date) }}
                             </td>
                             <td class="px-8 py-5">
                                 <span
@@ -185,12 +195,12 @@ function submit() {
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                         <div class="space-y-2">
                             <label class="text-[11px] font-black text-slate-400 uppercase tracking-widest ml-1">Nombres</label>
-                            <input v-model="form.first_name" type="text" class="w-full bg-slate-50 border-2 border-slate-50 rounded-2xl px-4 py-3 text-slate-700 text-sm font-bold focus:border-primary-400 focus:bg-white focus:ring-0 outline-none transition-all" required>
+                            <input v-model="form.first_name" type="text" class="w-full bg-slate-50 border-2 border-slate-400 rounded-2xl px-4 py-3 text-slate-700 text-sm font-bold focus:border-primary-400 focus:bg-white focus:ring-0 outline-none transition-all" required>
                             <p v-if="form.errors.first_name" class="text-xs text-red-500 font-bold mt-1 ml-1">{{ form.errors.first_name }}</p>
                         </div>
                         <div class="space-y-2">
                             <label class="text-[11px] font-black text-slate-400 uppercase tracking-widest ml-1">Apellidos</label>
-                            <input v-model="form.last_name" type="text" class="w-full bg-slate-50 border-2 border-slate-50 rounded-2xl px-4 py-3 text-slate-700 text-sm font-bold focus:border-primary-400 focus:bg-white focus:ring-0 outline-none transition-all" required>
+                            <input v-model="form.last_name" type="text" class="w-full bg-slate-50 border-2 border-slate-400 rounded-2xl px-4 py-3 text-slate-700 text-sm font-bold focus:border-primary-400 focus:bg-white focus:ring-0 outline-none transition-all" required>
                             <p v-if="form.errors.last_name" class="text-xs text-red-500 font-bold mt-1 ml-1">{{ form.errors.last_name }}</p>
                         </div>
                     </div>
@@ -198,13 +208,13 @@ function submit() {
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                         <div class="space-y-2">
                             <label class="text-[11px] font-black text-slate-400 uppercase tracking-widest ml-1">Cédula o Identificación</label>
-                            <input v-model="form.cedula" type="text" class="w-full bg-slate-50 border-2 border-slate-50 rounded-2xl px-4 py-3 text-slate-700 text-sm font-bold focus:border-primary-400 focus:bg-white focus:ring-0 outline-none transition-all">
+                            <input v-model="form.cedula" type="text" class="w-full bg-slate-50 border-2 border-slate-400 rounded-2xl px-4 py-3 text-slate-700 text-sm font-bold focus:border-primary-400 focus:bg-white focus:ring-0 outline-none transition-all">
                             <p v-if="form.errors.cedula" class="text-xs text-red-500 font-bold mt-1 ml-1">{{ form.errors.cedula }}</p>
                         </div>
                         <div class="space-y-2">
                             <label class="text-[11px] font-black text-slate-400 uppercase tracking-widest ml-1">Fecha de Nacimiento</label>
                             <div class="relative">
-                                <input v-model="form.birth_date" type="date" class="w-full bg-slate-50 border-2 border-slate-50 rounded-2xl px-4 py-3 text-slate-700 text-sm font-bold focus:border-primary-400 focus:bg-white focus:ring-0 outline-none transition-all" required>
+                                <input v-model="form.birth_date" type="date" class="w-full bg-slate-50 border-2 border-slate-400 rounded-2xl px-4 py-3 text-slate-700 text-sm font-bold focus:border-primary-400 focus:bg-white focus:ring-0 outline-none transition-all" required>
                             </div>
                             <p v-if="form.errors.birth_date" class="text-xs text-red-500 font-bold mt-1 ml-1">{{ form.errors.birth_date }}</p>
                         </div>
@@ -214,7 +224,7 @@ function submit() {
                         <div class="space-y-2">
                             <label class="text-[11px] font-black text-slate-400 uppercase tracking-widest ml-1">Género</label>
                             <div class="relative">
-                                <select v-model="form.gender" class="w-full bg-slate-50 border-2 border-slate-50 rounded-2xl px-4 py-3 text-slate-700 text-sm font-bold focus:border-primary-400 focus:bg-white focus:ring-0 outline-none transition-all appearance-none cursor-pointer">
+                                <select v-model="form.gender" class="w-full bg-slate-50 border-2 border-slate-400 rounded-2xl px-4 py-3 text-slate-700 text-sm font-bold focus:border-primary-400 focus:bg-white focus:ring-0 outline-none transition-all appearance-none cursor-pointer">
                                     <option value="M">Masculino</option>
                                     <option value="F">Femenino</option>
                                 </select>

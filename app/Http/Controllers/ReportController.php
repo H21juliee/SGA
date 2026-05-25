@@ -25,7 +25,7 @@ class ReportController extends Controller
 
         if ($activeYear) {
             $levels = \App\Models\GradeLevel::orderBy('order_num')->get();
-            
+
             $sectionsQuery = Section::where('school_year_id', $activeYear->id)
                 ->with('gradeLevel')
                 ->join('grade_levels', 'sections.grade_level_id', '=', 'grade_levels.id')
@@ -38,7 +38,7 @@ class ReportController extends Controller
             }
 
             $sections = $sectionsQuery->get();
-            
+
             if ($sectionId) {
                 $enrollments = Enrollment::where('section_id', $sectionId)
                     ->with('student')
@@ -58,6 +58,35 @@ class ReportController extends Controller
         ]);
     }
 
+    /**
+     * Generate PDF with list of students for a given year and section.
+     */
+    public function printStudents($yearId, $sectionId)
+    {
+        Gate::authorize('reports.generate');
+
+        $year = SchoolYear::findOrFail($yearId);
+        $section = Section::findOrFail($sectionId);
+
+        // Obtener los estudiantes inscritos en la sección mediante la tabla de matriculas (enrollments)
+        $students = Enrollment::where('section_id', $sectionId)
+            ->with('student')
+            ->get()
+            ->pluck('student')
+            ->sortBy([['last_name', 'asc'], ['first_name', 'asc']])
+            ->values();
+
+        $pdf = Pdf::loadView('pdf.students_list', [
+            'year' => $year,
+            'section' => $section,
+            'students' => $students,
+        ]);
+
+        $fileName = sprintf('%s_%s_%s.pdf', $year->name, $section->gradeLevel->name,$section->name);
+        return $pdf->download($fileName);
+    }
+
+    
     public function downloadReportCard(Request $request, Enrollment $enrollment, CalculateAverageAction $calcAverage)
     {
         // Aseguramos que el usuario tenga permiso
