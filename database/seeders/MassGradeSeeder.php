@@ -51,7 +51,7 @@ class MassGradeSeeder extends Seeder
                         'lapse_id' => $openLapse->id,
                     ],
                     [
-                        'score' => rand(10, 20),
+                        'score' => rand(1, 20),
                     ]
                 );
                 $totalGrades++;

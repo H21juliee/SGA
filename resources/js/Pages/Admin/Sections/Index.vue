@@ -72,7 +72,7 @@ function destroy(section) {
 
 <template>
     <AppLayout title="Gestión de Secciones">
-        <div class="space-y-8 max-w-7xl mx-auto">
+        <div class="space-y-8 max-w-12xl mx-auto">
             <!-- Header Section -->
             <div class="flex flex-col lg:flex-row gap-6 items-center justify-between animate-fade-in-up">
                 <div>

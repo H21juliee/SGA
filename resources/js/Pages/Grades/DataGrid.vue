@@ -56,7 +56,7 @@ function onSaveAll() {
 
 <template>
     <AppLayout :title="`Notas — ${subject.name}`">
-        <div class="space-y-8 max-w-6xl mx-auto">
+        <div class="space-y-8 max-w-12xl mx-auto">
             <!-- Header & Breadcrumbs -->
             <div class="animate-fade-in-up">
                 <nav class="flex items-center gap-3 text-[10px] font-black uppercase tracking-widest text-slate-400 mb-4">

@@ -81,7 +81,7 @@ function toggleLapse(lapse) {
 
 <template>
     <AppLayout title="Años Escolares">
-        <div class="space-y-8 max-w-7xl mx-auto">
+        <div class="space-y-8 max-w-12xl mx-auto">
             <!-- Header Section -->
             <div class="flex flex-col sm:flex-row justify-between items-center animate-fade-in-up">
                 <div>

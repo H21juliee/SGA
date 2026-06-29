@@ -39,7 +39,7 @@ function download(enrollmentId) {
 
 <template>
     <AppLayout title="Reportes">
-        <div class="space-y-8 max-w-6xl mx-auto">
+        <div class="space-y-8 max-w-12xl mx-auto">
             <!-- Header Section -->
             <div class="flex flex-col sm:flex-row gap-6 items-center justify-between animate-fade-in-up">
                 <div>

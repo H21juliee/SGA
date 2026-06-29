@@ -60,16 +60,25 @@ final class CalculateAverageAction
      */
     public function isApproved(Enrollment $enrollment): bool
     {
+        return $this->getFailedSubjects($enrollment)->isEmpty();
+    }
+
+    /**
+     * Retorna la colección de materias que el estudiante aplazó.
+     */
+    public function getFailedSubjects(Enrollment $enrollment)
+    {
         $section = $enrollment->section()->with('gradeLevel')->first();
         $subjects = Subject::where('grade_level_id', $section->grade_level_id)->get();
+        $failedSubjects = collect();
 
         foreach ($subjects as $subject) {
             $finalGrade = $this->forSubject($enrollment, $subject);
             if ($finalGrade === null || $finalGrade < 10) {
-                return false;
+                $failedSubjects->push($subject);
             }
         }
 
-        return true;
+        return $failedSubjects;
     }
 }

@@ -19,8 +19,8 @@
                         <i class="fas fa-graduation-cap"></i>
                     </div>
                     <div>
-                        <h1 class="text-2xl font-black gradient-text tracking-tight leading-none">SGE</h1>
-                        <p class="text-[10px] text-slate-400 font-bold uppercase tracking-widest mt-1">Gestión Escolar</p>
+                        <h1 class="text-2xl font-black gradient-text tracking-tight leading-none">SGA</h1>
+                        <p class="text-[10px] text-slate-400 font-bold uppercase tracking-widest mt-1">Gestión Académica</p>
                     </div>
                 </div>
 
@@ -102,7 +102,7 @@
                         </button>
                         <div>
                             <h2 class="text-lg lg:text-xl font-extrabold text-slate-800 leading-none">{{ title }}</h2>
-                            <p class="text-[11px] text-slate-400 font-medium mt-1 hidden sm:block">Sistema de Gestión Escolar</p>
+                            <p class="text-[11px] text-slate-400 font-medium mt-1 hidden sm:block">Sistema de Gestión Académica</p>
                         </div>
                     </div>
                     

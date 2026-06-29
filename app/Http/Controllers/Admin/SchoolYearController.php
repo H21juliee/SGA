@@ -93,7 +93,7 @@ class SchoolYearController extends Controller
 
         try {
             $result = $promotionService->promoteAll($school_year, $nextYear);
-            return back()->with('success', "Cierre exitoso. Promovidos: {$result['total_promoted']}, Reprobados: {$result['total_failed']}, Graduados: {$result['total_graduated']}");
+            return back()->with('success', "Cierre exitoso. Promovidos: {$result['total_promoted']}, Con pendientes: {$result['total_promoted_pending']}, Repitientes: {$result['total_failed']}, Graduados: {$result['total_graduated']}");
         } catch (\Exception $e) {
             return back()->with('error', $e->getMessage());
         }

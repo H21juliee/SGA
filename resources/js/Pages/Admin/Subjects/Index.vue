@@ -47,7 +47,7 @@ function submit() {
 
 <template>
     <AppLayout title="Pensum de Materias">
-        <div class="space-y-8 max-w-7xl mx-auto">
+        <div class="space-y-8 max-w-12xl mx-auto">
             <!-- Header Section -->
             <div class="flex flex-col sm:flex-row gap-6 items-center justify-between animate-fade-in-up">
                 <div>

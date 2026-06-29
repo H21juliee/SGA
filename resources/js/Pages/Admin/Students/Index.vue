@@ -70,7 +70,7 @@ function submit() {
 
 <template>
     <AppLayout title="Gestión de Estudiantes">
-        <div class="space-y-8 max-w-7xl mx-auto">
+        <div class="space-y-8 max-w-12xl mx-auto">
             <!-- Header & Toolbar -->
             <div class="flex flex-col lg:flex-row lg:items-center justify-between gap-6 animate-fade-in-up">
                 <div>

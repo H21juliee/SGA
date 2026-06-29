@@ -9,11 +9,14 @@ use App\Models\GradeLevel;
 use App\Models\Lapse;
 use App\Models\SchoolYear;
 use App\Models\Section;
+use App\Models\SubjectDebt;
+use App\Enums\EnrollmentType;
 use Illuminate\Support\Facades\DB;
 
 final class PromotionService
 {
     private array $promoted = [];
+    private array $promotedPending = [];
     private array $failed = [];
     private array $graduated = [];
 
@@ -29,6 +32,7 @@ final class PromotionService
         $this->validatePreConditions($currentYear);
 
         $this->promoted = [];
+        $this->promotedPending = [];
         $this->failed = [];
         $this->graduated = [];
 
@@ -61,12 +65,14 @@ final class PromotionService
 
         return [
             'promoted' => $this->promoted,
+            'promoted_pending' => $this->promotedPending,
             'failed' => $this->failed,
             'graduated' => $this->graduated,
             'total_promoted' => count($this->promoted),
+            'total_promoted_pending' => count($this->promotedPending),
             'total_failed' => count($this->failed),
             'total_graduated' => count($this->graduated),
-            'total_processed' => count($this->promoted) + count($this->failed) + count($this->graduated),
+            'total_processed' => count($this->promoted) + count($this->promotedPending) + count($this->failed) + count($this->graduated),
         ];
     }
 
@@ -88,12 +94,15 @@ final class PromotionService
     private function processEnrollment(Enrollment $enrollment, SchoolYear $nextYear): void
     {
         $gradeLevel = $enrollment->section->gradeLevel;
-        $isApproved = $this->calcAverage->isApproved($enrollment);
+        $failedSubjects = $this->calcAverage->getFailedSubjects($enrollment);
+        $failedCount = $failedSubjects->count();
 
-        if ($isApproved) {
+        if ($failedCount === 0) {
             $this->promoteStudent($enrollment, $gradeLevel, $nextYear);
+        } elseif ($failedCount <= 2) {
+            $this->promoteWithPending($enrollment, $gradeLevel, $nextYear, $failedSubjects);
         } else {
-            $this->failStudent($enrollment, $gradeLevel, $nextYear);
+            $this->failStudentPartial($enrollment, $gradeLevel, $nextYear);
         }
     }
 
@@ -132,7 +141,7 @@ final class PromotionService
         $this->promoted[] = $enrollment->student_id;
     }
 
-    private function failStudent(Enrollment $enrollment, GradeLevel $currentLevel, SchoolYear $nextYear): void
+    private function failStudentPartial(Enrollment $enrollment, GradeLevel $currentLevel, SchoolYear $nextYear): void
     {
         $enrollment->update(['status' => EnrollmentStatus::FAILED]);
 
@@ -153,9 +162,60 @@ final class PromotionService
             'section_id' => $sameSection->id,
             'school_year_id' => $nextYear->id,
             'status' => EnrollmentStatus::ACTIVE,
+            'enrollment_type' => EnrollmentType::REPEATER,
             'enrolled_at' => $nextYear->start_date,
         ]);
 
         $this->failed[] = $enrollment->student_id;
+    }
+
+    private function promoteWithPending(Enrollment $enrollment, GradeLevel $currentLevel, SchoolYear $nextYear, \Illuminate\Support\Collection $failedSubjects): void
+    {
+        $enrollment->update(['status' => EnrollmentStatus::PROMOTED_PENDING]);
+
+        // Si es 5to año, no puede haber materias pendientes para graduarse,
+        // pero de requerirse, se trata igual o se agrega lógica especial.
+        // Asumiendo que 5to año con pendientes NO se gradúa pero sí es "promovido con pendientes".
+        if ($currentLevel->isLast()) {
+            // Nota: Podríamos marcarlo como pendiente de graduación, pero por ahora
+            // se inscribe en el mismo nivel como PENDING para resolver deudas.
+            $nextLevel = $currentLevel;
+        } else {
+            $nextLevel = $currentLevel->next();
+        }
+
+        // Buscar o crear sección equivalente (misma letra)
+        $nextSection = Section::firstOrCreate(
+            [
+                'school_year_id' => $nextYear->id,
+                'grade_level_id' => $nextLevel->id,
+                'name' => $enrollment->section->name,
+            ],
+            [
+                'capacity' => $enrollment->section->capacity,
+            ]
+        );
+
+        $newEnrollment = Enrollment::create([
+            'student_id' => $enrollment->student_id,
+            'section_id' => $nextSection->id,
+            'school_year_id' => $nextYear->id,
+            'status' => EnrollmentStatus::ACTIVE,
+            'enrollment_type' => EnrollmentType::PENDING,
+            'enrolled_at' => $nextYear->start_date,
+        ]);
+
+        // Registrar las materias pendientes
+        foreach ($failedSubjects as $subject) {
+            SubjectDebt::create([
+                'student_id' => $enrollment->student_id,
+                'subject_id' => $subject->id,
+                'origin_school_year_id' => $enrollment->school_year_id,
+                'origin_enrollment_id' => $enrollment->id,
+                'status' => 'pending',
+            ]);
+        }
+
+        $this->promotedPending[] = $enrollment->student_id;
     }
 }
