@@ -27,10 +27,15 @@ class SubjectController extends Controller
     {
         $validated = $request->validate([
             'grade_level_id' => 'required|exists:grade_levels,id',
-            'name' => 'required|string|max:100',
-            'code' => 'required|string|max:20|unique:subjects,code',
-            'weight' => 'required|integer|min:1|max:10',
+            'name'           => 'required|string|max:100',
+            'code'           => 'required|string|max:20|unique:subjects,code',
+            'weight'         => 'integer|min:1|max:10',
+            'grading_type'   => 'in:numeric,qualitative',
         ]);
+
+        // Defaults
+        $validated['weight']       = $validated['weight'] ?? 10;
+        $validated['grading_type'] = $validated['grading_type'] ?? 'numeric';
 
         Subject::create($validated);
 
@@ -40,10 +45,14 @@ class SubjectController extends Controller
     public function update(Request $request, Subject $subject)
     {
         $validated = $request->validate([
-            'name' => 'required|string|max:100',
-            'code' => 'required|string|max:20|unique:subjects,code,' . $subject->id,
-            'weight' => 'required|integer|min:1|max:10',
+            'name'         => 'required|string|max:100',
+            'code'         => 'required|string|max:20|unique:subjects,code,' . $subject->id,
+            'weight'       => 'integer|min:1|max:10',
+            'grading_type' => 'in:numeric,qualitative',
         ]);
+
+        $validated['weight']       = $validated['weight'] ?? $subject->weight ?? 10;
+        $validated['grading_type'] = $validated['grading_type'] ?? $subject->grading_type ?? 'numeric';
 
         $subject->update($validated);
 

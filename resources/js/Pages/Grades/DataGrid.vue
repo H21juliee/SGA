@@ -59,11 +59,17 @@ function onSaveAll() {
         <div class="space-y-8 max-w-12xl mx-auto">
             <!-- Header & Breadcrumbs -->
             <div class="animate-fade-in-up">
-                <nav class="flex items-center gap-3 text-[10px] font-black uppercase tracking-widest text-slate-400 mb-4">
-                    <Link href="/grades" class="hover:text-primary-600 transition-colors">Notas</Link>
-                    <i class="fas fa-chevron-right text-[8px]"></i>
-                    <span class="text-slate-600">{{ subject.name }}</span>
-                </nav>
+                <div class="flex items-center gap-4 mb-4">
+                    <Link href="/grades" class="px-4 py-2 rounded-xl bg-white border-2 border-slate-100 text-slate-500 font-bold text-xs uppercase tracking-wider hover:bg-slate-50 hover:text-primary-600 hover:border-primary-200 transition-all shadow-sm flex items-center gap-2 group">
+                        <i class="fas fa-arrow-left group-hover:-translate-x-1 transition-transform"></i> Volver
+                    </Link>
+
+                    <nav class="flex items-center gap-3 text-[10px] font-black uppercase tracking-widest text-slate-400">
+                        <Link href="/grades" class="hover:text-primary-600 transition-colors">Notas</Link>
+                        <i class="fas fa-chevron-right text-[8px]"></i>
+                        <span class="text-slate-600">{{ subject.name }}</span>
+                    </nav>
+                </div>
 
                 <div class="flex flex-col md:flex-row md:items-center justify-between gap-6">
                     <div>

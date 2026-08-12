@@ -1,5 +1,5 @@
 <script setup>
-import { ref } from 'vue'
+import { ref, computed } from 'vue'
 import AppLayout from '@/Components/Layout/AppLayout.vue'
 import { Link, router } from '@inertiajs/vue3'
 
@@ -12,6 +12,57 @@ const props = defineProps({
 })
 
 const gradeLevelId = ref(props.filters.grade_level_id || '')
+
+// Buscador y ordenamiento
+const searchQuery = ref('')
+const sortCol = ref(null)
+const sortDir = ref('asc')
+
+const processedEnrollments = computed(() => {
+    let result = [...props.enrollments]
+
+    // Búsqueda
+    if (searchQuery.value) {
+        const query = searchQuery.value.toLowerCase()
+        result = result.filter(enrollment => {
+            const student = enrollment.student
+            const cedula = student?.cedula?.toLowerCase() || ''
+            const name = `${student?.last_name || ''}, ${student?.first_name || ''}`.toLowerCase()
+            return cedula.includes(query) || name.includes(query)
+        })
+    }
+
+    // Ordenamiento
+    if (sortCol.value) {
+        result.sort((a, b) => {
+            let valA = sortCol.value === 'cedula' ? a.student?.cedula : `${a.student?.last_name}, ${a.student?.first_name}`
+            let valB = sortCol.value === 'cedula' ? b.student?.cedula : `${b.student?.last_name}, ${b.student?.first_name}`
+
+            // Manejo de nulos
+            if (!valA) valA = ''
+            if (!valB) valB = ''
+
+            if (typeof valA === 'string') valA = valA.toLowerCase()
+            if (typeof valB === 'string') valB = valB.toLowerCase()
+
+            if (valA < valB) return sortDir.value === 'asc' ? -1 : 1
+            if (valA > valB) return sortDir.value === 'asc' ? 1 : -1
+            return 0
+        })
+    }
+
+    return result
+})
+
+function toggleSort(col) {
+    if (sortCol.value === col) {
+        if (sortDir.value === 'asc') sortDir.value = 'desc'
+        else { sortCol.value = null; sortDir.value = 'asc' }
+    } else {
+        sortCol.value = col
+        sortDir.value = 'asc'
+    }
+}
 
 function loadFiltered() {
     router.get('/reports', {
@@ -26,6 +77,11 @@ function printStudents(sectionId) {
 }
 
 function selectSection(id) {
+    // Resetear filtros al cambiar de vista
+    searchQuery.value = ''
+    sortCol.value = null
+    sortDir.value = 'asc'
+
     router.get('/reports', { 
         grade_level_id: gradeLevelId.value,
         section_id: id 
@@ -34,6 +90,10 @@ function selectSection(id) {
 
 function download(enrollmentId) {
     window.open(`/reports/download/${enrollmentId}`, '_blank')
+}
+
+function downloadBatch() {
+    window.open(`/reports/download-batch/${props.filters.section_id}`, '_blank')
 }
 </script>
 
@@ -134,41 +194,77 @@ function download(enrollmentId) {
                             class="flex items-center gap-3 px-5 py-2.5 bg-white text-slate-400 hover:text-primary-600 font-bold text-sm rounded-2xl border-2 border-slate-50 hover:border-primary-100 transition-all w-fit"
                         >
                             <i class="fas fa-arrow-left text-xs"></i>
-                            Volver a Secciones
+                            Volver
                         </button>
-                        <h3 class="text-xl font-black text-slate-800 flex items-center gap-3">
-                            <i class="fas fa-user-graduate text-primary-500"></i>
-                            Estudiantes de la Sección
-                        </h3>
+
+                        <div class="flex flex-col sm:flex-row items-center gap-4 w-full md:w-auto">
+                            <!-- Buscador -->
+                            <div class="relative w-full md:w-64">
+                                <i class="fas fa-search absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-sm"></i>
+                                <input 
+                                    v-model="searchQuery" 
+                                    type="text" 
+                                    placeholder="Buscar por cédula o nombre..." 
+                                    class="w-full bg-slate-50 border-2 border-slate-100 rounded-xl pl-9 pr-4 py-2 text-sm text-slate-700 placeholder:text-slate-400 focus:border-primary-400 focus:ring-0 outline-none transition-all shadow-sm"
+                                >
+                            </div>
+
+                            <!-- Botón Masivo -->
+                            <button 
+                                @click="downloadBatch"
+                                class="w-full sm:w-auto flex items-center justify-center gap-2 px-6 py-2.5 bg-slate-900 text-white font-bold text-xs uppercase tracking-widest rounded-xl hover:bg-slate-800 hover:-translate-y-0.5 transition-all shadow-lg"
+                            >
+                                <i class="fas fa-file-pdf"></i>
+                                Descargar Todas (Masivo)
+                            </button>
+                        </div>
                     </div>
 
                     <div class="glass-card rounded-3xl overflow-hidden shadow-2xl">
                         <table class="w-full text-sm text-left">
                             <thead class="bg-slate-50 text-slate-400 text-[10px] uppercase font-black tracking-[0.2em]">
                                 <tr>
-                                    <th class="px-8 py-5">Estudiante</th>
+                                    <th class="px-8 py-5 cursor-pointer hover:bg-slate-100/50 hover:text-slate-600 transition-colors select-none group" @click="toggleSort('name')">
+                                        <div class="flex items-center gap-2">
+                                            Estudiante
+                                            <div class="flex flex-col text-[8px] opacity-30 group-hover:opacity-100 transition-opacity"
+                                                 :class="{ 'opacity-100 text-primary-500': sortCol === 'name' }">
+                                                <i class="fas fa-chevron-up leading-[0.5]" :class="{ 'text-slate-300': sortCol === 'name' && sortDir === 'desc' }"></i>
+                                                <i class="fas fa-chevron-down leading-[0.5]" :class="{ 'text-slate-300': sortCol === 'name' && sortDir === 'asc' }"></i>
+                                            </div>
+                                        </div>
+                                    </th>
+                                    <th class="px-8 py-5 cursor-pointer hover:bg-slate-100/50 hover:text-slate-600 transition-colors select-none group" @click="toggleSort('cedula')">
+                                        <div class="flex items-center gap-2">
+                                            Cédula
+                                            <div class="flex flex-col text-[8px] opacity-30 group-hover:opacity-100 transition-opacity"
+                                                 :class="{ 'opacity-100 text-primary-500': sortCol === 'cedula' }">
+                                                <i class="fas fa-chevron-up leading-[0.5]" :class="{ 'text-slate-300': sortCol === 'cedula' && sortDir === 'desc' }"></i>
+                                                <i class="fas fa-chevron-down leading-[0.5]" :class="{ 'text-slate-300': sortCol === 'cedula' && sortDir === 'asc' }"></i>
+                                            </div>
+                                        </div>
+                                    </th>
                                     <th class="px-8 py-5 text-right">Documentos Disponibles</th>
                                 </tr>
                             </thead>
                             <tbody class="divide-y divide-slate-100">
-                                <tr v-for="enrollment in enrollments" :key="enrollment.id" class="group hover:bg-slate-50 transition-colors">
-                                    <td class="px-8 py-5">
+                                <tr v-for="enrollment in processedEnrollments" :key="enrollment.id" class="group hover:bg-slate-50 transition-colors">
+                                    <td class="px-8 py-4">
                                         <div class="flex items-center gap-4">
                                             <div class="w-10 h-10 rounded-full bg-slate-100 flex items-center justify-center text-slate-400 font-bold group-hover:bg-primary-50 group-hover:text-primary-500 transition-colors">
-                                                {{ enrollment.student?.full_name?.charAt(0) }}
+                                                {{ enrollment.student?.first_name?.charAt(0) }}
                                             </div>
-                                            <div>
-                                                <div class="font-black text-slate-700 text-base group-hover:text-primary-700 transition-colors">
-                                                    {{ enrollment.student?.full_name }}
-                                                </div>
-                                                <div class="text-xs font-bold text-slate-400 tracking-wider mt-0.5">
-                                                    <i class="far fa-id-card mr-1"></i>
-                                                    {{ enrollment.student?.cedula }}
-                                                </div>
+                                            <div class="font-black text-slate-700 text-base group-hover:text-primary-700 transition-colors">
+                                                {{ enrollment.student?.last_name }}, {{ enrollment.student?.first_name }}
                                             </div>
                                         </div>
                                     </td>
-                                    <td class="px-8 py-5 text-right">
+                                    <td class="px-8 py-4">
+                                        <div class="text-sm font-bold text-slate-500 tracking-wider">
+                                            {{ enrollment.student?.cedula || '—' }}
+                                        </div>
+                                    </td>
+                                    <td class="px-8 py-4 text-right">
                                         <button 
                                             @click="download(enrollment.id)"
                                             class="inline-flex items-center gap-3 px-6 py-3 bg-primary-50 text-primary-600 hover:bg-primary-600 hover:text-white text-[11px] font-black uppercase tracking-widest rounded-2xl border-2 border-primary-100 transition-all group/btn shadow-sm"
@@ -182,12 +278,12 @@ function download(enrollmentId) {
                         </table>
                         
                         <!-- Empty Section -->
-                        <div v-if="enrollments.length === 0" class="p-20 text-center">
+                        <div v-if="processedEnrollments.length === 0" class="p-20 text-center">
                             <div class="w-16 h-16 bg-slate-50 rounded-full flex items-center justify-center mx-auto mb-4 text-slate-200">
-                                <i class="fas fa-user-slash text-2xl"></i>
+                                <i class="fas fa-search text-2xl"></i>
                             </div>
-                            <h3 class="text-lg font-bold text-slate-400">No hay estudiantes inscritos</h3>
-                            <p class="text-slate-300 text-sm mt-1">Esta sección no tiene registros de inscripción.</p>
+                            <h3 class="text-lg font-bold text-slate-400">No hay resultados</h3>
+                            <p class="text-slate-300 text-sm mt-1">No se encontraron estudiantes con esos datos de búsqueda.</p>
                         </div>
                     </div>
                 </div>

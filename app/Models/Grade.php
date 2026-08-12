@@ -12,11 +12,22 @@ class Grade extends Model
         'subject_id',
         'lapse_id',
         'score',
+        'council_adjustment',
     ];
 
     protected $casts = [
-        'score' => 'decimal:2',
+        'score'              => 'decimal:2',
+        'council_adjustment' => 'integer',
     ];
+
+    /**
+     * Nota definitiva del lapso = nota del docente + ajuste de consejo.
+     */
+    public function getDefinitiveAttribute(): float
+    {
+        $definitive = (float) $this->score + (int) $this->council_adjustment;
+        return max(1, min(20, $definitive));
+    }
 
     /* ---- Relations ---- */
 

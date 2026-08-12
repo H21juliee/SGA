@@ -165,6 +165,7 @@ const navigation = computed(() => {
     return [
         { name: 'Dashboard', href: '/dashboard', icon: 'dashboard', show: true },
         { name: 'Notas', href: '/grades', icon: 'grades', show: can('grades.view') },
+        { name: 'Revisiones', href: '/revisions', icon: 'revisions', show: can('grades.view') },
         { name: 'Asistencia', href: '/attendance', icon: 'attendance', show: can('attendance.view') },
         { name: 'Reportes', href: '/reports', icon: 'reports', show: can('reports.generate') },
         {
@@ -178,6 +179,8 @@ const navigation = computed(() => {
                 { name: 'Materias', href: '/admin/subjects', show: can('subjects.manage') },
                 { name: 'Carga Académica', href: '/admin/academic-loads', show: can('academic_load.view') },
                 { name: 'Inscripciones', href: '/admin/enrollments', show: can('academic_load.view') },
+                { name: 'Ajuste de Consejo', href: '/admin/council-adjustments', show: roles.value.some(r => ['SuperAdmin', 'Administrador'].includes(r)) },
+                { name: 'Configuración', href: '/admin/settings', show: roles.value.some(r => ['SuperAdmin', 'Administrador'].includes(r)) },
             ]
         }
     ].filter(i => i.show)
@@ -193,6 +196,7 @@ function getIcon(name) {
     const icons = {
         'dashboard': 'fas fa-th-large',
         'grades': 'fas fa-book',
+        'revisions': 'fas fa-clipboard-list',
         'attendance': 'fas fa-check-circle',
         'reports': 'fas fa-chart-bar',
         'admin': 'fas fa-cog',

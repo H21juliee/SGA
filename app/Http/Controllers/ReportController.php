@@ -89,39 +89,139 @@ class ReportController extends Controller
     
     public function downloadReportCard(Request $request, Enrollment $enrollment, CalculateAverageAction $calcAverage)
     {
-        // Aseguramos que el usuario tenga permiso
         Gate::authorize('reports.generate');
+        $bulletinData = $this->getBulletinData($enrollment, $calcAverage);
+        $settings = \App\Models\SchoolSetting::allAsArray();
 
+        $pdf = Pdf::loadView('pdf.report_card', [
+            'bulletins' => [$bulletinData],
+            'settings' => $settings,
+        ])->setPaper('letter', 'portrait');
+
+        return $pdf->download("Boleta_{$enrollment->student->cedula}_{$enrollment->schoolYear->name}.pdf");
+    }
+
+    public function downloadBatchReportCards(Request $request, Section $section, CalculateAverageAction $calcAverage)
+    {
+        Gate::authorize('reports.generate');
+        
+        $enrollments = Enrollment::where('section_id', $section->id)
+            ->where('status', \App\Enums\EnrollmentStatus::ACTIVE)
+            ->with(['student'])
+            ->get()
+            ->sortBy([['student.last_name', 'asc'], ['student.first_name', 'asc']])
+            ->values();
+
+        $bulletins = [];
+        foreach ($enrollments as $enrollment) {
+            $bulletins[] = $this->getBulletinData($enrollment, $calcAverage);
+        }
+
+        $settings = \App\Models\SchoolSetting::allAsArray();
+
+        $pdf = Pdf::loadView('pdf.report_card', [
+            'bulletins' => $bulletins,
+            'settings' => $settings,
+        ])->setPaper('letter', 'portrait');
+
+        $fileName = sprintf('Boletas_Masivas_%s_%s.pdf', $section->gradeLevel->name, $section->name);
+        return $pdf->download($fileName);
+    }
+
+    private function getBulletinData(Enrollment $enrollment, CalculateAverageAction $calcAverage)
+    {
         $enrollment->load([
             'student',
-            'section.gradeLevel',
-            'schoolYear',
+            'section.gradeLevel.subjects',
+            'schoolYear.lapses',
             'grades.lapse',
             'grades.subject',
             'attendances',
+            'revisionGrades',
         ]);
 
-        $subjects = $enrollment->section->gradeLevel->subjects;
+        $lapses   = $enrollment->schoolYear->lapses->sortBy('order_num')->values();
+        $subjects = $enrollment->section->gradeLevel->subjects->sortBy('name')->values();
 
-        // Calcular promedios finales y generales
-        $finalGrades = [];
-        foreach ($subjects as $subject) {
-            $finalGrades[$subject->id] = $calcAverage->forSubject($enrollment, $subject);
+        // Separar materias numéricas de cualitativas
+        $numericSubjects     = $subjects->filter(fn($s) => $s->grading_type !== 'qualitative');
+        $qualitativeSubjects = $subjects->filter(fn($s) => $s->grading_type === 'qualitative');
+
+        // Construir la matriz de notas por materia/lapso
+        $gradesMatrix = [];
+        foreach ($numericSubjects as $subject) {
+            $row = [];
+            foreach ($lapses as $lapse) {
+                $grade = $enrollment->grades
+                    ->where('subject_id', $subject->id)
+                    ->where('lapse_id', $lapse->id)
+                    ->first();
+                $row[$lapse->id] = $grade ? [
+                    'score'              => (float) $grade->score,
+                    'council_adjustment' => (int) $grade->council_adjustment,
+                    'definitive'         => $grade->definitive,
+                ] : null;
+            }
+            // Nota final de la materia (promedio de definitivas de cada lapso)
+            $definitives = collect($row)->filter()->pluck('definitive');
+            $finalGrade  = $definitives->isNotEmpty() ? round($definitives->avg(), 2) : null;
+
+            // Nota de revisión si existe
+            $revision = $enrollment->revisionGrades
+                ->where('subject_id', $subject->id)
+                ->first();
+
+            $gradesMatrix[$subject->id] = [
+                'lapses'     => $row,
+                'final'      => $finalGrade,
+                'revision'   => $revision ? (float) $revision->score : null,
+                'is_pending' => $finalGrade !== null && $finalGrade < 10 && (!$revision || $revision->score < 10),
+            ];
         }
+
+        // Notas cualitativas (solo la del último lapso o la única registrada)
+        $qualitativeGrades = [];
+        foreach ($qualitativeSubjects as $subject) {
+            $lastGrade = $enrollment->grades
+                ->where('subject_id', $subject->id)
+                ->sortByDesc('lapse_id')
+                ->first();
+            $qualitativeGrades[$subject->id] = $lastGrade?->score ?? '—';
+        }
+
+        // Inasistencias totales (lapses no tienen rango de fechas definido)
+        $absencesByLapse = [];
+        foreach ($lapses as $lapse) {
+            $absencesByLapse[$lapse->id] = '—';
+        }
+        $totalAbsences = $enrollment->attendances
+            ->filter(fn($att) => $att->status->value === 'absent')
+            ->count();
+
+        // Promedio general (solo numéricas)
         $overallAverage = $calcAverage->overall($enrollment);
 
-        // Contar inasistencias
-        $absences = $enrollment->attendances->where('status', \App\Enums\AttendanceStatus::ABSENT)->count();
+        // Promedio por lapso
+        $lapseAverages = [];
+        foreach ($lapses as $lapse) {
+            $lapseScores = collect($gradesMatrix)
+                ->map(fn($m) => $m['lapses'][$lapse->id]['definitive'] ?? null)
+                ->filter()
+                ->values();
+            $lapseAverages[$lapse->id] = $lapseScores->isNotEmpty() ? round($lapseScores->avg(), 2) : null;
+        }
 
-        $pdf = Pdf::loadView('pdf.report_card', [
+        return [
             'enrollment' => $enrollment,
-            'subjects' => $subjects,
-            'finalGrades' => $finalGrades,
+            'lapses' => $lapses,
+            'numericSubjects' => $numericSubjects,
+            'qualitativeSubjects' => $qualitativeSubjects,
+            'gradesMatrix' => $gradesMatrix,
+            'qualitativeGrades' => $qualitativeGrades,
+            'absencesByLapse' => $absencesByLapse,
+            'totalAbsences' => $totalAbsences,
             'overallAverage' => $overallAverage,
-            'absences' => $absences,
-            'lapses' => $enrollment->schoolYear->lapses,
-        ]);
-
-        return $pdf->download("Boleta_{$enrollment->student->cedula}_{$enrollment->schoolYear->name}.pdf");
+            'lapseAverages' => $lapseAverages,
+        ];
     }
 }

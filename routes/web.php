@@ -4,6 +4,9 @@ use App\Http\Controllers\AttendanceController;
 use App\Http\Controllers\Auth\LoginController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\GradeController;
+use App\Http\Controllers\RevisionController;
+use App\Http\Controllers\Admin\SchoolSettingController;
+use App\Http\Controllers\Admin\CouncilAdjustmentController;
 use Illuminate\Support\Facades\Route;
 
 /*
@@ -38,6 +41,14 @@ Route::middleware('auth')->group(function () {
         Route::post('/batch', [GradeController::class, 'batchUpdate'])->name('batch');
     });
 
+    // Revisiones
+    Route::prefix('revisions')->name('revisions.')->group(function () {
+        Route::get('/', [RevisionController::class, 'index'])->name('index');
+        Route::get('/{section}/{subject}', [RevisionController::class, 'datagrid'])->name('datagrid');
+        Route::patch('/', [RevisionController::class, 'update'])->name('update');
+        Route::post('/batch', [RevisionController::class, 'batchUpdate'])->name('batch');
+    });
+
     // Asistencia
     Route::prefix('attendance')->name('attendance.')->group(function () {
         Route::get('/', [AttendanceController::class, 'index'])->name('index');
@@ -52,6 +63,7 @@ Route::middleware('auth')->group(function () {
     Route::prefix('reports')->name('reports.')->group(function () {
         Route::get('/', [\App\Http\Controllers\ReportController::class, 'index'])->name('index');
         Route::get('/download/{enrollment}', [\App\Http\Controllers\ReportController::class, 'downloadReportCard'])->name('download');
+        Route::get('/download-batch/{section}', [\App\Http\Controllers\ReportController::class, 'downloadBatchReportCards'])->name('download-batch');
         Route::get('/print-students/{year}/{section}', [\App\Http\Controllers\ReportController::class, 'printStudents'])->name('students.print');
     });
 
@@ -66,5 +78,15 @@ Route::middleware('auth')->group(function () {
         Route::resource('subjects', \App\Http\Controllers\Admin\SubjectController::class)->except(['create', 'show', 'edit']);
         Route::resource('academic-loads', \App\Http\Controllers\Admin\AcademicLoadController::class)->except(['create', 'show', 'edit']);
         Route::resource('enrollments', \App\Http\Controllers\Admin\EnrollmentController::class)->except(['create', 'show', 'edit']);
+
+        // Configuración institucional
+        Route::get('settings', [SchoolSettingController::class, 'index'])->name('settings.index');
+        Route::put('settings', [SchoolSettingController::class, 'update'])->name('settings.update');
+        Route::post('settings/logo', [SchoolSettingController::class, 'uploadLogo'])->name('settings.logo');
+
+        // Ajuste de Consejo
+        Route::get('council-adjustments', [CouncilAdjustmentController::class, 'index'])->name('council-adjustments.index');
+        Route::patch('council-adjustments', [CouncilAdjustmentController::class, 'update'])->name('council-adjustments.update');
+        Route::post('council-adjustments/batch', [CouncilAdjustmentController::class, 'batchUpdate'])->name('council-adjustments.batch');
     });
 });

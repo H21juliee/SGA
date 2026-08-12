@@ -2,102 +2,354 @@
 <html lang="es">
 <head>
     <meta charset="UTF-8">
-    <title>Boleta de Notas</title>
+    <title>Boletín Informativo</title>
     <style>
-        body { font-family: 'Helvetica', 'Arial', sans-serif; font-size: 12px; color: #333; }
-        .header { text-align: center; margin-bottom: 30px; border-bottom: 2px solid #1e1b4b; padding-bottom: 10px; }
-        .school-name { font-size: 20px; font-weight: bold; color: #312e81; }
-        .school-year { font-size: 14px; color: #6b7280; margin-top: 5px; }
-        .student-info { margin-bottom: 20px; width: 100%; border-collapse: collapse; }
-        .student-info td { padding: 5px; border-bottom: 1px solid #e5e7eb; }
-        .student-info strong { color: #1e1b4b; }
-        .grades-table { width: 100%; border-collapse: collapse; margin-top: 10px; }
-        .grades-table th, .grades-table td { border: 1px solid #9ca3af; padding: 8px; text-align: center; }
-        .grades-table th { background-color: #f3f4f6; color: #1f2937; font-size: 11px; text-transform: uppercase; }
-        .subject-name { text-align: left; font-weight: bold; }
-        .footer { margin-top: 50px; text-align: center; font-size: 10px; color: #6b7280; }
-        .signatures { width: 100%; margin-top: 60px; text-align: center; }
-        .signature-line { width: 200px; border-top: 1px solid #000; margin: 0 auto; padding-top: 5px; }
-        .text-red { color: #dc2626; font-weight: bold; }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        @page {
+            margin: 5mm; /* Margen pequeño para asegurar que no se corte en impresoras, pero manteniendo espacio */
+        }
+
+        body {
+            font-family: Arial, sans-serif;
+            font-size: 9px;
+            color: #111;
+            margin: 0;
+            padding: 0;
+        }
+
+        .bulletin-wrapper {
+            /* DomPDF ignora box-sizing a veces, sumando el padding al height */
+            height: 120mm; 
+            padding: 5mm 10mm; 
+            position: relative;
+            overflow: hidden;
+        }
+
+        .dotted-divider {
+            border-bottom: 1px dashed #aaa;
+            margin-bottom: 0;
+        }
+
+        /* ===== ENCABEZADO ===== */
+        .header-table { width: 100%; border-collapse: collapse; border: 1px solid #000; }
+        .header-table td { border: 1px solid #000; padding: 2px 4px; vertical-align: middle; }
+
+        .title-row td {
+            text-align: center;
+            font-weight: bold;
+            font-size: 12px;
+            letter-spacing: 1px;
+            padding: 4px;
+            background: #f0f0f0;
+        }
+
+        .logo-cell { width: 60px; text-align: center; vertical-align: middle; }
+        .logo-cell img { width: 50px; height: 50px; object-fit: contain; }
+        .logo-placeholder { width: 50px; height: 50px; border: 1px solid #ccc; display: inline-block; }
+
+        .label { font-size: 7px; font-weight: bold; text-transform: uppercase; color: #555; }
+        .value { font-size: 9px; font-weight: bold; }
+        .value-lg { font-size: 11px; font-weight: bold; }
+
+        /* ===== TABLA PRINCIPAL ===== */
+        .main-table { width: 100%; border-collapse: collapse; margin-top: 6px; }
+        .main-table th, .main-table td {
+            border: 1px solid #555;
+            padding: 2px 3px;
+            text-align: center;
+            vertical-align: middle;
+        }
+
+        .main-table thead th {
+            background: #d4d4d4;
+            font-weight: bold;
+            font-size: 7px;
+            text-transform: uppercase;
+        }
+
+        .group-header {
+            background: #b8b8b8;
+            font-weight: bold;
+            font-size: 7.5px;
+            text-transform: uppercase;
+            padding: 3px;
+        }
+
+        .subject-col {
+            text-align: left !important;
+            padding-left: 5px !important;
+            font-weight: bold;
+            font-size: 8px;
+            min-width: 130px;
+        }
+
+        /* Columnas de notas numéricas */
+        .score-col { width: 28px; }
+        .adj-col   { width: 22px; }
+        .def-col   { width: 28px; font-weight: bold; }
+        .abs-col   { width: 22px; }
+        .final-col { width: 32px; font-weight: bold; font-size: 10px; }
+        .rev-col   { width: 32px; }
+        .pend-col  { width: 80px; text-align: left !important; padding-left: 3px !important; }
+
+        .row-average { background: #e8e8e8; font-weight: bold; }
+        .row-qualitative { background: #fafafa; font-style: italic; }
+
+        .failed  { color: #cc0000; font-weight: bold; }
+        .pending-mark { color: #cc0000; font-size: 7px; }
+        .approved { color: #006600; }
+
+        /* ===== PIE ===== */
+        .signatures-row {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 8mm; /* Espacio para que firmen */
+        }
+        .signatures-row td { 
+            text-align: center; 
+            width: 50%;
+            padding: 0 10px;
+        }
+        .sig-line { 
+            border-top: 1px solid #333; 
+            padding-top: 3px; 
+            margin: 0 auto; 
+            width: 70%; 
+            font-size: 8px; 
+            font-weight: bold; 
+            color: #111;
+        }
+        .footer-text {
+            text-align: center;
+            font-size: 7px;
+            color: #888;
+            margin-top: 6mm;
+        }
+
     </style>
 </head>
 <body>
 
-    <div class="header">
-        <div class="school-name">Sistema de Gestión Escolar (SGE)</div>
-        <div class="school-year">Boleta de Calificaciones — Año Escolar {{ $enrollment->schoolYear->name }}</div>
-    </div>
+@foreach($bulletins as $index => $bulletin)
+    @php
+        $enrollment = $bulletin['enrollment'];
+        $lapses = $bulletin['lapses'];
+        $numericSubjects = $bulletin['numericSubjects'];
+        $qualitativeSubjects = $bulletin['qualitativeSubjects'];
+        $gradesMatrix = $bulletin['gradesMatrix'];
+        $qualitativeGrades = $bulletin['qualitativeGrades'];
+        $absencesByLapse = $bulletin['absencesByLapse'];
+        $totalAbsences = $bulletin['totalAbsences'];
+        $overallAverage = $bulletin['overallAverage'];
+        $lapseAverages = $bulletin['lapseAverages'];
+    @endphp
 
-    <table class="student-info">
-        <tr>
-            <td width="15%"><strong>Estudiante:</strong></td>
-            <td width="45%">{{ $enrollment->student->full_name }}</td>
-            <td width="15%"><strong>Cédula:</strong></td>
-            <td width="25%">{{ $enrollment->student->cedula ?? 'N/A' }}</td>
-        </tr>
-        <tr>
-            <td><strong>Nivel/Año:</strong></td>
-            <td>{{ $enrollment->section->gradeLevel->name }}</td>
-            <td><strong>Sección:</strong></td>
-            <td>{{ $enrollment->section->name }}</td>
-        </tr>
-    </table>
-
-    <table class="grades-table">
-        <thead>
+    <div class="bulletin-wrapper {{ $index % 2 == 0 && count($bulletins) > 1 && $index != count($bulletins) - 1 ? 'dotted-divider' : '' }}">
+        
+        {{-- ===== ENCABEZADO INSTITUCIONAL ===== --}}
+        <table class="header-table">
+            {{-- Título --}}
             <tr>
-                <th width="40%" class="subject-name">Materia</th>
-                @foreach($lapses as $lapse)
-                    <th width="15%">{{ $lapse->name }}</th>
-                @endforeach
-                <th width="15%">Nota Final</th>
+                <td colspan="4" class="title-row">BOLETÍN INFORMATIVO</td>
             </tr>
-        </thead>
-        <tbody>
-            @foreach($subjects as $subject)
+            {{-- Logo + República + Código --}}
+            <tr>
+                <td class="logo-cell" rowspan="3">
+                    @if(!empty($settings['logo_path']) && file_exists(storage_path('app/public/' . $settings['logo_path'])))
+                        <img src="{{ storage_path('app/public/' . $settings['logo_path']) }}" alt="Logo">
+                    @else
+                        <div class="logo-placeholder"></div>
+                    @endif
+                </td>
+                <td colspan="2">
+                    <span class="label">República Bolivariana de Venezuela</span><br>
+                    <span class="value">MINISTERIO DEL PODER POPULAR PARA LA EDUCACIÓN</span>
+                </td>
+                <td>
+                    <span class="label">Código del Plantel:</span><br>
+                    <span class="value-lg">{{ $settings['school_code'] ?? '—' }}</span>
+                </td>
+            </tr>
+            {{-- Plantel + Estudiante --}}
+            <tr>
+                <td colspan="2">
+                    <span class="label">Plantel:</span>
+                    <span class="value"> {{ strtoupper($settings['school_name'] ?? '—') }}</span>
+                </td>
+                <td colspan="1">
+                    <span class="label">Estudiante:</span>
+                    <span class="value"> {{ strtoupper($enrollment->student->last_name . ', ' . $enrollment->student->first_name) }}</span>
+                </td>
+            </tr>
+            {{-- Municipio + Cédula + Año + Sección --}}
+            <tr>
+                <td>
+                    <span class="label">Municipio/Estado:</span>
+                    <span class="value"> {{ $settings['municipality'] ?? '—' }} — {{ $settings['state'] ?? '—' }}</span>
+                </td>
+                <td>
+                    <span class="label">Cédula:</span>
+                    <span class="value"> {{ $enrollment->student->cedula ?? '—' }}</span>
+                </td>
+                <td>
+                    <span class="label">Año:</span>
+                    <span class="value"> {{ $enrollment->section->gradeLevel->name }}</span>
+                    &nbsp;&nbsp;
+                    <span class="label">Sección:</span>
+                    <span class="value"> {{ $enrollment->section->name }}</span>
+                    &nbsp;&nbsp;
+                    <span class="label">Año Escolar:</span>
+                    <span class="value"> {{ $enrollment->schoolYear->name }}</span>
+                </td>
+            </tr>
+        </table>
+
+        {{-- ===== TABLA PRINCIPAL ===== --}}
+        <table class="main-table">
+            <thead>
                 <tr>
-                    <td class="subject-name">{{ $subject->name }}</td>
+                    <th class="subject-col" rowspan="2">ÁREAS DE FORMACIÓN</th>
                     @foreach($lapses as $lapse)
-                        @php
-                            $grade = $enrollment->grades->where('subject_id', $subject->id)->where('lapse_id', $lapse->id)->first();
-                            $score = $grade ? $grade->score : '—';
-                        @endphp
-                        <td>{{ $score }}</td>
+                        <th colspan="3" class="group-header">{{ strtoupper($lapse->name) }}</th>
                     @endforeach
+                    <th colspan="{{ $lapses->count() + 1 }}" class="group-header">INASISTENCIAS</th>
+                    <th class="final-col" rowspan="2">DEF.<br>DEL AÑO</th>
+                    <th class="rev-col" rowspan="2">REVISIÓN</th>
+                    <th class="pend-col" rowspan="2">MATERIA PENDIENTE</th>
+                </tr>
+                <tr>
+                    @foreach($lapses as $lapse)
+                        <th class="score-col">DEF. DOCENTE</th>
+                        <th class="adj-col">AJUSTE</th>
+                        <th class="def-col">DEF.</th>
+                    @endforeach
+                    @foreach($lapses as $lapse)
+                        <th class="abs-col">{{ $loop->iteration }}° L</th>
+                    @endforeach
+                    <th class="abs-col">TOTAL</th>
+                </tr>
+            </thead>
+            <tbody>
+                {{-- MATERIAS NUMÉRICAS --}}
+                @foreach($numericSubjects as $subject)
                     @php
-                        $final = $finalGrades[$subject->id];
+                        $data    = $gradesMatrix[$subject->id] ?? ['lapses' => [], 'final' => null, 'revision' => null, 'is_pending' => false];
+                        $final   = $data['final'];
+                        $isFailed = $final !== null && $final < 10;
                     @endphp
-                    <td class="{{ $final !== null && $final < 10 ? 'text-red' : '' }}">
-                        <strong>{{ $final ?? '—' }}</strong>
+                    <tr>
+                        <td class="subject-col">{{ strtoupper($subject->name) }}</td>
+
+                        @foreach($lapses as $lapse)
+                            @php $lapseData = $data['lapses'][$lapse->id] ?? null; @endphp
+                            <td class="score-col {{ $lapseData && $lapseData['definitive'] < 10 ? 'failed' : '' }}">
+                                {{ $lapseData ? number_format($lapseData['score'], 0) : '—' }}
+                            </td>
+                            <td class="adj-col">
+                                {{ $lapseData && $lapseData['council_adjustment'] != 0 ? ($lapseData['council_adjustment'] > 0 ? '+' : '') . $lapseData['council_adjustment'] : '0' }}
+                            </td>
+                            <td class="def-col {{ $lapseData && $lapseData['definitive'] < 10 ? 'failed' : '' }}">
+                                {{ $lapseData ? number_format($lapseData['definitive'], 0) : '—' }}
+                            </td>
+                        @endforeach
+
+                        @foreach($lapses as $lapse)
+                            <td class="abs-col">{{ $absencesByLapse[$lapse->id] ?? '—' }}</td>
+                        @endforeach
+                        <td class="abs-col bold">{{ $totalAbsences }}</td>
+
+                        <td class="final-col {{ $isFailed ? 'failed' : 'approved' }}">
+                            {{ $final !== null ? number_format($final, 0) : '—' }}
+                        </td>
+
+                        <td class="rev-col">
+                            @if($data['revision'] !== null)
+                                <span class="{{ $data['revision'] >= 10 ? 'approved' : 'failed' }}">
+                                    {{ number_format($data['revision'], 0) }}
+                                </span>
+                            @else
+                                <span style="color: #999;">*</span>
+                            @endif
+                        </td>
+
+                        <td class="pend-col">
+                            @if($data['is_pending'])
+                                <span class="pending-mark">{{ strtoupper($subject->name) }}</span>
+                            @endif
+                        </td>
+                    </tr>
+                @endforeach
+
+                {{-- PROMEDIO --}}
+                <tr class="row-average">
+                    <td class="subject-col">PROMEDIO</td>
+                    @foreach($lapses as $lapse)
+                        <td class="score-col"></td>
+                        <td class="adj-col"></td>
+                        <td class="def-col">
+                            {{ $lapseAverages[$lapse->id] !== null ? number_format($lapseAverages[$lapse->id], 2) : '—' }}
+                        </td>
+                    @endforeach
+                    @foreach($lapses as $lapse)
+                        <td class="abs-col"></td>
+                    @endforeach
+                    <td class="abs-col bold">{{ $totalAbsences }}</td>
+                    <td class="final-col bold" colspan="3">
+                        PROMEDIO: <strong>{{ $overallAverage !== null ? number_format($overallAverage, 1) : '—' }}</strong>
                     </td>
                 </tr>
-            @endforeach
-        </tbody>
-    </table>
 
-    <div style="margin-top: 20px; font-size: 13px;">
-        <strong>Promedio General:</strong> 
-        <span class="{{ $overallAverage !== null && $overallAverage < 10 ? 'text-red' : '' }}">
-            {{ $overallAverage ?? '—' }} / 20
-        </span>
-        <br><br>
-        <strong>Inasistencias Acumuladas:</strong> {{ $absences }}
+                {{-- MATERIAS CUALITATIVAS --}}
+                @foreach($qualitativeSubjects as $subject)
+                    <tr class="row-qualitative">
+                        <td class="subject-col">{{ strtoupper($subject->name) }}</td>
+                        @foreach($lapses as $lapse)
+                            <td class="score-col"></td>
+                            <td class="adj-col"></td>
+                            <td class="def-col"></td>
+                        @endforeach
+                        @foreach($lapses as $lapse)
+                            <td class="abs-col"></td>
+                        @endforeach
+                        <td class="abs-col"></td>
+                        <td class="final-col bold">{{ $qualitativeGrades[$subject->id] ?? '—' }}</td>
+                        <td class="rev-col"></td>
+                        <td class="pend-col"></td>
+                    </tr>
+                @endforeach
+            </tbody>
+        </table>
+
+        {{-- ===== PIE / FIRMAS ===== --}}
+        <table class="signatures-row">
+            <tr>
+                <td>
+                    <div class="sig-line">
+                        Prof. {{ $settings['control_study_name'] ?? '___________________' }}<br>
+                        Control de Estudio
+                    </div>
+                </td>
+                <td>
+                    <div class="sig-line">
+                        Prof. {{ $settings['director_name'] ?? '___________________' }}<br>
+                        Director(a)
+                    </div>
+                </td>
+            </tr>
+        </table>
+        
+        <div class="footer-text">
+            Documento generado por el Sistema de Gestión Escolar — {{ now()->format('d/m/Y H:i') }}
+        </div>
+
     </div>
 
-    <table class="signatures">
-        <tr>
-            <td width="50%">
-                <div class="signature-line">Firma del Director(a)</div>
-            </td>
-            <td width="50%">
-                <div class="signature-line">Firma del Representante</div>
-            </td>
-        </tr>
-    </table>
-
-    <div class="footer">
-        Documento generado por el Sistema de Gestión Escolar el {{ now()->format('d/m/Y H:i') }}.
-    </div>
+    {{-- Salto de página cada 2 boletines --}}
+    @if($index % 2 != 0 && $index != count($bulletins) - 1)
+        <div style="page-break-after: always;"></div>
+    @endif
+@endforeach
 
 </body>
 </html>

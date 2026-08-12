@@ -13,11 +13,17 @@ class Subject extends Model
         'code',
         'grade_level_id',
         'weight',
+        'grading_type',
     ];
 
     protected $casts = [
         'weight' => 'decimal:2',
     ];
+
+    public function isQualitative(): bool
+    {
+        return $this->grading_type === 'qualitative';
+    }
 
     /* ---- Relations ---- */
 

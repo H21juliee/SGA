@@ -62,6 +62,11 @@ class Enrollment extends Model
         return $this->hasMany(SubjectDebt::class, 'resolution_enrollment_id');
     }
 
+    public function revisionGrades(): HasMany
+    {
+        return $this->hasMany(RevisionGrade::class);
+    }
+
     /* ---- Scopes ---- */
 
     public function scopeActive($query)
