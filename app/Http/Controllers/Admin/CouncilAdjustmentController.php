@@ -51,6 +51,7 @@ class CouncilAdjustmentController extends Controller
                 ->map(fn($grade) => [
                     'grade_id'          => $grade->id,
                     'student_name'      => $grade->enrollment->student->full_name,
+                    'student_cedula'    => $grade->enrollment->student->cedula ?? '—',
                     'score'             => (float) $grade->score,
                     'council_adjustment'=> (int) $grade->council_adjustment,
                     'definitive'        => $grade->definitive,
