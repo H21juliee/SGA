@@ -17,6 +17,18 @@ const localValue = ref(props.value)
 const inputRef = ref(null)
 const saveStatus = ref('idle')
 
+const displayValue = computed(() => {
+    if (props.value == null) return '—'
+    if (props.type === 'select' && props.options.length > 0) {
+        const selectedOpt = props.options.find(o => 
+            (typeof o === 'object' ? o.value === props.value : o === props.value)
+        )
+        if (selectedOpt && typeof selectedOpt === 'object') return selectedOpt.label
+        if (selectedOpt) return selectedOpt.charAt(0).toUpperCase() + selectedOpt.slice(1)
+    }
+    return props.value
+})
+
 const isValid = computed(() => {
     if (props.type === 'number' && props.min != null && props.max != null) {
         const num = Number(localValue.value)
@@ -99,8 +111,8 @@ function onKeydown(e) {
             @change="commitEdit"
             @keydown="onKeydown"
         >
-            <option v-for="opt in options" :key="opt" :value="opt">
-                {{ opt.charAt(0).toUpperCase() + opt.slice(1) }}
+            <option v-for="opt in options" :key="typeof opt === 'object' ? opt.value : opt" :value="typeof opt === 'object' ? opt.value : opt">
+                {{ typeof opt === 'object' ? opt.label : (opt.charAt(0).toUpperCase() + opt.slice(1)) }}
             </option>
         </select>
 
@@ -124,7 +136,7 @@ function onKeydown(e) {
                 isActive ? 'bg-primary-50 text-primary-700 ring-2 ring-primary-100' : 'group-hover:bg-slate-50'
             ]"
         >
-            {{ value ?? '—' }}
+            {{ displayValue }}
         </span>
 
         <!-- Save Status Indicators -->

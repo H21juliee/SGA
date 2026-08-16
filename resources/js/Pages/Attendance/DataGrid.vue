@@ -15,7 +15,12 @@ const props = defineProps({
 
 const currentDate = ref(props.date)
 
-const statusOptions = ['present', 'absent', 'late', 'excused']
+const statusOptions = [
+    { value: 'present', label: 'Presente' },
+    { value: 'absent', label: 'Ausente' },
+    { value: 'late', label: 'Tardanza' },
+    { value: 'excused', label: 'Justificado' }
+]
 
 const rows = computed(() =>
     props.enrollments.map(enrollment => {
