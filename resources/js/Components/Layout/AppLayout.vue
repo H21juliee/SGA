@@ -164,27 +164,54 @@ const props = defineProps({
 const navigation = computed(() => {
     return [
         { name: 'Dashboard', href: '/dashboard', icon: 'dashboard', show: true },
-        { name: 'Notas', href: '/grades', icon: 'grades', show: can('grades.view') },
-        { name: 'Revisiones', href: '/revisions', icon: 'revisions', show: can('grades.view') },
-        { name: 'Asistencia', href: '/attendance', icon: 'attendance', show: can('attendance.view') },
-        { name: 'Reportes', href: '/reports', icon: 'reports', show: can('reports.generate') },
         {
-            name: 'Administración',
-            icon: 'admin',
+            name: 'Estudiantes',
+            icon: 'students',
             show: roles.value.some(r => ['SuperAdmin', 'Administrador', 'Secretaria'].includes(r)),
             children: [
-                { name: 'Estudiantes', href: '/admin/students', show: can('students.view') },
-                { name: 'Usuarios', href: '/admin/users', show: can('users.manage') },
+                { name: 'Directorio', href: '/admin/students', show: can('students.view') },
+                { name: 'Inscripciones', href: '/admin/enrollments', show: can('academic_load.view') },
+            ]
+        },
+        { name: 'Asistencia', href: '/attendance', icon: 'attendance', show: can('attendance.view') },
+        {
+            name: 'Calificaciones',
+            icon: 'grades',
+            show: can('grades.view') || roles.value.some(r => ['SuperAdmin', 'Administrador'].includes(r)),
+            children: [
+                { name: 'Notas', href: '/grades', show: can('grades.view') },
+                { name: 'Revisiones', href: '/revisions', show: can('grades.view') },
+                { name: 'Ajuste de Consejo', href: '/admin/council-adjustments', show: roles.value.some(r => ['SuperAdmin', 'Administrador'].includes(r)) },
+            ]
+        },
+        {
+            name: 'Planificación',
+            icon: 'calendar',
+            show: roles.value.some(r => ['SuperAdmin', 'Administrador'].includes(r)),
+            children: [
                 { name: 'Años Escolares', href: '/admin/school-years', show: can('school_years.view') },
                 { name: 'Secciones', href: '/admin/sections', show: can('sections.manage') },
                 { name: 'Materias', href: '/admin/subjects', show: can('subjects.manage') },
                 { name: 'Carga Académica', href: '/admin/academic-loads', show: can('academic_load.view') },
-                { name: 'Inscripciones', href: '/admin/enrollments', show: can('academic_load.view') },
-                { name: 'Ajuste de Consejo', href: '/admin/council-adjustments', show: roles.value.some(r => ['SuperAdmin', 'Administrador'].includes(r)) },
+            ]
+        },
+        { name: 'Reportes', href: '/reports', icon: 'reports', show: can('reports.generate') },
+        {
+            name: 'Administración',
+            icon: 'admin',
+            show: roles.value.some(r => ['SuperAdmin', 'Administrador'].includes(r)),
+            children: [
+                { name: 'Usuarios', href: '/admin/users', show: can('users.manage') },
                 { name: 'Configuración', href: '/admin/settings', show: roles.value.some(r => ['SuperAdmin', 'Administrador'].includes(r)) },
             ]
         }
-    ].filter(i => i.show)
+    ].filter(i => {
+        if (i.children) {
+            i.children = i.children.filter(c => c.show);
+            return i.children.length > 0;
+        }
+        return i.show;
+    });
 })
 
 function can(permission) {
@@ -201,7 +228,8 @@ function getIcon(name) {
         'attendance': 'fas fa-check-circle',
         'reports': 'fas fa-chart-bar',
         'admin': 'fas fa-cog',
-        'students': 'fas fa-users'
+        'students': 'fas fa-user-graduate',
+        'calendar': 'fas fa-calendar-alt',
     }
     return icons[name] || 'fas fa-circle'
 }
