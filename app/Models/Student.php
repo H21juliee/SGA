@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use App\Enums\StudentStatus;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 
@@ -20,12 +21,12 @@ class Student extends Model
         'guardian_phone',
         'guardian_email',
         'photo_url',
-        'is_active',
+        'status',
     ];
 
     protected $casts = [
         'birth_date' => 'date',
-        'is_active' => 'boolean',
+        'status' => StudentStatus::class,
     ];
 
     /* ---- Accessors ---- */
@@ -46,7 +47,7 @@ class Student extends Model
 
     public function scopeActive($query)
     {
-        return $query->where('is_active', true);
+        return $query->where('status', StudentStatus::REGULAR);
     }
 
     public function scopeSearch($query, ?string $term)

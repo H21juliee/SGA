@@ -21,7 +21,7 @@ const form = useForm({
     school_year_id: schoolYearId.value,
     grade_level_id: '',
     name: '',
-    capacity: 35,
+    capacity: 100,
 })
 
 function loadSections() {

@@ -1,17 +1,20 @@
 <script setup>
-import { ref, computed } from 'vue'
-import { router, useForm } from '@inertiajs/vue3'
+import { ref } from 'vue'
+import { router, useForm, Link } from '@inertiajs/vue3'
 import AppLayout from '@/Components/Layout/AppLayout.vue'
 import Modal from '@/Components/UI/Modal.vue'
 
 const props = defineProps({
-    subjects: Array,
+    subjects: Object,
     levels: Array,
+    filters: Object,
 })
 
 const showModal = ref(false)
 const editingSubject = ref(null)
-const searchQuery = ref('')
+const searchQuery = ref(props.filters.search || '')
+const sortCol = ref(props.filters.sort || 'grade_level_id')
+const sortDir = ref(props.filters.direction || 'asc')
 
 const form = useForm({
     grade_level_id: '',
@@ -21,21 +24,19 @@ const form = useForm({
     grading_type: 'numeric',
 })
 
-const processedSubjects = computed(() => {
-    let result = [...props.subjects]
-    
-    if (searchQuery.value) {
-        const query = searchQuery.value.toLowerCase()
-        result = result.filter(subject => {
-            const name = subject.name?.toLowerCase() || ''
-            const code = subject.code?.toLowerCase() || ''
-            const level = subject.grade_level?.name?.toLowerCase() || ''
-            return name.includes(query) || code.includes(query) || level.includes(query)
-        })
+function doSearch() {
+    router.get('/admin/subjects', { search: searchQuery.value, sort: sortCol.value, direction: sortDir.value }, { preserveState: true, replace: true })
+}
+
+function toggleSort(col) {
+    if (sortCol.value === col) {
+        sortDir.value = sortDir.value === 'asc' ? 'desc' : 'asc'
+    } else {
+        sortCol.value = col
+        sortDir.value = 'asc'
     }
-    
-    return result
-})
+    doSearch()
+}
 
 function openCreateModal() {
     editingSubject.value = null
@@ -83,6 +84,7 @@ function submit() {
                         <i class="fas fa-search absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-sm"></i>
                         <input 
                             v-model="searchQuery" 
+                            @keyup.enter="doSearch"
                             type="text" 
                             placeholder="Buscar por materia o código..." 
                             class="w-full bg-white border-2 border-slate-100 rounded-xl pl-9 pr-4 py-3 text-sm text-slate-700 placeholder:text-slate-400 focus:border-primary-400 focus:ring-0 outline-none transition-all shadow-sm"
@@ -104,14 +106,32 @@ function submit() {
                 <table class="w-full text-sm text-left">
                     <thead class="bg-slate-50 text-slate-400 text-[10px] uppercase font-black tracking-[0.2em]">
                         <tr>
-                            <th class="px-8 py-5">Nivel / Año</th>
-                            <th class="px-8 py-5">Código</th>
-                            <th class="px-8 py-5">Materia</th>
+                            <th @click="toggleSort('grade_level_id')" class="px-8 py-5 cursor-pointer hover:bg-slate-100 hover:text-slate-600 transition-colors select-none group">
+                                Nivel / Año
+                                <span v-if="sortCol === 'grade_level_id'" class="ml-1 text-primary-500">
+                                    <i class="fas" :class="sortDir === 'asc' ? 'fa-sort-up' : 'fa-sort-down'"></i>
+                                </span>
+                                <span v-else class="ml-1 opacity-0 group-hover:opacity-100 transition-opacity"><i class="fas fa-sort"></i></span>
+                            </th>
+                            <th @click="toggleSort('code')" class="px-8 py-5 cursor-pointer hover:bg-slate-100 hover:text-slate-600 transition-colors select-none group">
+                                Código
+                                <span v-if="sortCol === 'code'" class="ml-1 text-primary-500">
+                                    <i class="fas" :class="sortDir === 'asc' ? 'fa-sort-up' : 'fa-sort-down'"></i>
+                                </span>
+                                <span v-else class="ml-1 opacity-0 group-hover:opacity-100 transition-opacity"><i class="fas fa-sort"></i></span>
+                            </th>
+                            <th @click="toggleSort('name')" class="px-8 py-5 cursor-pointer hover:bg-slate-100 hover:text-slate-600 transition-colors select-none group">
+                                Materia
+                                <span v-if="sortCol === 'name'" class="ml-1 text-primary-500">
+                                    <i class="fas" :class="sortDir === 'asc' ? 'fa-sort-up' : 'fa-sort-down'"></i>
+                                </span>
+                                <span v-else class="ml-1 opacity-0 group-hover:opacity-100 transition-opacity"><i class="fas fa-sort"></i></span>
+                            </th>
                             <th class="px-8 py-5 text-right">Acciones</th>
                         </tr>
                     </thead>
                     <tbody class="divide-y divide-slate-100">
-                        <tr v-for="subject in processedSubjects" :key="subject.id" class="group hover:bg-slate-50 transition-colors">
+                        <tr v-for="subject in subjects.data" :key="subject.id" class="group hover:bg-slate-50 transition-colors">
                             <td class="px-8 py-4">
                                 <span class="px-2.5 py-1 rounded-lg bg-slate-100 text-slate-400 text-[10px] font-black uppercase tracking-wider border border-slate-200">
                                     {{ subject.grade_level?.name }}
@@ -141,7 +161,7 @@ function submit() {
                                 </button>
                             </td>
                         </tr>
-                        <tr v-if="processedSubjects.length === 0">
+                        <tr v-if="subjects.data.length === 0">
                             <td colspan="4" class="px-8 py-20 text-center">
                                 <div class="w-16 h-16 bg-slate-50 rounded-full flex items-center justify-center mx-auto mb-4 text-slate-200">
                                     <i class="fas fa-book-open text-2xl"></i>
@@ -152,6 +172,27 @@ function submit() {
                         </tr>
                     </tbody>
                 </table>
+            </div>
+
+            <!-- Pagination Info -->
+            <div class="flex flex-col sm:flex-row items-center justify-between gap-4 px-4 animate-fade-in-up" style="animation-delay: 200ms">
+                <span class="text-xs font-bold text-slate-400 uppercase tracking-widest">
+                    Mostrando {{ subjects.data.length }} de {{ subjects.total }} registros
+                </span>
+                
+                <div class="flex flex-wrap justify-center items-center gap-1.5 w-full sm:w-auto" v-if="subjects.links && subjects.links.length > 3">
+                    <Link
+                        v-for="(link, i) in subjects.links"
+                        :key="i"
+                        :href="link.url || '#'"
+                        class="px-3 sm:px-4 py-2 sm:py-2.5 rounded-xl text-[10px] sm:text-xs font-black uppercase tracking-widest transition-all shadow-sm"
+                        :class="[
+                            link.active ? 'bg-primary-500 text-white ring-2 ring-primary-500/20' : 'bg-white text-slate-500 hover:bg-slate-50 border border-slate-200/60',
+                            !link.url ? 'opacity-40 cursor-not-allowed border-transparent shadow-none' : 'cursor-pointer hover:-translate-y-0.5'
+                        ]"
+                        v-html="link.label.replace(/pagination\.previous|previous/i, '&laquo;').replace(/pagination\.next|next/i, '&raquo;')"
+                    ></Link>
+                </div>
             </div>
         </div>
 

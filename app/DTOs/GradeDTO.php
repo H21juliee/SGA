@@ -11,6 +11,7 @@ final readonly class GradeDTO
         public int $subjectId,
         public int $lapseId,
         public float $score,
+        public ?int $teacherId = null,
     ) {}
 
     public static function fromRequest(StoreGradeRequest $request): self
@@ -20,6 +21,7 @@ final readonly class GradeDTO
             subjectId: $request->validated('subject_id'),
             lapseId: $request->validated('lapse_id'),
             score: $request->validated('score'),
+            teacherId: auth()->id(),
         );
     }
 
@@ -30,6 +32,7 @@ final readonly class GradeDTO
             subjectId: $data['subject_id'],
             lapseId: $data['lapse_id'],
             score: $data['score'],
+            teacherId: auth()->id(),
         );
     }
 }

@@ -213,6 +213,16 @@ const flash = computed(() => page.props.flash ?? {})
 const isSidebarOpen = ref(false)
 const openMenu = ref(null)
 
+import { watch } from 'vue'
+watch(() => page.url, (newUrl) => {
+    const parentItem = navigation.value.find(item => 
+        item.children?.some(child => newUrl.startsWith(child.href))
+    )
+    if (parentItem) {
+        openMenu.value = parentItem.name
+    }
+}, { immediate: true })
+
 function toggleSidebar() {
     isSidebarOpen.value = !isSidebarOpen.value
 }

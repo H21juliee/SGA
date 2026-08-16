@@ -13,6 +13,7 @@ class Grade extends Model
         'lapse_id',
         'score',
         'council_adjustment',
+        'teacher_id',
     ];
 
     protected $casts = [
@@ -44,5 +45,10 @@ class Grade extends Model
     public function lapse(): BelongsTo
     {
         return $this->belongsTo(Lapse::class);
+    }
+
+    public function teacher(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'teacher_id');
     }
 }

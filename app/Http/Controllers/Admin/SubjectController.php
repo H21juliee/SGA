@@ -10,16 +10,37 @@ use Inertia\Inertia;
 
 class SubjectController extends Controller
 {
-    public function index()
+    public function index(Request $request)
     {
+        $search = $request->input('search');
+        $sort = $request->input('sort', 'grade_level_id');
+        $direction = $request->input('direction', 'asc');
+        
+        $allowedSorts = ['code', 'name', 'grade_level_id', 'is_active'];
+        if (!in_array($sort, $allowedSorts)) {
+            $sort = 'grade_level_id';
+        }
+
         $subjects = Subject::with('gradeLevel')
-            ->orderBy('grade_level_id')
-            ->orderBy('name')
-            ->get();
+            ->when($search, function ($query, $search) {
+                $query->where('name', 'like', "%{$search}%")
+                      ->orWhere('code', 'like', "%{$search}%")
+                      ->orWhereHas('gradeLevel', function($q) use ($search) {
+                          $q->where('name', 'like', "%{$search}%");
+                      });
+            })
+            ->orderBy($sort, $direction)
+            ->paginate(15)
+            ->withQueryString();
 
         return Inertia::render('Admin/Subjects/Index', [
             'subjects' => $subjects,
             'levels' => GradeLevel::orderBy('order_num')->get(),
+            'filters' => [
+                'search' => $search,
+                'sort' => $sort,
+                'direction' => $direction,
+            ]
         ]);
     }
 

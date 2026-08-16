@@ -1,6 +1,6 @@
 <script setup>
 import { ref } from 'vue'
-import { router, useForm } from '@inertiajs/vue3'
+import { router, useForm, Link } from '@inertiajs/vue3'
 import AppLayout from '@/Components/Layout/AppLayout.vue'
 import Modal from '@/Components/UI/Modal.vue'
 
@@ -10,6 +10,8 @@ const props = defineProps({
 })
 
 const search = ref(props.filters.search || '')
+const sortCol = ref(props.filters.sort || 'last_name')
+const sortDir = ref(props.filters.direction || 'asc')
 const showModal = ref(false)
 const editingStudent = ref(null)
 
@@ -19,7 +21,7 @@ const form = useForm({
     cedula: '',
     birth_date: '',
     gender: 'M',
-    is_active: true,
+    status: 'regular',
 })
 
 function formatDate(dateStr) {
@@ -33,7 +35,17 @@ function formatDate(dateStr) {
 }
 
 function doSearch() {
-    router.get('/admin/students', { search: search.value }, { preserveState: true, replace: true })
+    router.get('/admin/students', { search: search.value, sort: sortCol.value, direction: sortDir.value }, { preserveState: true, replace: true })
+}
+
+function toggleSort(col) {
+    if (sortCol.value === col) {
+        sortDir.value = sortDir.value === 'asc' ? 'desc' : 'asc'
+    } else {
+        sortCol.value = col
+        sortDir.value = 'asc'
+    }
+    doSearch()
 }
 
 function openCreateModal() {
@@ -50,7 +62,7 @@ function openEditModal(student) {
     form.cedula = student.cedula
     form.birth_date = student.birth_date
     form.gender = student.gender
-    form.is_active = student.is_active
+    form.status = student.status
     form.clearErrors()
     showModal.value = true
 }
@@ -103,13 +115,38 @@ function submit() {
 
             <!-- Table Container -->
             <div class="glass-card rounded-3xl overflow-hidden shadow-2xl animate-fade-in-up" style="animation-delay: 100ms">
-                <table class="w-full text-sm text-left">
+                <div class="overflow-x-auto w-full">
+                    <table class="w-full text-sm text-left min-w-[800px]">
                     <thead class="bg-slate-50 text-slate-400 text-[10px] uppercase font-black tracking-[0.2em]">
                         <tr>
-                            <th class="px-8 py-5">Apellidos y Nombres</th>
-                            <th class="px-8 py-5">Cédula</th>
-                            <th class="px-8 py-5">Fecha Nac.</th>
-                            <th class="px-8 py-5">Estado</th>
+                            <th @click="toggleSort('last_name')" class="px-8 py-5 cursor-pointer hover:bg-slate-100 hover:text-slate-600 transition-colors select-none group">
+                                Apellidos y Nombres
+                                <span v-if="sortCol === 'last_name'" class="ml-1 text-primary-500">
+                                    <i class="fas" :class="sortDir === 'asc' ? 'fa-sort-up' : 'fa-sort-down'"></i>
+                                </span>
+                                <span v-else class="ml-1 opacity-0 group-hover:opacity-100 transition-opacity"><i class="fas fa-sort"></i></span>
+                            </th>
+                            <th @click="toggleSort('cedula')" class="px-8 py-5 cursor-pointer hover:bg-slate-100 hover:text-slate-600 transition-colors select-none group">
+                                Cédula
+                                <span v-if="sortCol === 'cedula'" class="ml-1 text-primary-500">
+                                    <i class="fas" :class="sortDir === 'asc' ? 'fa-sort-up' : 'fa-sort-down'"></i>
+                                </span>
+                                <span v-else class="ml-1 opacity-0 group-hover:opacity-100 transition-opacity"><i class="fas fa-sort"></i></span>
+                            </th>
+                            <th @click="toggleSort('birth_date')" class="px-8 py-5 cursor-pointer hover:bg-slate-100 hover:text-slate-600 transition-colors select-none group">
+                                Fecha Nac.
+                                <span v-if="sortCol === 'birth_date'" class="ml-1 text-primary-500">
+                                    <i class="fas" :class="sortDir === 'asc' ? 'fa-sort-up' : 'fa-sort-down'"></i>
+                                </span>
+                                <span v-else class="ml-1 opacity-0 group-hover:opacity-100 transition-opacity"><i class="fas fa-sort"></i></span>
+                            </th>
+                            <th @click="toggleSort('status')" class="px-8 py-5 cursor-pointer hover:bg-slate-100 hover:text-slate-600 transition-colors select-none group">
+                                Estado
+                                <span v-if="sortCol === 'status'" class="ml-1 text-primary-500">
+                                    <i class="fas" :class="sortDir === 'asc' ? 'fa-sort-up' : 'fa-sort-down'"></i>
+                                </span>
+                                <span v-else class="ml-1 opacity-0 group-hover:opacity-100 transition-opacity"><i class="fas fa-sort"></i></span>
+                            </th>
                             <th class="px-8 py-5 text-right">Acciones</th>
                         </tr>
                     </thead>
@@ -135,13 +172,17 @@ function submit() {
                                 {{ formatDate(student.birth_date) }}
                             </td>
                             <td class="px-8 py-5">
-                                <span
-                                    class="px-2.5 py-1 text-[10px] font-black uppercase tracking-wider rounded-lg border shadow-sm"
-                                    :class="student.is_active 
-                                        ? 'bg-emerald-50 text-emerald-600 border-emerald-100' 
-                                        : 'bg-red-50 text-red-600 border-red-100'"
-                                >
-                                    {{ student.is_active ? 'Activo' : 'Inactivo' }}
+                                <span v-if="student.status === 'regular'" class="px-2.5 py-1 text-[10px] font-black uppercase tracking-wider rounded-lg border shadow-sm bg-emerald-50 text-emerald-600 border-emerald-100">
+                                    Regular
+                                </span>
+                                <span v-else-if="student.status === 'graduated'" class="px-2.5 py-1 text-[10px] font-black uppercase tracking-wider rounded-lg border shadow-sm bg-sky-50 text-sky-600 border-sky-100">
+                                    Graduado
+                                </span>
+                                <span v-else-if="student.status === 'withdrawn'" class="px-2.5 py-1 text-[10px] font-black uppercase tracking-wider rounded-lg border shadow-sm bg-gray-50 text-gray-600 border-gray-200">
+                                    Retirado
+                                </span>
+                                <span v-else-if="student.status === 'suspended'" class="px-2.5 py-1 text-[10px] font-black uppercase tracking-wider rounded-lg border shadow-sm bg-red-50 text-red-600 border-red-100">
+                                    Suspendido
                                 </span>
                             </td>
                             <td class="px-8 py-5 text-right">
@@ -164,15 +205,29 @@ function submit() {
                             </td>
                         </tr>
                     </tbody>
-                </table>
+                    </table>
+                </div>
             </div>
 
             <!-- Pagination Info -->
-            <div class="flex items-center justify-between px-4 animate-fade-in-up" style="animation-delay: 200ms">
+            <div class="flex flex-col sm:flex-row items-center justify-between gap-4 px-4 animate-fade-in-up" style="animation-delay: 200ms">
                 <span class="text-xs font-bold text-slate-400 uppercase tracking-widest">
                     Mostrando {{ students.data.length }} de {{ students.total }} registros
                 </span>
-                <!-- Simple Pagination buttons could go here -->
+                
+                <div class="flex flex-wrap justify-center items-center gap-1.5 w-full sm:w-auto" v-if="students.links && students.links.length > 3">
+                    <Link
+                        v-for="(link, i) in students.links"
+                        :key="i"
+                        :href="link.url || '#'"
+                        class="px-3 sm:px-4 py-2 sm:py-2.5 rounded-xl text-[10px] sm:text-xs font-black uppercase tracking-widest transition-all shadow-sm"
+                        :class="[
+                            link.active ? 'bg-primary-500 text-white ring-2 ring-primary-500/20' : 'bg-white text-slate-500 hover:bg-slate-50 border border-slate-200/60',
+                            !link.url ? 'opacity-40 cursor-not-allowed border-transparent shadow-none' : 'cursor-pointer hover:-translate-y-0.5'
+                        ]"
+                        v-html="link.label.replace(/pagination\.previous|previous/i, '&laquo;').replace(/pagination\.next|next/i, '&raquo;')"
+                    ></Link>
+                </div>
             </div>
         </div>
 
@@ -231,12 +286,17 @@ function submit() {
                                 <i class="fas fa-chevron-down absolute right-4 top-1/2 -translate-y-1/2 text-slate-300 pointer-events-none"></i>
                             </div>
                         </div>
-                        <div v-if="editingStudent" class="flex items-center h-full pt-6">
-                            <label class="relative inline-flex items-center cursor-pointer group">
-                                <input v-model="form.is_active" type="checkbox" class="sr-only peer">
-                                <div class="w-11 h-6 bg-slate-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full rtl:peer-checked:after:-translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-emerald-500"></div>
-                                <span class="ml-3 text-sm font-bold text-slate-500 group-hover:text-slate-700 transition-colors">Estudiante Activo</span>
-                            </label>
+                        <div v-if="editingStudent" class="space-y-2">
+                            <label class="text-[11px] font-black text-slate-400 uppercase tracking-widest ml-1">Estatus del Estudiante</label>
+                            <div class="relative">
+                                <select v-model="form.status" class="w-full bg-slate-50 border-2 border-slate-400 rounded-2xl px-4 py-3 text-slate-700 text-sm font-bold focus:border-primary-400 focus:bg-white focus:ring-0 outline-none transition-all appearance-none cursor-pointer">
+                                    <option value="regular">Regular</option>
+                                    <option value="graduated">Graduado</option>
+                                    <option value="withdrawn">Retirado</option>
+                                    <option value="suspended">Suspendido</option>
+                                </select>
+                                <i class="fas fa-chevron-down absolute right-4 top-1/2 -translate-y-1/2 text-slate-300 pointer-events-none"></i>
+                            </div>
                         </div>
                     </div>
 

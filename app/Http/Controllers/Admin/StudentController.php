@@ -2,6 +2,8 @@
 
 namespace App\Http\Controllers\Admin;
 
+use App\Enums\StudentStatus;
+use Illuminate\Validation\Rule;
 use App\Http\Controllers\Controller;
 use App\Models\Student;
 use Illuminate\Http\Request;
@@ -12,6 +14,13 @@ class StudentController extends Controller
     public function index(Request $request)
     {
         $search = $request->input('search');
+        $sort = $request->input('sort', 'last_name');
+        $direction = $request->input('direction', 'asc');
+
+        $allowedSorts = ['first_name', 'last_name', 'cedula', 'birth_date', 'status'];
+        if (!in_array($sort, $allowedSorts)) {
+            $sort = 'last_name';
+        }
 
         $students = Student::query()
             ->when($search, function ($query, $search) {
@@ -19,13 +28,17 @@ class StudentController extends Controller
                       ->orWhere('last_name', 'like', "%{$search}%")
                       ->orWhere('cedula', 'like', "%{$search}%");
             })
-            ->orderBy('last_name')
+            ->orderBy($sort, $direction)
             ->paginate(15)
             ->withQueryString();
 
         return Inertia::render('Admin/Students/Index', [
             'students' => $students,
-            'filters' => ['search' => $search],
+            'filters' => [
+                'search' => $search,
+                'sort' => $sort,
+                'direction' => $direction,
+            ],
         ]);
     }
 
@@ -52,7 +65,7 @@ class StudentController extends Controller
             'cedula' => 'nullable|string|max:20|unique:students,cedula,' . $student->id,
             'birth_date' => 'required|date',
             'gender' => 'required|in:M,F',
-            'is_active' => 'boolean',
+            'status' => ['required', Rule::enum(StudentStatus::class)],
         ]);
 
         $student->update($validated);
@@ -62,13 +75,8 @@ class StudentController extends Controller
 
     public function destroy(Student $student)
     {
-        // Solo soft delete o desactivación si tiene notas
-        if ($student->enrollments()->exists()) {
-            $student->update(['is_active' => false]);
-            return back()->with('success', 'El estudiante ha sido desactivado (no se puede borrar porque tiene historial).');
-        }
+        $student->update(['status' => StudentStatus::WITHDRAWN]);
 
-        $student->delete();
-        return back()->with('success', 'Estudiante eliminado exitosamente.');
+        return back()->with('success', 'Estudiante retirado.');
     }
 }

@@ -78,7 +78,8 @@ Route::middleware('auth')->group(function () {
         Route::resource('subjects', \App\Http\Controllers\Admin\SubjectController::class)->except(['create', 'show', 'edit']);
         Route::resource('academic-loads', \App\Http\Controllers\Admin\AcademicLoadController::class)->except(['create', 'show', 'edit']);
         Route::resource('enrollments', \App\Http\Controllers\Admin\EnrollmentController::class)->except(['create', 'show', 'edit']);
-
+        Route::patch('enrollments/{enrollment}/status', [\App\Http\Controllers\Admin\EnrollmentController::class, 'updateStatus'])->name('enrollments.status');
+        Route::patch('enrollments/{enrollment}/transfer', [\App\Http\Controllers\Admin\EnrollmentController::class, 'transfer'])->name('enrollments.transfer');
         // Configuración institucional
         Route::get('settings', [SchoolSettingController::class, 'index'])->name('settings.index');
         Route::put('settings', [SchoolSettingController::class, 'update'])->name('settings.update');

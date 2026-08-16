@@ -25,6 +25,7 @@ final class StoreGradeAction
             ],
             [
                 'score' => $dto->score,
+                'teacher_id' => $dto->teacherId,
             ]
         );
     }

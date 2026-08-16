@@ -2,6 +2,7 @@
 import { ref, computed } from 'vue'
 import { router, useForm } from '@inertiajs/vue3'
 import AppLayout from '@/Components/Layout/AppLayout.vue'
+import Modal from '@/Components/UI/Modal.vue'
 
 const props = defineProps({
     activeYear: Object,
@@ -15,11 +16,55 @@ const props = defineProps({
 const gradeLevelId = ref(props.filters.grade_level_id || '')
 const sectionId = ref(props.filters.section_id || '')
 const searchStudent = ref('')
+const searchEnrolled = ref('')
+const sortCol = ref('student')
+const sortDir = ref('asc')
 
 const form = useForm({
     section_id: sectionId.value,
     student_id: '',
 })
+
+const showStatusModal = ref(false)
+const showTransferModal = ref(false)
+const targetEnrollment = ref(null)
+
+const statusForm = useForm({
+    status: 'active'
+})
+
+const transferForm = useForm({
+    section_id: ''
+})
+
+function openStatusModal(enrollment) {
+    targetEnrollment.value = enrollment
+    statusForm.status = enrollment.status || 'active'
+    showStatusModal.value = true
+}
+
+function openTransferModal(enrollment) {
+    targetEnrollment.value = enrollment
+    transferForm.section_id = ''
+    showTransferModal.value = true
+}
+
+function updateStatus() {
+    statusForm.patch(`/admin/enrollments/${targetEnrollment.value.id}/status`, {
+        preserveScroll: true,
+        onSuccess: () => showStatusModal.value = false
+    })
+}
+
+function transferStudent() {
+    transferForm.patch(`/admin/enrollments/${targetEnrollment.value.id}/transfer`, {
+        preserveScroll: true,
+        onSuccess: () => {
+            showTransferModal.value = false
+            loadData()
+        }
+    })
+}
 
 function loadData() {
     router.get('/admin/enrollments', { 
@@ -42,6 +87,50 @@ const filteredStudents = computed(() => {
         (s.cedula && s.cedula.toLowerCase().includes(query))
     ).slice(0, 50)
 })
+
+const processedEnrollments = computed(() => {
+    let result = [...props.enrollments]
+
+    if (searchEnrolled.value) {
+        const query = searchEnrolled.value.toLowerCase()
+        result = result.filter(enrollment => {
+            const firstName = enrollment.student?.first_name?.toLowerCase() || ''
+            const lastName = enrollment.student?.last_name?.toLowerCase() || ''
+            const cedula = enrollment.student?.cedula?.toLowerCase() || ''
+            return firstName.includes(query) || lastName.includes(query) || cedula.includes(query)
+        })
+    }
+
+    result.sort((a, b) => {
+        let valA = '', valB = ''
+        
+        if (sortCol.value === 'student') {
+            valA = ((a.student?.last_name || '') + ' ' + (a.student?.first_name || '')).toLowerCase()
+            valB = ((b.student?.last_name || '') + ' ' + (b.student?.first_name || '')).toLowerCase()
+        } else if (sortCol.value === 'cedula') {
+            valA = (a.student?.cedula || '').toLowerCase()
+            valB = (b.student?.cedula || '').toLowerCase()
+        } else if (sortCol.value === 'enrolled_at') {
+            valA = a.enrolled_at || ''
+            valB = b.enrolled_at || ''
+        }
+
+        if (valA < valB) return sortDir.value === 'asc' ? -1 : 1
+        if (valA > valB) return sortDir.value === 'asc' ? 1 : -1
+        return 0
+    })
+
+    return result
+})
+
+function toggleSort(col) {
+    if (sortCol.value === col) {
+        sortDir.value = sortDir.value === 'asc' ? 'desc' : 'asc'
+    } else {
+        sortCol.value = col
+        sortDir.value = 'asc'
+    }
+}
 
 function enroll(studentId) {
     form.section_id = sectionId.value
@@ -190,21 +279,53 @@ function destroy(id) {
                             </div>
                             <h3 class="font-black text-slate-800 uppercase tracking-widest text-xs">Estudiantes Inscritos</h3>
                         </div>
-                        <span class="px-3 py-1 bg-emerald-50 text-emerald-600 text-[10px] font-black uppercase tracking-widest rounded-lg border border-emerald-100">{{ enrollments.length }} Registrados</span>
+                        <div class="flex items-center gap-4">
+                            <div class="relative hidden sm:block">
+                                <i class="fas fa-search absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-xs"></i>
+                                <input 
+                                    v-model="searchEnrolled"
+                                    type="text" 
+                                    placeholder="Buscar inscrito..." 
+                                    class="w-48 bg-white border border-slate-200 rounded-xl pl-8 pr-3 py-1.5 text-xs text-slate-700 placeholder:text-slate-400 focus:border-primary-400 focus:ring-0 outline-none transition-all shadow-sm"
+                                >
+                            </div>
+                            <span class="px-3 py-1 bg-emerald-50 text-emerald-600 text-[10px] font-black uppercase tracking-widest rounded-lg border border-emerald-100">{{ enrollments.length }} Registrados</span>
+                        </div>
                     </div>
                     
                     <div class="flex-1 overflow-y-auto custom-scrollbar">
                         <table class="w-full text-sm text-left">
                             <thead class="bg-slate-50 text-slate-400 text-[10px] uppercase font-black tracking-[0.2em] sticky top-0 z-10 shadow-sm">
                                 <tr>
-                                    <th class="px-8 py-4">Estudiante</th>
-                                    <th class="px-8 py-4">Cédula</th>
-                                    <th class="px-8 py-4">Inscrito el</th>
+                                    <th @click="toggleSort('student')" class="px-8 py-4 cursor-pointer hover:bg-slate-100 hover:text-slate-600 transition-colors select-none group">
+                                        Estudiante
+                                        <span v-if="sortCol === 'student'" class="ml-1 text-primary-500">
+                                            <i class="fas" :class="sortDir === 'asc' ? 'fa-sort-up' : 'fa-sort-down'"></i>
+                                        </span>
+                                        <span v-else class="ml-1 opacity-0 group-hover:opacity-100 transition-opacity"><i class="fas fa-sort"></i></span>
+                                    </th>
+                                    <th @click="toggleSort('cedula')" class="px-8 py-4 cursor-pointer hover:bg-slate-100 hover:text-slate-600 transition-colors select-none group">
+                                        Cédula
+                                        <span v-if="sortCol === 'cedula'" class="ml-1 text-primary-500">
+                                            <i class="fas" :class="sortDir === 'asc' ? 'fa-sort-up' : 'fa-sort-down'"></i>
+                                        </span>
+                                        <span v-else class="ml-1 opacity-0 group-hover:opacity-100 transition-opacity"><i class="fas fa-sort"></i></span>
+                                    </th>
+                                    <th @click="toggleSort('enrolled_at')" class="px-8 py-4 cursor-pointer hover:bg-slate-100 hover:text-slate-600 transition-colors select-none group">
+                                        Inscrito el
+                                        <span v-if="sortCol === 'enrolled_at'" class="ml-1 text-primary-500">
+                                            <i class="fas" :class="sortDir === 'asc' ? 'fa-sort-up' : 'fa-sort-down'"></i>
+                                        </span>
+                                        <span v-else class="ml-1 opacity-0 group-hover:opacity-100 transition-opacity"><i class="fas fa-sort"></i></span>
+                                    </th>
+                                    <th class="px-8 py-4 cursor-pointer hover:bg-slate-100 hover:text-slate-600 transition-colors select-none">
+                                        Estatus
+                                    </th>
                                     <th class="px-8 py-4 text-right"></th>
                                 </tr>
                             </thead>
                             <tbody class="divide-y divide-slate-50">
-                                <tr v-for="enrollment in enrollments" :key="enrollment.id" class="group hover:bg-slate-50 transition-colors">
+                                <tr v-for="enrollment in processedEnrollments" :key="enrollment.id" class="group hover:bg-slate-50 transition-colors" :class="{'opacity-60': enrollment.status !== 'active'}">
                                     <td class="px-8 py-4">
                                         <div class="flex items-center gap-3">
                                             <div class="w-8 h-8 rounded-full bg-slate-100 text-slate-400 flex items-center justify-center text-[10px] font-black group-hover:bg-primary-50 group-hover:text-primary-600 transition-all shadow-sm">
@@ -222,17 +343,39 @@ function destroy(id) {
                                             {{ new Date(enrollment.enrolled_at).toLocaleDateString() }}
                                         </div>
                                     </td>
+                                    <td class="px-8 py-4">
+                                        <span v-if="enrollment.status === 'active'" class="px-2 py-1 text-[10px] font-black uppercase tracking-wider rounded-md bg-emerald-50 text-emerald-600 border border-emerald-100">Activo</span>
+                                        <span v-else-if="enrollment.status === 'promoted'" class="px-2 py-1 text-[10px] font-black uppercase tracking-wider rounded-md bg-sky-50 text-sky-600 border border-sky-100">Promovido</span>
+                                        <span v-else-if="enrollment.status === 'withdrawn'" class="px-2 py-1 text-[10px] font-black uppercase tracking-wider rounded-md bg-gray-100 text-gray-500 border border-gray-200">Retirado</span>
+                                        <span v-else class="px-2 py-1 text-[10px] font-black uppercase tracking-wider rounded-md bg-slate-100 text-slate-500 border border-slate-200">{{ enrollment.status }}</span>
+                                    </td>
                                     <td class="px-8 py-4 text-right">
-                                        <button 
-                                            @click="destroy(enrollment.id)" 
-                                            class="w-8 h-8 rounded-xl bg-red-50 text-red-400 hover:bg-red-500 hover:text-white transition-all border border-transparent shadow-sm"
-                                            title="Retirar Estudiante"
-                                        >
-                                            <i class="fas fa-user-minus text-[10px]"></i>
-                                        </button>
+                                        <div class="flex items-center justify-end gap-2">
+                                            <button 
+                                                @click="openStatusModal(enrollment)" 
+                                                class="w-8 h-8 rounded-xl bg-slate-50 text-slate-400 hover:bg-slate-200 hover:text-slate-600 transition-all border border-transparent shadow-sm"
+                                                title="Cambiar Estatus"
+                                            >
+                                                <i class="fas fa-cog text-[10px]"></i>
+                                            </button>
+                                            <button 
+                                                @click="openTransferModal(enrollment)" 
+                                                class="w-8 h-8 rounded-xl bg-sky-50 text-sky-400 hover:bg-sky-500 hover:text-white transition-all border border-transparent shadow-sm"
+                                                title="Transferir de Sección"
+                                            >
+                                                <i class="fas fa-exchange-alt text-[10px]"></i>
+                                            </button>
+                                            <button 
+                                                @click="destroy(enrollment.id)" 
+                                                class="w-8 h-8 rounded-xl bg-red-50 text-red-400 hover:bg-red-500 hover:text-white transition-all border border-transparent shadow-sm"
+                                                title="Eliminar Inscripción"
+                                            >
+                                                <i class="fas fa-trash-alt text-[10px]"></i>
+                                            </button>
+                                        </div>
                                     </td>
                                 </tr>
-                                <tr v-if="enrollments.length === 0">
+                                <tr v-if="processedEnrollments.length === 0">
                                     <td colspan="4" class="px-8 py-32 text-center">
                                         <div class="w-16 h-16 bg-slate-50 rounded-full flex items-center justify-center mx-auto mb-4 text-slate-200">
                                             <i class="fas fa-users-slash text-2xl"></i>
@@ -247,5 +390,79 @@ function destroy(id) {
                 </div>
             </div>
         </div>
+        
+        <!-- Status Modal -->
+        <Modal :show="showStatusModal" @close="showStatusModal = false" maxWidth="md">
+            <div class="p-8">
+                <div class="flex items-center gap-4 mb-6">
+                    <div class="w-12 h-12 rounded-2xl bg-slate-50 text-slate-400 flex items-center justify-center text-xl shadow-sm">
+                        <i class="fas fa-cog"></i>
+                    </div>
+                    <div>
+                        <h3 class="text-xl font-black text-slate-800 leading-tight">Cambiar Estatus</h3>
+                        <p class="text-xs font-medium text-slate-400 mt-1">Modificar estado de inscripción</p>
+                    </div>
+                </div>
+                
+                <form @submit.prevent="updateStatus" class="space-y-6">
+                    <div class="space-y-2">
+                        <label class="text-[11px] font-black text-slate-400 uppercase tracking-widest ml-1">Estatus Actual</label>
+                        <div class="relative">
+                            <select v-model="statusForm.status" class="w-full bg-slate-50 border-2 border-slate-400 rounded-2xl px-4 py-3 text-slate-700 text-sm font-bold focus:border-primary-400 focus:bg-white focus:ring-0 outline-none transition-all appearance-none cursor-pointer">
+                                <option value="active">Activo</option>
+                                <option value="withdrawn">Retirado</option>
+                                <option value="promoted">Promovido</option>
+                                <option value="promoted_pending">Promovido con Pendientes</option>
+                                <option value="failed">Reprobado</option>
+                            </select>
+                            <i class="fas fa-chevron-down absolute right-4 top-1/2 -translate-y-1/2 text-slate-300 pointer-events-none"></i>
+                        </div>
+                    </div>
+                    
+                    <div class="flex items-center justify-end gap-4 mt-8">
+                        <button type="button" @click="showStatusModal = false" class="px-6 py-3 text-sm font-black uppercase tracking-widest text-slate-400 hover:text-slate-600 transition-all">Cancelar</button>
+                        <button type="submit" :disabled="statusForm.processing" class="px-8 py-3 bg-slate-800 text-white text-[11px] font-black uppercase tracking-widest rounded-2xl shadow-lg hover:bg-slate-700 hover:-translate-y-0.5 transition-all disabled:opacity-50">Guardar</button>
+                    </div>
+                </form>
+            </div>
+        </Modal>
+
+        <!-- Transfer Modal -->
+        <Modal :show="showTransferModal" @close="showTransferModal = false" maxWidth="md">
+            <div class="p-8">
+                <div class="flex items-center gap-4 mb-6">
+                    <div class="w-12 h-12 rounded-2xl bg-sky-50 text-sky-500 flex items-center justify-center text-xl shadow-sm">
+                        <i class="fas fa-exchange-alt"></i>
+                    </div>
+                    <div>
+                        <h3 class="text-xl font-black text-slate-800 leading-tight">Transferir Sección</h3>
+                        <p class="text-xs font-medium text-slate-400 mt-1">Mover estudiante conservando notas</p>
+                    </div>
+                </div>
+                
+                <form @submit.prevent="transferStudent" class="space-y-6">
+                    <div class="space-y-2">
+                        <label class="text-[11px] font-black text-slate-400 uppercase tracking-widest ml-1">Sección Destino</label>
+                        <div class="relative">
+                            <select v-model="transferForm.section_id" required class="w-full bg-slate-50 border-2 border-sky-200 rounded-2xl px-4 py-3 text-slate-700 text-sm font-bold focus:border-sky-400 focus:bg-white focus:ring-0 outline-none transition-all appearance-none cursor-pointer">
+                                <option value="" disabled>Seleccione una sección</option>
+                                <option v-for="sec in sections" :key="sec.id" :value="sec.id" :disabled="sec.id === targetEnrollment?.section_id">{{ sec.name }}</option>
+                            </select>
+                            <i class="fas fa-chevron-down absolute right-4 top-1/2 -translate-y-1/2 text-slate-300 pointer-events-none"></i>
+                        </div>
+                    </div>
+                    
+                    <div class="p-4 bg-sky-50 rounded-2xl border border-sky-100 flex gap-3 text-sky-800 text-sm">
+                        <i class="fas fa-info-circle mt-0.5"></i>
+                        <p>El estudiante será transferido a la nueva sección. Todo su historial de notas (de este año escolar) viajará con él.</p>
+                    </div>
+                    
+                    <div class="flex items-center justify-end gap-4 mt-8">
+                        <button type="button" @click="showTransferModal = false" class="px-6 py-3 text-sm font-black uppercase tracking-widest text-slate-400 hover:text-slate-600 transition-all">Cancelar</button>
+                        <button type="submit" :disabled="transferForm.processing" class="px-8 py-3 bg-sky-500 text-white text-[11px] font-black uppercase tracking-widest rounded-2xl shadow-lg shadow-sky-500/30 hover:bg-sky-600 hover:-translate-y-0.5 transition-all disabled:opacity-50">Transferir</button>
+                    </div>
+                </form>
+            </div>
+        </Modal>
     </AppLayout>
 </template>
