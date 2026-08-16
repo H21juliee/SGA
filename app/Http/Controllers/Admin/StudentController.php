@@ -16,6 +16,7 @@ class StudentController extends Controller
         $search = $request->input('search');
         $sort = $request->input('sort', 'last_name');
         $direction = $request->input('direction', 'asc');
+        $status_filter = $request->input('status_filter', 'regular');
 
         $allowedSorts = ['first_name', 'last_name', 'cedula', 'birth_date', 'status'];
         if (!in_array($sort, $allowedSorts)) {
@@ -24,11 +25,16 @@ class StudentController extends Controller
 
         $students = Student::query()
             ->with('guardian')
+            ->when($status_filter && $status_filter !== 'all', function($query) use ($status_filter) {
+                $query->where('status', $status_filter);
+            })
             ->when($search, function ($query, $search) {
-                $query->where('first_name', 'like', "%{$search}%")
+                $query->where(function($q) use ($search) {
+                    $q->where('first_name', 'like', "%{$search}%")
                       ->orWhere('last_name', 'like', "%{$search}%")
                       ->orWhere('cedula', 'like', "%{$search}%")
                       ->orWhere('birth_date', 'like', "%{$search}%");
+                });
             })
             ->orderBy($sort, $direction)
             ->paginate(15)
@@ -40,6 +46,7 @@ class StudentController extends Controller
                 'search' => $search,
                 'sort' => $sort,
                 'direction' => $direction,
+                'status_filter' => $status_filter,
             ],
         ]);
     }

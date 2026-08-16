@@ -11,6 +11,7 @@ const props = defineProps({
 })
 
 const search = ref(props.filters.search || '')
+const statusFilter = ref(props.filters.status_filter || 'regular')
 const sortCol = ref(props.filters.sort || 'last_name')
 const sortDir = ref(props.filters.direction || 'asc')
 const showModal = ref(false)
@@ -95,7 +96,12 @@ function formatDate(dateStr) {
 }
 
 function doSearch() {
-    router.get('/admin/students', { search: search.value, sort: sortCol.value, direction: sortDir.value }, { preserveState: true, replace: true })
+    router.get('/admin/students', { search: search.value, sort: sortCol.value, direction: sortDir.value, status_filter: statusFilter.value }, { preserveState: true, replace: true })
+}
+
+function setStatusFilter(status) {
+    statusFilter.value = status;
+    doSearch();
 }
 
 let searchTimeout = null;
@@ -193,6 +199,15 @@ function submit() {
                         Nuevo Estudiante
                     </button>
                 </div>
+            </div>
+
+            <!-- Status Tabs -->
+            <div class="flex flex-wrap gap-2 animate-fade-in-up" style="animation-delay: 50ms">
+                <button @click="setStatusFilter('all')" :class="statusFilter === 'all' ? 'bg-slate-800 text-white' : 'bg-white text-slate-500 hover:bg-slate-100'" class="px-5 py-2.5 rounded-xl text-xs font-black uppercase tracking-widest transition-all shadow-sm">Todos</button>
+                <button @click="setStatusFilter('regular')" :class="statusFilter === 'regular' ? 'bg-emerald-500 text-white shadow-emerald-500/20' : 'bg-white text-slate-500 hover:bg-slate-100'" class="px-5 py-2.5 rounded-xl text-xs font-black uppercase tracking-widest transition-all shadow-sm">Regulares</button>
+                <button @click="setStatusFilter('graduated')" :class="statusFilter === 'graduated' ? 'bg-blue-500 text-white shadow-blue-500/20' : 'bg-white text-slate-500 hover:bg-slate-100'" class="px-5 py-2.5 rounded-xl text-xs font-black uppercase tracking-widest transition-all shadow-sm">Graduados</button>
+                <button @click="setStatusFilter('withdrawn')" :class="statusFilter === 'withdrawn' ? 'bg-amber-500 text-white shadow-amber-500/20' : 'bg-white text-slate-500 hover:bg-slate-100'" class="px-5 py-2.5 rounded-xl text-xs font-black uppercase tracking-widest transition-all shadow-sm">Retirados</button>
+                <button @click="setStatusFilter('suspended')" :class="statusFilter === 'suspended' ? 'bg-red-500 text-white shadow-red-500/20' : 'bg-white text-slate-500 hover:bg-slate-100'" class="px-5 py-2.5 rounded-xl text-xs font-black uppercase tracking-widest transition-all shadow-sm">Suspendidos</button>
             </div>
 
             <!-- Table Container -->
