@@ -69,7 +69,10 @@ Route::middleware('auth')->group(function () {
 
     // Módulo de Administración (Solo roles autorizados)
     Route::prefix('admin')->name('admin.')->middleware(['role:SuperAdmin|Administrador|Secretaria'])->group(function () {
-        Route::resource('students', \App\Http\Controllers\Admin\StudentController::class)->except(['create', 'show', 'edit']);
+        Route::resource('users', \App\Http\Controllers\Admin\UserController::class)->except(['create', 'edit']);
+                Route::get('guardians/search', [\App\Http\Controllers\GuardianController::class, 'search'])->name('guardians.search');
+        Route::post('guardians', [\App\Http\Controllers\GuardianController::class, 'store'])->name('guardians.store');
+        Route::resource('students', \App\Http\Controllers\Admin\StudentController::class)->except(['create', 'edit']);
         Route::resource('school-years', \App\Http\Controllers\Admin\SchoolYearController::class)->except(['create', 'show', 'edit']);
         Route::post('school-years/{school_year}/toggle', [\App\Http\Controllers\Admin\SchoolYearController::class, 'toggleActive'])->name('school-years.toggle');
         Route::post('school-years/{school_year}/promote', [\App\Http\Controllers\Admin\SchoolYearController::class, 'closeAndPromote'])->name('school-years.promote');
@@ -91,3 +94,6 @@ Route::middleware('auth')->group(function () {
         Route::post('council-adjustments/batch', [CouncilAdjustmentController::class, 'batchUpdate'])->name('council-adjustments.batch');
     });
 });
+
+
+

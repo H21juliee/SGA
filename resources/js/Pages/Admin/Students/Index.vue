@@ -1,6 +1,7 @@
 <script setup>
-import { ref } from 'vue'
+import { ref, watch } from 'vue'
 import { router, useForm, Link } from '@inertiajs/vue3'
+import axios from 'axios'
 import AppLayout from '@/Components/Layout/AppLayout.vue'
 import Modal from '@/Components/UI/Modal.vue'
 
@@ -22,7 +23,66 @@ const form = useForm({
     birth_date: '',
     gender: 'M',
     status: 'regular',
+    guardian_id: '',
 })
+
+const guardianSearchCedula = ref('')
+const searchingGuardian = ref(false)
+const guardianNotFound = ref(false)
+const selectedGuardian = ref(null)
+
+const showGuardianModal = ref(false)
+const guardianFormErrors = ref({})
+const guardianForm = useForm({
+    cedula: '',
+    name: '',
+    phone: '',
+    email: '',
+})
+
+function searchGuardian() {
+    if (!guardianSearchCedula.value) return;
+    searchingGuardian.value = true;
+    guardianNotFound.value = false;
+    selectedGuardian.value = null;
+    form.guardian_id = '';
+    
+    axios.get('/admin/guardians/search', { params: { cedula: guardianSearchCedula.value } })
+        .then(response => {
+            if (response.data.guardian) {
+                selectedGuardian.value = response.data.guardian;
+                form.guardian_id = response.data.guardian.id;
+            } else {
+                guardianNotFound.value = true;
+            }
+        })
+        .finally(() => {
+            searchingGuardian.value = false;
+        });
+}
+
+function openCreateGuardian() {
+    guardianForm.reset()
+    guardianForm.cedula = guardianSearchCedula.value
+    guardianFormErrors.value = {}
+    showGuardianModal.value = true
+}
+
+function submitGuardian() {
+    axios.post('/admin/guardians', guardianForm.data())
+        .then(response => {
+            showGuardianModal.value = false;
+            selectedGuardian.value = response.data.guardian;
+            form.guardian_id = response.data.guardian.id;
+            guardianSearchCedula.value = response.data.guardian.cedula;
+            guardianNotFound.value = false;
+        })
+        .catch(error => {
+            if (error.response && error.response.status === 422) {
+                guardianFormErrors.value = error.response.data.errors;
+            }
+        });
+}
 
 function formatDate(dateStr) {
     if (!dateStr) return '—'
@@ -38,6 +98,14 @@ function doSearch() {
     router.get('/admin/students', { search: search.value, sort: sortCol.value, direction: sortDir.value }, { preserveState: true, replace: true })
 }
 
+let searchTimeout = null;
+watch(search, (value) => {
+    if (searchTimeout) clearTimeout(searchTimeout);
+    searchTimeout = setTimeout(() => {
+        doSearch();
+    }, 300); // 300ms debounce
+});
+
 function toggleSort(col) {
     if (sortCol.value === col) {
         sortDir.value = sortDir.value === 'asc' ? 'desc' : 'asc'
@@ -52,6 +120,9 @@ function openCreateModal() {
     editingStudent.value = null
     form.reset()
     form.clearErrors()
+    selectedGuardian.value = null
+    guardianSearchCedula.value = ''
+    guardianNotFound.value = false
     showModal.value = true
 }
 
@@ -63,6 +134,17 @@ function openEditModal(student) {
     form.birth_date = student.birth_date
     form.gender = student.gender
     form.status = student.status
+    form.guardian_id = student.guardian_id || ''
+    
+    if (student.guardian) {
+        selectedGuardian.value = student.guardian
+        guardianSearchCedula.value = student.guardian.cedula || ''
+    } else {
+        selectedGuardian.value = null
+        guardianSearchCedula.value = ''
+    }
+    
+    guardianNotFound.value = false
     form.clearErrors()
     showModal.value = true
 }
@@ -186,13 +268,22 @@ function submit() {
                                 </span>
                             </td>
                             <td class="px-8 py-5 text-right">
-                                <button 
-                                    @click="openEditModal(student)" 
-                                    class="w-10 h-10 rounded-xl bg-slate-50 text-slate-400 hover:text-primary-600 hover:bg-primary-50 transition-all border border-transparent hover:border-primary-100"
-                                    title="Editar Estudiante"
-                                >
-                                    <i class="fas fa-edit"></i>
-                                </button>
+                                <div class="flex items-center justify-end gap-2">
+                                    <Link 
+                                        :href="'/admin/students/' + student.id"
+                                        class="w-10 h-10 rounded-xl bg-slate-50 text-slate-400 hover:text-indigo-600 hover:bg-indigo-50 transition-all border border-transparent hover:border-indigo-100 flex items-center justify-center"
+                                        title="Ver Expediente"
+                                    >
+                                        <i class="fas fa-folder-open"></i>
+                                    </Link>
+                                    <button 
+                                        @click="openEditModal(student)" 
+                                        class="w-10 h-10 rounded-xl bg-slate-50 text-slate-400 hover:text-primary-600 hover:bg-primary-50 transition-all border border-transparent hover:border-primary-100"
+                                        title="Editar Estudiante"
+                                    >
+                                        <i class="fas fa-edit"></i>
+                                    </button>
+                                </div>
                             </td>
                         </tr>
                         <tr v-if="students.data.length === 0">
@@ -291,11 +382,51 @@ function submit() {
                             <div class="relative">
                                 <select v-model="form.status" class="w-full bg-slate-50 border-2 border-slate-400 rounded-2xl px-4 py-3 text-slate-700 text-sm font-bold focus:border-primary-400 focus:bg-white focus:ring-0 outline-none transition-all appearance-none cursor-pointer">
                                     <option value="regular">Regular</option>
-                                    <option value="graduated">Graduado</option>
                                     <option value="withdrawn">Retirado</option>
                                     <option value="suspended">Suspendido</option>
                                 </select>
                                 <i class="fas fa-chevron-down absolute right-4 top-1/2 -translate-y-1/2 text-slate-300 pointer-events-none"></i>
+                            </div>
+                        </div>
+                    </div>
+
+                    
+                    <!-- Guardian Section -->
+                    <div class="pt-6 border-t border-slate-100">
+                        <h4 class="text-sm font-black text-slate-800 uppercase tracking-widest mb-4">Representante</h4>
+                        
+                        <div class="bg-slate-50 border-2 border-slate-200 rounded-2xl p-6 relative">
+                            <div v-if="selectedGuardian" class="flex items-center justify-between">
+                                <div>
+                                    <p class="font-bold text-slate-800">{{ selectedGuardian.name }}</p>
+                                    <p class="text-xs text-slate-500 font-medium">C.I: {{ selectedGuardian.cedula || 'N/A' }} | Tel: {{ selectedGuardian.phone || 'N/A' }}</p>
+                                </div>
+                                <button type="button" @click="selectedGuardian = null; form.guardian_id = ''; guardianSearchCedula = '';" class="text-xs font-black text-red-500 hover:text-red-600 uppercase tracking-widest bg-red-50 px-3 py-1.5 rounded-lg border border-red-100 transition-colors">
+                                    Cambiar
+                                </button>
+                            </div>
+                            
+                            <div v-else class="space-y-4">
+                                <div>
+                                    <label class="text-[11px] font-black text-slate-400 uppercase tracking-widest ml-1 mb-2 block">Buscar por Cédula</label>
+                                    <div class="flex gap-3">
+                                        <div class="relative flex-1">
+                                            <input v-model="guardianSearchCedula" @keyup.enter="searchGuardian" type="text" placeholder="Ej: V-12345678" class="w-full bg-white border-2 border-slate-300 rounded-xl px-4 py-2.5 text-slate-700 text-sm font-bold focus:border-indigo-400 focus:ring-0 outline-none transition-all">
+                                        </div>
+                                        <button type="button" @click="searchGuardian" :disabled="searchingGuardian || !guardianSearchCedula" class="px-5 py-2.5 bg-indigo-600 text-white text-xs font-black uppercase tracking-widest rounded-xl shadow-md hover:bg-indigo-500 transition-all disabled:opacity-50">
+                                            <i v-if="searchingGuardian" class="fas fa-spinner fa-spin"></i>
+                                            <i v-else class="fas fa-search"></i>
+                                        </button>
+                                    </div>
+                                    <p v-if="form.errors.guardian_id" class="text-xs text-red-500 font-bold mt-1 ml-1">{{ form.errors.guardian_id }}</p>
+                                </div>
+                                
+                                <div v-if="guardianNotFound" class="bg-amber-50 border border-amber-200 rounded-xl p-4 flex items-center justify-between animate-fade-in-up">
+                                    <p class="text-xs font-bold text-amber-700">No se encontró ningún representante con esta cédula.</p>
+                                    <button type="button" @click="openCreateGuardian" class="px-4 py-2 bg-amber-600 text-white text-[10px] font-black uppercase tracking-widest rounded-lg shadow-sm hover:bg-amber-500 transition-all">
+                                        Registrar Nuevo
+                                    </button>
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -314,6 +445,49 @@ function submit() {
                         </button>
                     </div>
                 </form>
+            </div>
+        </Modal>
+
+        <!-- Guardian Create Modal -->
+        <Modal :show="showGuardianModal" @close="showGuardianModal = false" max-width="md">
+            <div class="p-8">
+                <div class="flex items-center justify-between mb-6">
+                    <h3 class="text-xl font-black text-slate-800">
+                        Nuevo <span class="text-indigo-500">Representante</span>
+                    </h3>
+                    <button @click="showGuardianModal = false" class="w-8 h-8 rounded-full bg-slate-50 text-slate-400 hover:bg-slate-100 transition-all">
+                        <i class="fas fa-times"></i>
+                    </button>
+                </div>
+                
+                <div class="space-y-4">
+                    <div class="space-y-2">
+                        <label class="text-[11px] font-black text-slate-400 uppercase tracking-widest ml-1">Cédula</label>
+                        <input v-model="guardianForm.cedula" type="text" class="w-full bg-slate-50 border-2 border-slate-300 rounded-xl px-4 py-2.5 text-slate-700 text-sm font-bold focus:border-indigo-400 focus:bg-white focus:ring-0 outline-none transition-all">
+                        <p v-if="guardianFormErrors && guardianFormErrors.cedula" class="text-xs text-red-500 font-bold mt-1 ml-1">{{ guardianFormErrors.cedula[0] }}</p>
+                    </div>
+                    <div class="space-y-2">
+                        <label class="text-[11px] font-black text-slate-400 uppercase tracking-widest ml-1">Nombre Completo</label>
+                        <input v-model="guardianForm.name" type="text" class="w-full bg-slate-50 border-2 border-slate-300 rounded-xl px-4 py-2.5 text-slate-700 text-sm font-bold focus:border-indigo-400 focus:bg-white focus:ring-0 outline-none transition-all">
+                        <p v-if="guardianFormErrors && guardianFormErrors.name" class="text-xs text-red-500 font-bold mt-1 ml-1">{{ guardianFormErrors.name[0] }}</p>
+                    </div>
+                    <div class="space-y-2">
+                        <label class="text-[11px] font-black text-slate-400 uppercase tracking-widest ml-1">Teléfono</label>
+                        <input v-model="guardianForm.phone" type="text" class="w-full bg-slate-50 border-2 border-slate-300 rounded-xl px-4 py-2.5 text-slate-700 text-sm font-bold focus:border-indigo-400 focus:bg-white focus:ring-0 outline-none transition-all">
+                        <p v-if="guardianFormErrors && guardianFormErrors.phone" class="text-xs text-red-500 font-bold mt-1 ml-1">{{ guardianFormErrors.phone[0] }}</p>
+                    </div>
+                    <div class="space-y-2">
+                        <label class="text-[11px] font-black text-slate-400 uppercase tracking-widest ml-1">Correo Electrónico</label>
+                        <input v-model="guardianForm.email" type="email" class="w-full bg-slate-50 border-2 border-slate-300 rounded-xl px-4 py-2.5 text-slate-700 text-sm font-bold focus:border-indigo-400 focus:bg-white focus:ring-0 outline-none transition-all">
+                        <p v-if="guardianFormErrors && guardianFormErrors.email" class="text-xs text-red-500 font-bold mt-1 ml-1">{{ guardianFormErrors.email[0] }}</p>
+                    </div>
+                    
+                    <div class="flex justify-end pt-4">
+                        <button type="button" @click="submitGuardian" class="px-6 py-3 bg-indigo-600 text-white text-[11px] font-black uppercase tracking-widest rounded-xl shadow-lg hover:bg-indigo-500 transition-all">
+                            Guardar y Seleccionar
+                        </button>
+                    </div>
+                </div>
             </div>
         </Modal>
     </AppLayout>

@@ -174,6 +174,7 @@ const navigation = computed(() => {
             show: roles.value.some(r => ['SuperAdmin', 'Administrador', 'Secretaria'].includes(r)),
             children: [
                 { name: 'Estudiantes', href: '/admin/students', show: can('students.view') },
+                { name: 'Usuarios', href: '/admin/users', show: can('users.manage') },
                 { name: 'Años Escolares', href: '/admin/school-years', show: can('school_years.view') },
                 { name: 'Secciones', href: '/admin/sections', show: can('sections.manage') },
                 { name: 'Materias', href: '/admin/subjects', show: can('subjects.manage') },

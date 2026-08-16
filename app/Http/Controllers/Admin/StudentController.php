@@ -23,10 +23,12 @@ class StudentController extends Controller
         }
 
         $students = Student::query()
+            ->with('guardian')
             ->when($search, function ($query, $search) {
                 $query->where('first_name', 'like', "%{$search}%")
                       ->orWhere('last_name', 'like', "%{$search}%")
-                      ->orWhere('cedula', 'like', "%{$search}%");
+                      ->orWhere('cedula', 'like', "%{$search}%")
+                      ->orWhere('birth_date', 'like', "%{$search}%");
             })
             ->orderBy($sort, $direction)
             ->paginate(15)
@@ -42,6 +44,25 @@ class StudentController extends Controller
         ]);
     }
 
+    public function show(Student $student)
+    {
+        $student->load('guardian');
+        $enrollments = $student->enrollments()
+            ->with([
+                'schoolYear',
+                'section.gradeLevel',
+                'grades.subject',
+                'grades.lapse'
+            ])
+            ->orderByDesc('school_year_id')
+            ->get();
+
+        return Inertia::render('Admin/Students/Show', [
+            'student' => $student,
+            'enrollments' => $enrollments,
+        ]);
+    }
+
     public function store(Request $request)
     {
         $validated = $request->validate([
@@ -50,6 +71,8 @@ class StudentController extends Controller
             'cedula' => 'nullable|string|max:20|unique:students,cedula',
             'birth_date' => 'required|date',
             'gender' => 'required|in:M,F',
+            'address' => 'nullable|string',
+            'guardian_id' => 'nullable|exists:guardians,id',
         ]);
 
         Student::create($validated);
@@ -65,6 +88,8 @@ class StudentController extends Controller
             'cedula' => 'nullable|string|max:20|unique:students,cedula,' . $student->id,
             'birth_date' => 'required|date',
             'gender' => 'required|in:M,F',
+            'address' => 'nullable|string',
+            'guardian_id' => 'nullable|exists:guardians,id',
             'status' => ['required', Rule::enum(StudentStatus::class)],
         ]);
 

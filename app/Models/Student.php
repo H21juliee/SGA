@@ -17,9 +17,7 @@ class Student extends Model
         'birth_date',
         'gender',
         'address',
-        'guardian_name',
-        'guardian_phone',
-        'guardian_email',
+        'guardian_id',
         'photo_url',
         'status',
     ];
@@ -37,6 +35,11 @@ class Student extends Model
     }
 
     /* ---- Relations ---- */
+
+    public function guardian(): \Illuminate\Database\Eloquent\Relations\BelongsTo
+    {
+        return $this->belongsTo(Guardian::class);
+    }
 
     public function enrollments(): HasMany
     {
