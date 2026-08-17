@@ -10,72 +10,59 @@ class RolePermissionSeeder extends Seeder
 {
     public function run(): void
     {
-        // Reset cached roles and permissions
         app()[\Spatie\Permission\PermissionRegistrar::class]->forgetCachedPermissions();
 
-        // Crear permisos
         $permissions = [
-            'students.view',
-            'students.create',
-            'students.edit',
-            'students.delete',
-            'enrollments.view',
-            'enrollments.create',
-            'enrollments.edit',
-            'enrollments.delete',
-            'grades.view',
-            'grades.edit',
-            'attendance.view',
-            'attendance.manage',
+            'students.view', 'students.create', 'students.edit', 'students.delete',
+            'enrollments.view', 'enrollments.create', 'enrollments.edit', 'enrollments.delete',
+            'attendance.view', 'attendance.manage',
+            'grades.view', 'grades.edit',
+            'revisions.view', 'revisions.edit',
+            'council.view', 'council.manage',
+            'school_years.view', 'school_years.manage',
+            'sections.view', 'sections.manage',
+            'subjects.view', 'subjects.manage',
+            'academic_load.view', 'academic_load.manage',
             'reports.generate',
-            'school_years.view',
-            'school_years.manage',
-            'sections.manage',
-            'subjects.manage',
-            'academic_load.view',
-            'academic_load.manage',
-            'promotion.execute',
-            'roles.manage',
-            'users.manage',
+            'users.view', 'users.manage',
+            'roles.view', 'roles.manage',
+            'settings.manage',
         ];
 
         foreach ($permissions as $permission) {
-            Permission::firstOrCreate(['name' => $permission]);
+            Permission::firstOrCreate(['name' => $permission, 'guard_name' => 'web']);
         }
 
-        // SuperAdmin — todos los permisos
-        $superAdmin = Role::firstOrCreate(['name' => 'SuperAdmin']);
-        $superAdmin->givePermissionTo(Permission::all());
+        // SuperAdmin
+        $superAdmin = Role::firstOrCreate(['name' => 'SuperAdmin', 'guard_name' => 'web']);
+        $superAdmin->syncPermissions(Permission::all());
 
-        // Administrador — todo excepto gestión de roles
-        $admin = Role::firstOrCreate(['name' => 'Administrador']);
-        $admin->givePermissionTo(
-            collect($permissions)->reject(fn($p) => $p === 'roles.manage')->toArray()
+        // Administrador (Todo menos roles)
+        $admin = Role::firstOrCreate(['name' => 'Administrador', 'guard_name' => 'web']);
+        $admin->syncPermissions(
+            collect($permissions)->reject(fn($p) => in_array($p, ['roles.view', 'roles.manage']))->toArray()
         );
 
-        // Docente — solo su carga académica (filtrado por Policies)
-        $docente = Role::firstOrCreate(['name' => 'Docente']);
-        $docente->givePermissionTo([
-            'grades.view',
-            'grades.edit',
-            'attendance.view',
-            'attendance.manage',
-            'reports.generate',
-            'academic_load.view',
+        // Docente (Foco en lo académico)
+        $docente = Role::firstOrCreate(['name' => 'Docente', 'guard_name' => 'web']);
+        $docente->syncPermissions([
+            'attendance.view', 'attendance.manage',
+            'grades.view', 'grades.edit',
         ]);
 
-        // Secretaria — gestión administrativa
-        $secretaria = Role::firstOrCreate(['name' => 'Secretaria']);
-        $secretaria->givePermissionTo([
-            'students.view',
-            'students.create',
-            'students.edit',
-            'enrollments.view',
-            'enrollments.create',
-            'enrollments.edit',
-            'reports.generate',
+        // Secretaria (Foco en administración estudiantil e inscripciones)
+        $secretaria = Role::firstOrCreate(['name' => 'Secretaria', 'guard_name' => 'web']);
+        $secretaria->syncPermissions([
+            'students.view', 'students.create', 'students.edit', 'students.delete',
+            'enrollments.view', 'enrollments.create', 'enrollments.edit', 'enrollments.delete',
+            'attendance.view', 'attendance.manage',
+            'grades.view',
+            'revisions.view',
             'school_years.view',
-            'academic_load.view',
+            'sections.view', 'sections.manage',
+            'subjects.view', 'subjects.manage',
+            'academic_load.view', 'academic_load.manage',
+            'reports.generate'
         ]);
     }
 }

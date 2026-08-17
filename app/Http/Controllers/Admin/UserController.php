@@ -80,7 +80,8 @@ class UserController extends Controller
             'cedula' => 'nullable|string|max:20|unique:users',
             'phone' => 'nullable|string|max:20',
             'password' => 'required|string|min:8',
-            'role' => 'required|string|exists:roles,name',
+            'roles' => 'required|array|min:1',
+            'roles.*' => 'string|exists:roles,name',
         ]);
 
         $user = User::create([
@@ -92,7 +93,7 @@ class UserController extends Controller
             'is_active' => true,
         ]);
 
-        $user->assignRole($validated['role']);
+        $user->syncRoles($validated['roles']);
 
         return back()->with('success', 'Usuario creado exitosamente.');
     }
@@ -109,7 +110,8 @@ class UserController extends Controller
             'cedula' => ['nullable', 'string', 'max:20', Rule::unique('users')->ignore($user->id)],
             'phone' => 'nullable|string|max:20',
             'password' => 'nullable|string|min:8',
-            'role' => 'required|string|exists:roles,name',
+            'roles' => 'required|array|min:1',
+            'roles.*' => 'string|exists:roles,name',
             'is_active' => 'required|boolean',
         ]);
 
@@ -127,7 +129,7 @@ class UserController extends Controller
             ]);
         }
 
-        $user->syncRoles([$validated['role']]);
+        $user->syncRoles($validated['roles']);
 
         return back()->with('success', 'Usuario actualizado exitosamente.');
     }

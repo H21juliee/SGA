@@ -167,31 +167,31 @@ const navigation = computed(() => {
         {
             name: 'Estudiantes',
             icon: 'students',
-            show: roles.value.some(r => ['SuperAdmin', 'Administrador', 'Secretaria'].includes(r)),
+            show: can('students.view') || can('enrollments.view'),
             children: [
                 { name: 'Directorio', href: '/admin/students', show: can('students.view') },
-                { name: 'Inscripciones', href: '/admin/enrollments', show: can('academic_load.view') },
+                { name: 'Inscripciones', href: '/admin/enrollments', show: can('enrollments.view') },
             ]
         },
         { name: 'Asistencia', href: '/attendance', icon: 'attendance', show: can('attendance.view') },
         {
             name: 'Calificaciones',
             icon: 'grades',
-            show: can('grades.view') || roles.value.some(r => ['SuperAdmin', 'Administrador'].includes(r)),
+            show: can('grades.view') || can('revisions.view') || can('council.view'),
             children: [
                 { name: 'Notas', href: '/grades', show: can('grades.view') },
-                { name: 'Revisiones', href: '/revisions', show: can('grades.view') },
-                { name: 'Ajuste de Consejo', href: '/admin/council-adjustments', show: roles.value.some(r => ['SuperAdmin', 'Administrador'].includes(r)) },
+                { name: 'Revisiones', href: '/revisions', show: can('revisions.view') },
+                { name: 'Ajuste de Consejo', href: '/admin/council-adjustments', show: can('council.view') },
             ]
         },
         {
             name: 'Planificación',
             icon: 'calendar',
-            show: roles.value.some(r => ['SuperAdmin', 'Administrador'].includes(r)),
+            show: can('school_years.view') || can('sections.view') || can('subjects.view') || can('academic_load.view'),
             children: [
                 { name: 'Años Escolares', href: '/admin/school-years', show: can('school_years.view') },
-                { name: 'Secciones', href: '/admin/sections', show: can('sections.manage') },
-                { name: 'Materias', href: '/admin/subjects', show: can('subjects.manage') },
+                { name: 'Secciones', href: '/admin/sections', show: can('sections.manage') || can('sections.view') },
+                { name: 'Materias', href: '/admin/subjects', show: can('subjects.manage') || can('subjects.view') },
                 { name: 'Carga Académica', href: '/admin/academic-loads', show: can('academic_load.view') },
             ]
         },
@@ -199,10 +199,11 @@ const navigation = computed(() => {
         {
             name: 'Administración',
             icon: 'admin',
-            show: roles.value.some(r => ['SuperAdmin', 'Administrador'].includes(r)),
+            show: can('users.view') || can('roles.view') || can('settings.manage'),
             children: [
-                { name: 'Usuarios', href: '/admin/users', show: can('users.manage') },
-                { name: 'Configuración', href: '/admin/settings', show: roles.value.some(r => ['SuperAdmin', 'Administrador'].includes(r)) },
+                { name: 'Usuarios', href: '/admin/users', show: can('users.manage') || can('users.view') },
+                { name: 'Roles y Permisos', href: '/admin/roles', show: can('roles.manage') || can('roles.view') },
+                { name: 'Configuración', href: '/admin/settings', show: can('settings.manage') },
             ]
         }
     ].filter(i => {

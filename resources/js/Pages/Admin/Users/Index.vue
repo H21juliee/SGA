@@ -52,7 +52,7 @@ const form = useForm({
     cedula: '',
     phone: '',
     password: '',
-    role: '',
+    roles: [],
     is_active: true,
 })
 
@@ -75,7 +75,7 @@ function openEditModal(user) {
     form.cedula = user.cedula || ''
     form.phone = user.phone || ''
     form.password = ''
-    form.role = user.roles[0]?.name || ''
+    form.roles = user.roles.map(r => r.name)
     form.is_active = user.is_active === 1 || user.is_active === true
     
     showModal.value = true
@@ -186,16 +186,20 @@ function destroy(id) {
                                     <p class="text-[10px] font-bold text-slate-400 mt-0.5">{{ user.phone || 'Sin teléfono' }}</p>
                                 </td>
                                 <td class="px-8 py-4">
-                                    <span class="px-3 py-1 rounded-lg text-[10px] font-black uppercase tracking-widest border shadow-sm"
-                                          :class="{
-                                              'bg-primary-50 text-primary-600 border-primary-100': user.roles[0]?.name === 'Docente',
-                                              'bg-indigo-50 text-indigo-600 border-indigo-100': user.roles[0]?.name === 'Administrador',
-                                              'bg-emerald-50 text-emerald-600 border-emerald-100': user.roles[0]?.name === 'Secretaria',
-                                              'bg-rose-50 text-rose-600 border-rose-100': user.roles[0]?.name === 'SuperAdmin',
-                                              'bg-slate-50 text-slate-500 border-slate-200': !user.roles.length
-                                          }">
-                                        {{ user.roles[0]?.name || 'Sin Rol' }}
-                                    </span>
+                                    <div class="flex flex-wrap gap-1.5">
+                                        <span v-for="r in user.roles" :key="r.id"
+                                              class="px-2.5 py-1 rounded-lg text-[10px] font-black uppercase tracking-widest border shadow-sm"
+                                              :class="{
+                                                  'bg-primary-50 text-primary-600 border-primary-100': r.name === 'Docente',
+                                                  'bg-indigo-50 text-indigo-600 border-indigo-100': r.name === 'Administrador',
+                                                  'bg-emerald-50 text-emerald-600 border-emerald-100': r.name === 'Secretaria',
+                                                  'bg-rose-50 text-rose-600 border-rose-100': r.name === 'SuperAdmin',
+                                                  'bg-slate-50 text-slate-500 border-slate-200': true
+                                              }">
+                                            {{ r.name }}
+                                        </span>
+                                        <span v-if="!user.roles.length" class="text-xs text-slate-300 italic">Sin rol</span>
+                                    </div>
                                 </td>
                                 <td class="px-8 py-4">
                                     <span v-if="user.is_active" class="flex items-center gap-2 text-emerald-500 text-xs font-black">
@@ -298,16 +302,20 @@ function destroy(id) {
                             <p v-if="form.errors.phone" class="text-xs font-bold text-rose-500 ml-1">{{ form.errors.phone }}</p>
                         </div>
 
-                        <div class="space-y-2">
-                            <label class="text-[11px] font-black text-slate-400 uppercase tracking-widest ml-1">Rol</label>
-                            <div class="relative">
-                                <select v-model="form.role" required class="w-full bg-slate-50 border-2 border-slate-100 rounded-2xl px-4 py-3 text-slate-700 text-sm font-bold focus:border-primary-400 focus:bg-white focus:ring-0 outline-none transition-all appearance-none">
-                                    <option value="" disabled>Seleccione un Rol</option>
-                                    <option v-for="role in roles" :key="role.id" :value="role.name">{{ role.name }}</option>
-                                </select>
-                                <i class="fas fa-chevron-down absolute right-4 top-1/2 -translate-y-1/2 text-slate-300 pointer-events-none"></i>
+                        <div class="space-y-2 md:col-span-2">
+                            <label class="text-[11px] font-black text-slate-400 uppercase tracking-widest ml-1">Roles (puede seleccionar varios)</label>
+                            <div class="bg-slate-50 border-2 border-slate-100 rounded-2xl p-4 grid grid-cols-2 gap-2">
+                                <label v-for="role in roles" :key="role.id" class="flex items-center gap-2.5 cursor-pointer group">
+                                    <input
+                                        type="checkbox"
+                                        :value="role.name"
+                                        v-model="form.roles"
+                                        class="rounded accent-primary-600 w-4 h-4"
+                                    >
+                                    <span class="text-sm font-bold text-slate-600 group-hover:text-slate-800 transition-colors">{{ role.name }}</span>
+                                </label>
                             </div>
-                            <p v-if="form.errors.role" class="text-xs font-bold text-rose-500 ml-1">{{ form.errors.role }}</p>
+                            <p v-if="form.errors.roles" class="text-xs font-bold text-rose-500 ml-1">{{ form.errors.roles }}</p>
                         </div>
 
                         <div class="space-y-2">

@@ -8,6 +8,7 @@ use App\Models\SchoolYear;
 use App\Models\Section;
 use App\Models\Subject;
 use App\Models\User;
+use App\Models\GradeLevel;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 
@@ -16,79 +17,108 @@ class AcademicLoadController extends Controller
     public function index(Request $request)
     {
         $schoolYearId = $request->input('school_year_id', SchoolYear::active()->first()?->id);
-        $gradeLevelId = $request->input('grade_level_id');
-        $sectionId = $request->input('section_id');
         
         $years = SchoolYear::orderByDesc('start_date')->get();
-        $levels = \App\Models\GradeLevel::orderBy('order_num')->get();
-        $teachers = User::role('Docente')->where('is_active', true)->orderBy('name')->get();
+        $teachers = User::role('Docente')->where('is_active', true)->orderBy('name')->get()->map(function($t) {
+            return ['id' => $t->id, 'name' => $t->name];
+        });
         
-        $loads = [];
-        $sections = [];
-        $subjects = [];
+        $tree = [];
 
         if ($schoolYearId) {
-            $query = AcademicLoad::where('school_year_id', $schoolYearId)
-                ->with(['teacher', 'subject.gradeLevel', 'section.gradeLevel']);
-            
-            if ($gradeLevelId) {
-                $query->whereHas('section', function($q) use ($gradeLevelId) {
-                    $q->where('grade_level_id', $gradeLevelId);
-                });
-            }
+            $gradeLevels = GradeLevel::orderBy('order_num')->get();
+            $sections = Section::where('school_year_id', $schoolYearId)->get()->groupBy('grade_level_id');
+            $subjects = Subject::all()->groupBy('grade_level_id');
+            $loads = AcademicLoad::where('school_year_id', $schoolYearId)->get();
 
-            if ($sectionId) {
-                $query->where('section_id', $sectionId);
-            }
-
-            $loads = $query->get();
+            foreach ($gradeLevels as $grade) {
+                $gradeSections = $sections->get($grade->id, collect());
                 
-            $sections = Section::where('school_year_id', $schoolYearId)->with('gradeLevel')->get();
-            $subjects = Subject::with('gradeLevel')->get();
+                if ($gradeSections->isEmpty()) {
+                    continue; // Skip grade levels without sections in this year
+                }
+                
+                $gradeSubjects = $subjects->get($grade->id, collect());
+                
+                $gradeData = [
+                    'id' => $grade->id,
+                    'name' => $grade->name,
+                    'sections' => []
+                ];
+                
+                foreach ($gradeSections as $section) {
+                    $sectionData = [
+                        'id' => $section->id,
+                        'name' => $section->name, // Solo "A", "B", etc.
+                        'subjects' => []
+                    ];
+                    
+                    foreach ($gradeSubjects as $subject) {
+                        $load = $loads->where('section_id', $section->id)
+                                      ->where('subject_id', $subject->id)
+                                      ->first();
+                                      
+                        $sectionData['subjects'][] = [
+                            'id' => $subject->id,
+                            'name' => $subject->name,
+                            'teacher_id' => $load ? $load->teacher_id : null,
+                            'load_id' => $load ? $load->id : null
+                        ];
+                    }
+                    
+                    $gradeData['sections'][] = $sectionData;
+                }
+                
+                // Sort sections alphabetically (A, B, C...)
+                usort($gradeData['sections'], function($a, $b) {
+                    return strcmp($a['name'], $b['name']);
+                });
+                
+                $tree[] = $gradeData;
+            }
         }
 
         return Inertia::render('Admin/AcademicLoads/Index', [
-            'loads' => $loads,
+            'tree' => $tree,
             'years' => $years,
-            'levels' => $levels,
             'teachers' => $teachers,
-            'sections' => $sections,
-            'subjects' => $subjects,
             'filters' => [
                 'school_year_id' => $schoolYearId,
-                'grade_level_id' => $gradeLevelId,
-                'section_id' => $sectionId,
             ],
         ]);
     }
 
-    public function store(Request $request)
+    public function assign(Request $request)
     {
         $validated = $request->validate([
             'school_year_id' => 'required|exists:school_years,id',
-            'teacher_id' => 'required|exists:users,id',
-            'subject_id' => 'required|exists:subjects,id',
             'section_id' => 'required|exists:sections,id',
+            'subject_id' => 'required|exists:subjects,id',
+            'teacher_id' => 'nullable|exists:users,id',
         ]);
 
-        // Evitar duplicados (un mismo profe no puede dar la misma materia en la misma seccion dos veces)
-        $exists = AcademicLoad::where('school_year_id', $validated['school_year_id'])
-            ->where('subject_id', $validated['subject_id'])
-            ->where('section_id', $validated['section_id'])
-            ->exists();
-
-        if ($exists) {
-            return back()->with('error', 'Esta materia ya fue asignada en esta sección para este año escolar.');
+        if (empty($validated['teacher_id'])) {
+            AcademicLoad::where('school_year_id', $validated['school_year_id'])
+                ->where('section_id', $validated['section_id'])
+                ->where('subject_id', $validated['subject_id'])
+                ->delete();
+            return back()->with('success', 'Docente removido de la materia.');
         }
 
-        AcademicLoad::create($validated);
+        AcademicLoad::updateOrCreate(
+            [
+                'school_year_id' => $validated['school_year_id'],
+                'section_id' => $validated['section_id'],
+                'subject_id' => $validated['subject_id'],
+            ],
+            [
+                'teacher_id' => $validated['teacher_id'],
+            ]
+        );
 
-        return back()->with('success', 'Carga académica asignada exitosamente.');
+        return back()->with('success', 'Docente asignado a la materia.');
     }
 
-    public function destroy(AcademicLoad $academicLoad)
-    {
-        $academicLoad->delete();
-        return back()->with('success', 'Asignación removida.');
-    }
+    public function store(Request $request) { return back(); }
+    public function destroy(AcademicLoad $academicLoad) { return back(); }
 }

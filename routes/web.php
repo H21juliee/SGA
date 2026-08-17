@@ -6,6 +6,7 @@ use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\GradeController;
 use App\Http\Controllers\RevisionController;
 use App\Http\Controllers\Admin\SchoolSettingController;
+use App\Http\Controllers\Admin\RoleController;
 use App\Http\Controllers\Admin\CouncilAdjustmentController;
 use Illuminate\Support\Facades\Route;
 
@@ -34,33 +35,33 @@ Route::middleware('auth')->group(function () {
     Route::get('/dashboard', DashboardController::class);
 
     // Notas
-    Route::prefix('grades')->name('grades.')->group(function () {
+    Route::prefix('grades')->name('grades.')->middleware(['permission:grades.view'])->group(function () {
         Route::get('/', [GradeController::class, 'index'])->name('index');
         Route::get('/{section}/{subject}/{lapse}', [GradeController::class, 'datagrid'])->name('datagrid');
-        Route::patch('/', [GradeController::class, 'update'])->name('update');
-        Route::post('/batch', [GradeController::class, 'batchUpdate'])->name('batch');
+        Route::patch('/', [GradeController::class, 'update'])->name('update')->middleware('permission:grades.edit');
+        Route::post('/batch', [GradeController::class, 'batchUpdate'])->name('batch')->middleware('permission:grades.edit');
     });
 
     // Revisiones
-    Route::prefix('revisions')->name('revisions.')->group(function () {
+    Route::prefix('revisions')->name('revisions.')->middleware(['permission:revisions.view'])->group(function () {
         Route::get('/', [RevisionController::class, 'index'])->name('index');
         Route::get('/{section}/{subject}', [RevisionController::class, 'datagrid'])->name('datagrid');
-        Route::patch('/', [RevisionController::class, 'update'])->name('update');
-        Route::post('/batch', [RevisionController::class, 'batchUpdate'])->name('batch');
+        Route::patch('/', [RevisionController::class, 'update'])->name('update')->middleware('permission:revisions.edit');
+        Route::post('/batch', [RevisionController::class, 'batchUpdate'])->name('batch')->middleware('permission:revisions.edit');
     });
 
     // Asistencia
-    Route::prefix('attendance')->name('attendance.')->group(function () {
+    Route::prefix('attendance')->name('attendance.')->middleware(['permission:attendance.view'])->group(function () {
         Route::get('/', [AttendanceController::class, 'index'])->name('index');
         Route::get('/{section}', [AttendanceController::class, 'datagrid'])->name('datagrid');
-        Route::patch('/', [AttendanceController::class, 'update'])->name('update');
-        Route::post('/batch', [AttendanceController::class, 'batchUpdate'])->name('batch');
-        Route::post('/lock', [AttendanceController::class, 'lock'])->name('lock');
+        Route::patch('/', [AttendanceController::class, 'update'])->name('update')->middleware('permission:attendance.manage');
+        Route::post('/batch', [AttendanceController::class, 'batchUpdate'])->name('batch')->middleware('permission:attendance.manage');
+        Route::post('/lock', [AttendanceController::class, 'lock'])->name('lock')->middleware('permission:attendance.manage');
         Route::get('/history/{section}/{subject}/{lapse}', [AttendanceController::class, 'history'])->name('history');
     });
 
     // Reportes
-    Route::prefix('reports')->name('reports.')->group(function () {
+    Route::prefix('reports')->name('reports.')->middleware(['permission:reports.generate'])->group(function () {
         Route::get('/', [\App\Http\Controllers\ReportController::class, 'index'])->name('index');
         Route::get('/download/{enrollment}', [\App\Http\Controllers\ReportController::class, 'downloadReportCard'])->name('download');
         Route::get('/download-batch/{section}', [\App\Http\Controllers\ReportController::class, 'downloadBatchReportCards'])->name('download-batch');
@@ -79,6 +80,7 @@ Route::middleware('auth')->group(function () {
         Route::post('lapses/{lapse}/toggle', [\App\Http\Controllers\Admin\SchoolYearController::class, 'toggleLapse'])->name('lapses.toggle');
         Route::resource('sections', \App\Http\Controllers\Admin\SectionController::class)->except(['create', 'show', 'edit']);
         Route::resource('subjects', \App\Http\Controllers\Admin\SubjectController::class)->except(['create', 'show', 'edit']);
+        Route::post('academic-loads/assign', [\App\Http\Controllers\Admin\AcademicLoadController::class, 'assign'])->name('academic-loads.assign');
         Route::resource('academic-loads', \App\Http\Controllers\Admin\AcademicLoadController::class)->except(['create', 'show', 'edit']);
         Route::resource('enrollments', \App\Http\Controllers\Admin\EnrollmentController::class)->except(['create', 'show', 'edit']);
         Route::patch('enrollments/{enrollment}/status', [\App\Http\Controllers\Admin\EnrollmentController::class, 'updateStatus'])->name('enrollments.status');
@@ -87,6 +89,9 @@ Route::middleware('auth')->group(function () {
         Route::get('settings', [SchoolSettingController::class, 'index'])->name('settings.index');
         Route::put('settings', [SchoolSettingController::class, 'update'])->name('settings.update');
         Route::post('settings/logo', [SchoolSettingController::class, 'uploadLogo'])->name('settings.logo');
+
+        // Roles y Permisos
+        Route::resource('roles', RoleController::class)->except(['create', 'edit']);
 
         // Ajuste de Consejo
         Route::get('council-adjustments', [CouncilAdjustmentController::class, 'index'])->name('council-adjustments.index');

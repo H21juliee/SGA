@@ -48,7 +48,6 @@ watch(() => props.modelValue, (newVal) => {
 const filteredOptions = computed(() => {
     if (!searchQuery.value) return props.options
     
-    // If the search query exactly matches the selected option's label, show all options
     if (selectedOption.value && searchQuery.value === selectedOption.value.label) {
         return props.options
     }
@@ -65,7 +64,6 @@ const selectOption = (option) => {
 
 const openDropdown = () => {
     isOpen.value = true
-    // Optionally clear search when opening to see all options, but keep the current if we want
     if (selectedOption.value) {
         searchQuery.value = ''
     }
@@ -73,23 +71,25 @@ const openDropdown = () => {
 
 const handleInput = () => {
     isOpen.value = true
-    // If user starts typing, we should probably clear the actual modelValue until they select a valid one
-    // But it's better to just emit null if it doesn't match
-    if (selectedOption.value && searchQuery.value !== selectedOption.value.label) {
-        emit('update:modelValue', '')
-    }
+    // REMOVED: Do not emit empty just because user is typing
 }
 
 const handleClickOutside = (event) => {
     if (containerRef.value && !containerRef.value.contains(event.target)) {
         isOpen.value = false
-        // Revert search query to selected option if no new option was selected
+        // Revert to selected option if clicking outside
         if (selectedOption.value) {
             searchQuery.value = selectedOption.value.label
         } else {
             searchQuery.value = ''
         }
     }
+}
+
+const clearSelection = () => {
+    searchQuery.value = ''
+    emit('update:modelValue', '')
+    isOpen.value = false
 }
 
 onMounted(() => {
@@ -111,14 +111,21 @@ onBeforeUnmount(() => {
             @input="handleInput"
             :placeholder="placeholder"
             :required="required && !modelValue"
-            class="w-full bg-slate-50 border-2 border-slate-400 rounded-2xl px-4 py-3 text-slate-700 text-sm font-bold focus:border-primary-400 focus:bg-white focus:ring-0 outline-none transition-all cursor-text"
+            class="w-full bg-slate-50 border-2 border-slate-200 rounded-xl px-4 py-2 text-slate-700 text-sm font-bold focus:border-primary-400 focus:bg-white focus:ring-0 outline-none transition-all cursor-text pr-10"
         >
-        <!-- Icon -->
-        <i v-if="icon" :class="icon" class="absolute right-4 top-1/2 -translate-y-1/2 text-slate-300 pointer-events-none"></i>
+        
+        <!-- Clear button / Icon -->
+        <button 
+            v-if="modelValue && !required"
+            @click.stop="clearSelection"
+            class="absolute right-3 top-1/2 -translate-y-1/2 w-6 h-6 flex items-center justify-center text-slate-400 hover:text-rose-500 hover:bg-rose-50 rounded-full transition-colors z-10"
+            title="Quitar asignación"
+        >
+            <i class="fas fa-times text-xs"></i>
+        </button>
+        <i v-else-if="icon" :class="icon" class="absolute right-4 top-1/2 -translate-y-1/2 text-slate-300 pointer-events-none"></i>
         <i v-else class="fas fa-chevron-down absolute right-4 top-1/2 -translate-y-1/2 text-slate-300 pointer-events-none"></i>
 
-        <!-- Hidden actual input for form submission if needed, though Inertia uses modelValue -->
-        
         <!-- Dropdown Layer -->
         <transition 
             enter-active-class="transition duration-100 ease-out"

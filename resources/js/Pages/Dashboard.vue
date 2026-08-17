@@ -52,28 +52,28 @@
                     Acciones Rápidas
                 </h3>
                 <div class="grid grid-cols-2 lg:grid-cols-4 gap-4">
-                    <Link href="/admin/students" class="action-btn-hover p-6 border-2 border-dashed border-slate-100 rounded-2xl bg-white/50 flex flex-col items-center gap-4 text-center group transition-all">
+                    <Link v-if="can('students.create') || can('students.view')" href="/admin/students" class="action-btn-hover p-6 border-2 border-dashed border-slate-100 rounded-2xl bg-white/50 flex flex-col items-center gap-4 text-center group transition-all">
                         <div class="w-16 h-16 bg-gradient-to-br from-primary-50 to-indigo-100 rounded-2xl flex items-center justify-center text-primary-600 text-3xl group-hover:scale-110 transition-transform">
                             <i class="fas fa-user-plus"></i>
                         </div>
                         <span class="font-bold text-slate-700 text-sm">Nuevo Estudiante</span>
                     </Link>
 
-                    <Link href="/grades" class="action-btn-hover p-6 border-2 border-dashed border-slate-100 rounded-2xl bg-white/50 flex flex-col items-center gap-4 text-center group transition-all">
+                    <Link v-if="can('grades.view') || can('grades.edit')" href="/grades" class="action-btn-hover p-6 border-2 border-dashed border-slate-100 rounded-2xl bg-white/50 flex flex-col items-center gap-4 text-center group transition-all">
                         <div class="w-16 h-16 bg-gradient-to-br from-emerald-50 to-teal-100 rounded-2xl flex items-center justify-center text-emerald-600 text-3xl group-hover:scale-110 transition-transform">
                             <i class="fas fa-file-signature"></i>
                         </div>
                         <span class="font-bold text-slate-700 text-sm">Registrar Notas</span>
                     </Link>
 
-                    <Link href="/attendance" class="action-btn-hover p-6 border-2 border-dashed border-slate-100 rounded-2xl bg-white/50 flex flex-col items-center gap-4 text-center group transition-all">
+                    <Link v-if="can('attendance.view') || can('attendance.manage')" href="/attendance" class="action-btn-hover p-6 border-2 border-dashed border-slate-100 rounded-2xl bg-white/50 flex flex-col items-center gap-4 text-center group transition-all">
                         <div class="w-16 h-16 bg-gradient-to-br from-amber-50 to-orange-100 rounded-2xl flex items-center justify-center text-amber-600 text-3xl group-hover:scale-110 transition-transform">
                             <i class="fas fa-clipboard-check"></i>
                         </div>
                         <span class="font-bold text-slate-700 text-sm">Tomar Asistencia</span>
                     </Link>
 
-                    <Link href="/reports" class="action-btn-hover p-6 border-2 border-dashed border-slate-100 rounded-2xl bg-white/50 flex flex-col items-center gap-4 text-center group transition-all">
+                    <Link v-if="can('reports.generate')" href="/reports" class="action-btn-hover p-6 border-2 border-dashed border-slate-100 rounded-2xl bg-white/50 flex flex-col items-center gap-4 text-center group transition-all">
                         <div class="w-16 h-16 bg-gradient-to-br from-pink-50 to-rose-100 rounded-2xl flex items-center justify-center text-pink-600 text-3xl group-hover:scale-110 transition-transform">
                             <i class="fas fa-file-pdf"></i>
                         </div>
@@ -101,7 +101,15 @@
 <script setup>
 import AppLayout from '@/Components/Layout/AppLayout.vue'
 import { computed } from 'vue'
-import { Link } from '@inertiajs/vue3'
+import { Link, usePage } from '@inertiajs/vue3'
+
+const page = usePage()
+function can(permission) {
+    const roles = page.props.auth?.roles ?? []
+    if (roles.includes('SuperAdmin')) return true
+    const perms = page.props.auth?.permissions ?? []
+    return perms.includes(permission)
+}
 
 const props = defineProps({
     stats: { type: Object, default: () => ({}) },
