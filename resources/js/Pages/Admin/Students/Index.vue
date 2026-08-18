@@ -112,6 +112,26 @@ watch(search, (value) => {
     }, 300); // 300ms debounce
 });
 
+function formatCedula(value) {
+    if (!value) return '';
+    let val = value.toUpperCase().replace(/[^VEP0-9]/g, '');
+    if (val.length > 0 && !['V', 'E', 'P'].includes(val[0])) {
+        if (/[0-9]/.test(val[0])) {
+            val = 'V' + val;
+        } else {
+            val = val.substring(1);
+        }
+    }
+    // Limitar a máximo 10 dígitos numéricos (Total 11 caracteres sin guion)
+    if (val.length > 9) {
+        val = val.substring(0, 9);
+    }
+    if (val.length > 1) {
+        val = val[0] + '-' + val.substring(1);
+    }
+    return val;
+}
+
 function toggleSort(col) {
     if (sortCol.value === col) {
         sortDir.value = sortDir.value === 'asc' ? 'desc' : 'asc'
@@ -369,7 +389,7 @@ function submit() {
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                         <div class="space-y-2">
                             <label class="text-[11px] font-black text-slate-400 uppercase tracking-widest ml-1">Cédula o Identificación</label>
-                            <input v-model="form.cedula" type="text" class="w-full bg-slate-50 border-2 border-slate-400 rounded-2xl px-4 py-3 text-slate-700 text-sm font-bold focus:border-primary-400 focus:bg-white focus:ring-0 outline-none transition-all">
+                            <input v-model="form.cedula" @input="form.cedula = formatCedula($event.target.value)" type="text" class="w-full bg-slate-50 border-2 border-slate-400 rounded-2xl px-4 py-3 text-slate-700 text-sm font-bold focus:border-primary-400 focus:bg-white focus:ring-0 outline-none transition-all" maxlength="12">
                             <p v-if="form.errors.cedula" class="text-xs text-red-500 font-bold mt-1 ml-1">{{ form.errors.cedula }}</p>
                         </div>
                         <div class="space-y-2">
@@ -426,7 +446,7 @@ function submit() {
                                     <label class="text-[11px] font-black text-slate-400 uppercase tracking-widest ml-1 mb-2 block">Buscar por Cédula</label>
                                     <div class="flex gap-3">
                                         <div class="relative flex-1">
-                                            <input v-model="guardianSearchCedula" @keyup.enter="searchGuardian" type="text" placeholder="Ej: V-12345678" class="w-full bg-white border-2 border-slate-300 rounded-xl px-4 py-2.5 text-slate-700 text-sm font-bold focus:border-indigo-400 focus:ring-0 outline-none transition-all">
+                                            <input v-model="guardianSearchCedula" @input="guardianSearchCedula = formatCedula($event.target.value)" @keyup.enter="searchGuardian" type="text" placeholder="Ej: V-12345678" class="w-full bg-white border-2 border-slate-300 rounded-xl px-4 py-2.5 text-slate-700 text-sm font-bold focus:border-indigo-400 focus:ring-0 outline-none transition-all" maxlength="12">
                                         </div>
                                         <button type="button" @click="searchGuardian" :disabled="searchingGuardian || !guardianSearchCedula" class="px-5 py-2.5 bg-indigo-600 text-white text-xs font-black uppercase tracking-widest rounded-xl shadow-md hover:bg-indigo-500 transition-all disabled:opacity-50">
                                             <i v-if="searchingGuardian" class="fas fa-spinner fa-spin"></i>
@@ -478,7 +498,7 @@ function submit() {
                 <div class="space-y-4">
                     <div class="space-y-2">
                         <label class="text-[11px] font-black text-slate-400 uppercase tracking-widest ml-1">Cédula</label>
-                        <input v-model="guardianForm.cedula" type="text" class="w-full bg-slate-50 border-2 border-slate-300 rounded-xl px-4 py-2.5 text-slate-700 text-sm font-bold focus:border-indigo-400 focus:bg-white focus:ring-0 outline-none transition-all">
+                        <input v-model="guardianForm.cedula" @input="guardianForm.cedula = formatCedula($event.target.value)" type="text" class="w-full bg-slate-50 border-2 border-slate-300 rounded-xl px-4 py-2.5 text-slate-700 text-sm font-bold focus:border-indigo-400 focus:bg-white focus:ring-0 outline-none transition-all" maxlength="12">
                         <p v-if="guardianFormErrors && guardianFormErrors.cedula" class="text-xs text-red-500 font-bold mt-1 ml-1">{{ guardianFormErrors.cedula[0] }}</p>
                     </div>
                     <div class="space-y-2">

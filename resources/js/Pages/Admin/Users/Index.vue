@@ -32,6 +32,26 @@ function loadData() {
     }, { preserveState: true, replace: true })
 }
 
+function formatCedula(value) {
+    if (!value) return '';
+    let val = value.toUpperCase().replace(/[^VEP0-9]/g, '');
+    if (val.length > 0 && !['V', 'E', 'P'].includes(val[0])) {
+        if (/[0-9]/.test(val[0])) {
+            val = 'V' + val;
+        } else {
+            val = val.substring(1);
+        }
+    }
+    // Limitar a máximo 10 dígitos numéricos (Total 11 caracteres sin guion)
+    if (val.length > 9) {
+        val = val.substring(0, 9);
+    }
+    if (val.length > 1) {
+        val = val[0] + '-' + val.substring(1);
+    }
+    return val;
+}
+
 function toggleSort(col) {
     if (sortCol.value === col) {
         sortDir.value = sortDir.value === 'asc' ? 'desc' : 'asc'
@@ -286,7 +306,7 @@ function destroy(id) {
                         
                         <div class="space-y-2">
                             <label class="text-[11px] font-black text-slate-400 uppercase tracking-widest ml-1">Cédula</label>
-                            <input v-model="form.cedula" type="text" class="w-full bg-slate-50 border-2 border-slate-100 rounded-2xl px-4 py-3 text-slate-700 text-sm font-bold focus:border-primary-400 focus:bg-white focus:ring-0 outline-none transition-all">
+                            <input v-model="form.cedula" @input="form.cedula = formatCedula($event.target.value)" type="text" class="w-full bg-slate-50 border-2 border-slate-100 rounded-2xl px-4 py-3 text-slate-700 text-sm font-bold focus:border-primary-400 focus:bg-white focus:ring-0 outline-none transition-all" maxlength="12">
                             <p v-if="form.errors.cedula" class="text-xs font-bold text-rose-500 ml-1">{{ form.errors.cedula }}</p>
                         </div>
 

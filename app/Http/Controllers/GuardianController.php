@@ -23,7 +23,7 @@ class GuardianController extends Controller
     public function store(Request $request)
     {
         $validated = $request->validate([
-            'cedula' => 'required|string|unique:guardians,cedula',
+            'cedula' => ['required', 'string', 'regex:/^[VEP]-\d{6,10}$/i', 'unique:guardians,cedula'],
             'name' => 'required|string|max:255',
             'phone' => 'nullable|string|max:255',
             'email' => 'nullable|email|max:255',

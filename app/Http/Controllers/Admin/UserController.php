@@ -77,7 +77,7 @@ class UserController extends Controller
         $validated = $request->validate([
             'name' => 'required|string|max:255',
             'email' => 'required|string|email|max:255|unique:users',
-            'cedula' => 'nullable|string|max:20|unique:users',
+            'cedula' => ['nullable', 'string', 'max:20', 'regex:/^[VEP]-\d{6,10}$/i', 'unique:users'],
             'phone' => 'nullable|string|max:20',
             'password' => 'required|string|min:8',
             'roles' => 'required|array|min:1',
@@ -107,7 +107,7 @@ class UserController extends Controller
         $validated = $request->validate([
             'name' => 'required|string|max:255',
             'email' => ['required', 'string', 'email', 'max:255', Rule::unique('users')->ignore($user->id)],
-            'cedula' => ['nullable', 'string', 'max:20', Rule::unique('users')->ignore($user->id)],
+            'cedula' => ['nullable', 'string', 'max:20', 'regex:/^[VEP]-\d{6,10}$/i', Rule::unique('users')->ignore($user->id)],
             'phone' => 'nullable|string|max:20',
             'password' => 'nullable|string|min:8',
             'roles' => 'required|array|min:1',

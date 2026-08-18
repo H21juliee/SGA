@@ -75,7 +75,7 @@ class StudentController extends Controller
         $validated = $request->validate([
             'first_name' => 'required|string|max:255',
             'last_name' => 'required|string|max:255',
-            'cedula' => 'nullable|string|max:20|unique:students,cedula',
+            'cedula' => ['nullable', 'string', 'max:20', 'regex:/^[VEP]-\d{6,10}$/i', 'unique:students,cedula'],
             'birth_date' => 'required|date',
             'gender' => 'required|in:M,F',
             'address' => 'nullable|string',
@@ -92,7 +92,7 @@ class StudentController extends Controller
         $validated = $request->validate([
             'first_name' => 'required|string|max:255',
             'last_name' => 'required|string|max:255',
-            'cedula' => 'nullable|string|max:20|unique:students,cedula,' . $student->id,
+            'cedula' => ['nullable', 'string', 'max:20', 'regex:/^[VEP]-\d{6,10}$/i', 'unique:students,cedula,' . $student->id],
             'birth_date' => 'required|date',
             'gender' => 'required|in:M,F',
             'address' => 'nullable|string',
