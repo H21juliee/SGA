@@ -70,6 +70,10 @@ function loadFiltered() {
     }, { preserveState: true })
 }
 
+function printSabana(sectionId, lapseId) {
+    window.open(`/reports/print-sabana/${sectionId}/${lapseId}`, '_blank')
+}
+
 function printStudents(sectionId) {
     const yearId = props.activeYear.id
     const url = `/reports/print-students/${yearId}/${sectionId}`
@@ -166,7 +170,19 @@ function downloadBatch() {
                                 {{ section.grade_level?.name }}
                             </p>
 
-                            <div class="h-[1px] bg-slate-100 w-full my-6"></div>
+                            <div class="h-[1px] bg-slate-100 w-full my-4"></div>
+                            
+                            <h5 class="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 text-center">Sábanas de Notas</h5>
+                            <div class="flex gap-2 mb-4">
+                                <button 
+                                    v-for="lapse in activeYear.lapses" 
+                                    :key="lapse.id"
+                                    @click="printSabana(section.id, lapse.id)"
+                                    class="flex-1 py-2 bg-indigo-50 text-indigo-600 hover:bg-indigo-600 hover:text-white rounded-xl text-[10px] font-bold uppercase transition-colors"
+                                >
+                                    L{{ lapse.order_num }}
+                                </button>
+                            </div>
 
                             <button 
                                 @click="selectSection(section.id)"

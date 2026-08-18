@@ -66,6 +66,7 @@ Route::middleware('auth')->group(function () {
         Route::get('/download/{enrollment}', [\App\Http\Controllers\ReportController::class, 'downloadReportCard'])->name('download');
         Route::get('/download-batch/{section}', [\App\Http\Controllers\ReportController::class, 'downloadBatchReportCards'])->name('download-batch');
         Route::get('/print-students/{year}/{section}', [\App\Http\Controllers\ReportController::class, 'printStudents'])->name('students.print');
+        Route::get('/print-sabana/{section}/{lapse}', [\App\Http\Controllers\ReportController::class, 'printSabana'])->name('sabana.print');
     });
 
     // Módulo de Administración (Solo roles autorizados)

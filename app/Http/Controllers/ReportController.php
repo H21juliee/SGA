@@ -24,6 +24,7 @@ class ReportController extends Controller
         $levels = [];
 
         if ($activeYear) {
+            $activeYear->load('lapses');
             $levels = \App\Models\GradeLevel::orderBy('order_num')->get();
 
             $sectionsQuery = Section::where('school_year_id', $activeYear->id)
@@ -73,7 +74,7 @@ class ReportController extends Controller
             ->with('student')
             ->get()
             ->pluck('student')
-            ->sortBy([['last_name', 'asc'], ['first_name', 'asc']])
+            ->sortBy('cedula')
             ->values();
 
         $pdf = Pdf::loadView('pdf.students_list', [
@@ -87,6 +88,35 @@ class ReportController extends Controller
     }
 
     
+        public function printSabana($sectionId, $lapseId)
+    {
+        Gate::authorize('reports.generate');
+
+        $section = Section::with('gradeLevel.subjects', 'schoolYear')->findOrFail($sectionId);
+        $lapse = \App\Models\Lapse::findOrFail($lapseId);
+        $subjects = $section->gradeLevel->subjects->sortBy('name');
+
+        // Obtener los estudiantes inscritos en la sección mediante la tabla de matriculas (enrollments)
+        $enrollments = Enrollment::where('section_id', $sectionId)
+            ->with(['student', 'grades' => function ($query) use ($lapseId) {
+                $query->where('lapse_id', $lapseId);
+            }])
+            ->get()
+            ->sortBy(function($enrollment) {
+                return $enrollment->student->cedula;
+            })
+            ->values();
+
+        $pdf = Pdf::loadView('pdf.sabana', [
+            'section' => $section,
+            'lapse' => $lapse,
+            'subjects' => $subjects,
+            'enrollments' => $enrollments,
+        ])->setPaper('letter', 'landscape');
+
+        $fileName = sprintf('Sabana_%s_%s_Lapso%s.pdf', $section->gradeLevel->name, $section->name, $lapse->order_num);
+        return $pdf->download($fileName);
+    }
     public function downloadReportCard(Request $request, Enrollment $enrollment, CalculateAverageAction $calcAverage)
     {
         Gate::authorize('reports.generate');
