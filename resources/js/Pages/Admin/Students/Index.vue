@@ -112,6 +112,21 @@ watch(search, (value) => {
     }, 300); // 300ms debounce
 });
 
+function formatPhone(value) {
+    if (!value) return '';
+    let val = value.replace(/[^0-9]/g, ''); // Solo números
+    if (val.length > 0 && val[0] !== '0') {
+        val = '0' + val; // Asegurar que empiece con 0
+    }
+    if (val.length > 4) {
+        val = val.substring(0, 4) + '-' + val.substring(4);
+    }
+    if (val.length > 12) {
+        val = val.substring(0, 12); // Limitar a 12 caracteres (04XX-XXXXXXX)
+    }
+    return val;
+}
+
 function formatCedula(value) {
     if (!value) return '';
     let val = value.toUpperCase().replace(/[^VEP0-9]/g, '');
@@ -508,7 +523,7 @@ function submit() {
                     </div>
                     <div class="space-y-2">
                         <label class="text-[11px] font-black text-slate-400 uppercase tracking-widest ml-1">Teléfono</label>
-                        <input v-model="guardianForm.phone" type="text" class="w-full bg-slate-50 border-2 border-slate-300 rounded-xl px-4 py-2.5 text-slate-700 text-sm font-bold focus:border-indigo-400 focus:bg-white focus:ring-0 outline-none transition-all">
+                        <input v-model="guardianForm.phone" @input="guardianForm.phone = formatPhone($event.target.value)" type="tel" placeholder="0414-1234567" maxlength="12" class="w-full bg-slate-50 border-2 border-slate-300 rounded-xl px-4 py-2.5 text-slate-700 text-sm font-bold focus:border-indigo-400 focus:bg-white focus:ring-0 outline-none transition-all">
                         <p v-if="guardianFormErrors && guardianFormErrors.phone" class="text-xs text-red-500 font-bold mt-1 ml-1">{{ guardianFormErrors.phone[0] }}</p>
                     </div>
                     <div class="space-y-2">

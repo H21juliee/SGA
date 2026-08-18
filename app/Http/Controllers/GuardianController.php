@@ -25,8 +25,8 @@ class GuardianController extends Controller
         $validated = $request->validate([
             'cedula' => ['required', 'string', 'regex:/^[VEP]-\d{6,10}$/i', 'unique:guardians,cedula'],
             'name' => 'required|string|max:255',
-            'phone' => 'nullable|string|max:255',
-            'email' => 'nullable|email|max:255',
+            'phone' => ['nullable', 'string', 'regex:/^0[24]\d{2}-\d{7}$/'],
+            'email' => ['nullable', 'email:rfc,dns', 'max:255'],
         ]);
 
         $guardian = Guardian::create($validated);

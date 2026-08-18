@@ -4,7 +4,7 @@ import { onMounted, onUnmounted, watch } from 'vue'
 const props = defineProps({
     show: { type: Boolean, default: false },
     maxWidth: { type: String, default: '2xl' },
-    closeable: { type: Boolean, default: true },
+    closeable: { type: Boolean, default: false },
 })
 
 const emit = defineEmits(['close'])
