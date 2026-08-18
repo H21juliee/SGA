@@ -11,6 +11,7 @@ const props = defineProps({
 })
 
 const searchQuery = ref('')
+const sortOrder = ref('name')
 let debounceTimer = null
 
 // Initialize local state for immediate visual feedback
@@ -40,7 +41,8 @@ watch(() => props.enrollments, (newVal) => {
 }, { deep: true })
 
 const filteredRows = computed(() => {
-    let result = localRows.value
+    let result = [...localRows.value]
+    
     if (searchQuery.value) {
         const query = searchQuery.value.toLowerCase()
         result = result.filter(row => {
@@ -48,6 +50,21 @@ const filteredRows = computed(() => {
                    (row.cedula && row.cedula.toLowerCase().includes(query))
         })
     }
+    
+    if (sortOrder.value === 'cedula') {
+        result.sort((a, b) => {
+            const valA = a.cedula || ''
+            const valB = b.cedula || ''
+            return valA.localeCompare(valB)
+        })
+    } else {
+        result.sort((a, b) => {
+            const valA = a.student_name || ''
+            const valB = b.student_name || ''
+            return valA.localeCompare(valB)
+        })
+    }
+    
     return result
 })
 
@@ -221,9 +238,9 @@ function saveToServer(row) {
                 </p>
             </div>
 
-            <!-- Buscador -->
-            <div class="flex items-center gap-3 w-full animate-fade-in-up" style="animation-delay: 150ms">
-                <div class="relative w-full">
+            <!-- Buscador y Ordenamiento -->
+            <div class="flex flex-col sm:flex-row items-center gap-3 w-full animate-fade-in-up" style="animation-delay: 150ms">
+                <div class="relative w-full flex-1">
                     <i class="fas fa-search absolute left-4 top-1/2 -translate-y-1/2 text-slate-400"></i>
                     <input 
                         v-model="searchQuery" 
@@ -231,6 +248,13 @@ function saveToServer(row) {
                         placeholder="Buscar estudiante por nombre o cédula..." 
                         class="w-full bg-white border-2 border-slate-100 rounded-2xl pl-11 pr-4 py-3 text-sm text-slate-700 placeholder:text-slate-400 focus:border-primary-400 focus:ring-0 outline-none transition-all shadow-sm"
                     >
+                </div>
+                <div class="w-full sm:w-auto relative">
+                    <select v-model="sortOrder" class="w-full sm:w-56 bg-white border-2 border-slate-100 rounded-2xl px-4 py-3 text-slate-700 text-sm font-bold focus:border-primary-400 focus:ring-0 outline-none transition-all shadow-sm appearance-none cursor-pointer">
+                        <option value="name">Ordenar por Apellido</option>
+                        <option value="cedula">Ordenar por Cédula</option>
+                    </select>
+                    <i class="fas fa-sort absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none"></i>
                 </div>
             </div>
 

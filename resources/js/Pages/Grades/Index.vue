@@ -161,14 +161,15 @@ function changeYear() {
 
                     <div class="flex items-start justify-between mb-4">
                         <div class="flex-1">
-                            <h3 class="text-lg font-black text-slate-800 group-hover:text-primary-600 transition-colors leading-tight">
+                            <div class="inline-flex items-center gap-1.5 px-2.5 py-1 mb-2 bg-primary-50 text-primary-700 rounded-lg text-[10px] font-black uppercase tracking-widest border border-primary-100 shadow-sm">
+                                <i class="fas fa-users opacity-50"></i>
+                                {{ load.section?.grade_level?.name }} — Sec. {{ load.section?.name }}
+                            </div>
+                            <h3 class="text-xl font-black text-slate-800 group-hover:text-primary-600 transition-colors leading-tight">
                                 {{ load.subject?.name }}
                             </h3>
-                            <p class="text-xs font-bold text-slate-400 mt-1 uppercase tracking-wider">
-                                {{ load.section?.grade_level?.name }} · Sección {{ load.section?.name }}
-                            </p>
                         </div>
-                        <div class="w-10 h-10 bg-primary-50 text-primary-600 rounded-xl flex items-center justify-center text-xs font-bold shadow-sm">
+                        <div class="w-10 h-10 bg-slate-50 text-slate-400 rounded-xl flex items-center justify-center text-[10px] font-bold shadow-sm shrink-0 border border-slate-100">
                             {{ load.subject?.code }}
                         </div>
                     </div>
