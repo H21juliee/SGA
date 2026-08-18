@@ -40,31 +40,31 @@ const filteredSections = computed(() => {
     return props.sections.filter(s => s.grade_level_id === gradeLevelId.value)
 })
 
-// Ajustes locales (por grade_id)
-const adjustments = ref({})
 const isLoading = ref(false)
+const searchQuery = ref('')
+const sortOrder = ref('name')
+let debounceTimer = null
 
-// Inicializar desde los datos del servidor
+// Ajustes locales (por grade_id)
+const localRows = ref([])
+
 const initAdjustments = () => {
-    adjustments.value = {}
-    props.rows.forEach(row => {
-        adjustments.value[row.grade_id] = row.council_adjustment
-    })
+    localRows.value = props.rows.map(row => ({
+        ...row,
+        council_adjustment: row.council_adjustment ?? 0,
+        saving: false,
+        saved: false
+    }))
     isLoading.value = false
 }
 initAdjustments()
 
 const definitiveOf = (row) => {
-    const adj = adjustments.value[row.grade_id] ?? 0
-    return Math.min(20, Math.max(1, row.score + adj))
+    return Math.min(20, Math.max(1, row.score + row.council_adjustment))
 }
 
-const searchQuery = ref('')
-const sortCol = ref(null)
-const sortDir = ref('asc')
-
 const processedRows = computed(() => {
-    let result = [...props.rows]
+    let result = [...localRows.value]
 
     // Filtrar por búsqueda
     if (searchQuery.value) {
@@ -77,44 +77,22 @@ const processedRows = computed(() => {
     }
 
     // Ordenar
-    if (sortCol.value) {
+    if (sortOrder.value === 'cedula') {
         result.sort((a, b) => {
-            let valA = a[sortCol.value]
-            let valB = b[sortCol.value]
-            
-            if (sortCol.value === 'definitive') {
-                valA = definitiveOf(a)
-                valB = definitiveOf(b)
-            } else if (sortCol.value === 'council_adjustment') {
-                valA = adjustments.value[a.grade_id] ?? 0
-                valB = adjustments.value[b.grade_id] ?? 0
-            }
-
-            if (typeof valA === 'string') valA = valA.toLowerCase()
-            if (typeof valB === 'string') valB = valB.toLowerCase()
-
-            if (valA < valB) return sortDir.value === 'asc' ? -1 : 1
-            if (valA > valB) return sortDir.value === 'asc' ? 1 : -1
-            return 0
+            const valA = a.student_cedula || ''
+            const valB = b.student_cedula || ''
+            return valA.localeCompare(valB)
+        })
+    } else {
+        result.sort((a, b) => {
+            const valA = a.student_name || ''
+            const valB = b.student_name || ''
+            return valA.localeCompare(valB)
         })
     }
 
     return result
 })
-
-function toggleSort(colKey) {
-    if (sortCol.value === colKey) {
-        if (sortDir.value === 'asc') {
-            sortDir.value = 'desc'
-        } else {
-            sortCol.value = null
-            sortDir.value = 'asc'
-        }
-    } else {
-        sortCol.value = colKey
-        sortDir.value = 'asc'
-    }
-}
 
 watch(gradeLevelId, (newId, oldId) => {
     if (oldId && newId !== oldId) {
@@ -138,13 +116,61 @@ watch([sectionId, subjectId, lapseId], ([sec, sub, lap]) => {
     }
 })
 
-function saveAll() {
-    const changes = props.rows.map(row => ({
-        grade_id:           row.grade_id,
-        council_adjustment: adjustments.value[row.grade_id] ?? 0,
-    }))
+function getIconColor(adjustment) {
+    if (adjustment === 0) return 'text-slate-300 group-hover:text-slate-400'
+    if (adjustment > 0) return 'text-emerald-400 group-hover:text-emerald-500'
+    return 'text-red-400 group-hover:text-red-500'
+}
 
-    router.post('/admin/council-adjustments/batch', { changes }, { preserveScroll: true })
+function incrementAdjustment(row) {
+    if (row.council_adjustment < 5) {
+        row.council_adjustment += 1
+        triggerSave(row)
+    }
+}
+
+function decrementAdjustment(row) {
+    if (row.council_adjustment > -5) {
+        row.council_adjustment -= 1
+        triggerSave(row)
+    }
+}
+
+function validateAndSave(row) {
+    let s = parseInt(row.council_adjustment)
+    if (isNaN(s)) {
+        row.council_adjustment = 0
+    } else {
+        if (s > 5) row.council_adjustment = 5
+        if (s < -5) row.council_adjustment = -5
+    }
+    triggerSave(row)
+}
+
+function triggerSave(row) {
+    row.saving = true
+    row.saved = false
+    
+    if (debounceTimer) clearTimeout(debounceTimer)
+    
+    debounceTimer = setTimeout(() => {
+        saveToServer(row)
+    }, 500)
+}
+
+function saveToServer(row) {
+    router.patch('/admin/council-adjustments', {
+        grade_id: row.grade_id,
+        council_adjustment: row.council_adjustment,
+    }, { 
+        preserveScroll: true, 
+        preserveState: true,
+        onFinish: () => {
+            row.saving = false
+            row.saved = true
+            setTimeout(() => { row.saved = false }, 2000)
+        }
+    })
 }
 
 const hasFilters = computed(() => sectionId.value && subjectId.value && lapseId.value)
@@ -152,183 +178,205 @@ const hasFilters = computed(() => sectionId.value && subjectId.value && lapseId.
 
 <template>
     <AppLayout title="Ajuste de Consejo">
-        <div class="space-y-8 max-w-12xl mx-auto">
+        <div class="space-y-6 max-w-7xl mx-auto pb-10">
             <!-- Header -->
-            <div class="flex flex-col sm:flex-row gap-6 items-start sm:items-end justify-between animate-fade-in-up">
-                <div>
-                    <h1 class="text-3xl font-extrabold text-slate-800">
-                        Ajuste de <span class="gradient-text">Consejo</span>
-                    </h1>
-                    <p class="text-slate-400 font-medium mt-2">Aplicar ajuste del consejo docente a las notas definitivas de un lapso</p>
+            <div class="animate-fade-in-up">
+                <div class="flex flex-col lg:flex-row lg:items-end justify-between gap-6 relative z-10 mb-6">
+                    <div>
+                        <h1 class="text-3xl font-extrabold text-slate-800">
+                            Ajuste de <span class="gradient-text">Consejo</span>
+                        </h1>
+                        <p class="text-slate-500 font-bold mt-2">Aplica puntos de ajuste del consejo docente a las notas definitivas.</p>
+                    </div>
+                </div>
+
+                <!-- Filtros -->
+                <div class="glass-card rounded-3xl p-5 sm:p-6 shadow-xl relative overflow-hidden flex flex-wrap items-end gap-4" style="animation-delay: 50ms">
+                    <div class="absolute top-0 right-0 p-6 opacity-5 pointer-events-none hidden sm:block">
+                        <i class="fas fa-balance-scale text-8xl text-primary-500"></i>
+                    </div>
+
+                    <!-- Año -->
+                    <div class="flex flex-col gap-2 flex-1 min-w-[140px] relative z-10">
+                        <label class="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Año</label>
+                        <div class="relative">
+                            <select v-model="gradeLevelId"
+                                class="w-full bg-white border-2 border-slate-100 rounded-2xl px-4 py-3 text-slate-700 text-sm font-bold focus:border-primary-400 focus:ring-0 outline-none transition-all appearance-none shadow-sm">
+                                <option value="">Año...</option>
+                                <option v-for="g in gradeLevels" :key="g.id" :value="g.id">
+                                    {{ g.name }}
+                                </option>
+                            </select>
+                            <i class="fas fa-chevron-down absolute right-4 top-1/2 -translate-y-1/2 text-slate-300 pointer-events-none"></i>
+                        </div>
+                    </div>
+
+                    <!-- Sección -->
+                    <div class="flex flex-col gap-2 flex-1 min-w-[140px] relative z-10">
+                        <label class="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Sección</label>
+                        <div class="relative">
+                            <select v-model="sectionId" :disabled="!gradeLevelId"
+                                class="w-full bg-white border-2 border-slate-100 rounded-2xl px-4 py-3 text-slate-700 text-sm font-bold focus:border-primary-400 focus:ring-0 outline-none transition-all appearance-none shadow-sm disabled:opacity-50">
+                                <option value="">Sección...</option>
+                                <option v-for="s in filteredSections" :key="s.id" :value="s.id">
+                                    Sec. {{ s.name }}
+                                </option>
+                            </select>
+                            <i class="fas fa-chevron-down absolute right-4 top-1/2 -translate-y-1/2 text-slate-300 pointer-events-none"></i>
+                        </div>
+                    </div>
+
+                    <!-- Materia -->
+                    <div class="flex flex-col gap-2 flex-1 min-w-[160px] relative z-10" v-if="subjects.length > 0">
+                        <label class="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Materia</label>
+                        <div class="relative">
+                            <select v-model="subjectId"
+                                class="w-full bg-white border-2 border-slate-100 rounded-2xl px-4 py-3 text-slate-700 text-sm font-bold focus:border-primary-400 focus:ring-0 outline-none transition-all appearance-none shadow-sm">
+                                <option value="">Materia...</option>
+                                <option v-for="s in subjects" :key="s.id" :value="s.id">{{ s.name }}</option>
+                            </select>
+                            <i class="fas fa-chevron-down absolute right-4 top-1/2 -translate-y-1/2 text-slate-300 pointer-events-none"></i>
+                        </div>
+                    </div>
+
+                    <!-- Lapso -->
+                    <div class="flex flex-col gap-2 flex-1 min-w-[140px] relative z-10" v-if="lapses.length > 0">
+                        <label class="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Lapso</label>
+                        <div class="relative">
+                            <select v-model="lapseId"
+                                class="w-full bg-white border-2 border-slate-100 rounded-2xl px-4 py-3 text-slate-700 text-sm font-bold focus:border-primary-400 focus:ring-0 outline-none transition-all appearance-none shadow-sm">
+                                <option value="">Lapso...</option>
+                                <option v-for="l in lapses" :key="l.id" :value="l.id">{{ l.name }}</option>
+                            </select>
+                            <i class="fas fa-chevron-down absolute right-4 top-1/2 -translate-y-1/2 text-slate-300 pointer-events-none"></i>
+                        </div>
+                    </div>
                 </div>
             </div>
 
-            <!-- Filtros -->
-            <div class="glass-card rounded-3xl p-6 shadow-xl animate-fade-in-up flex flex-wrap items-end gap-6" style="animation-delay: 50ms">
-                <!-- Año -->
-                <div class="flex flex-col gap-2 min-w-[160px]">
-                    <label class="text-[11px] font-black text-slate-400 uppercase tracking-widest ml-1">Año</label>
-                    <div class="relative">
-                        <select v-model="gradeLevelId"
-                            class="w-full bg-white border-2 border-slate-100 rounded-2xl px-4 py-3 text-slate-700 text-sm font-bold focus:border-primary-400 focus:ring-0 outline-none transition-all appearance-none shadow-sm">
-                            <option value="">Seleccionar año...</option>
-                            <option v-for="g in gradeLevels" :key="g.id" :value="g.id">
-                                {{ g.name }}
-                            </option>
-                        </select>
-                        <i class="fas fa-chevron-down absolute right-4 top-1/2 -translate-y-1/2 text-slate-300 pointer-events-none"></i>
-                    </div>
-                </div>
-
-                <!-- Sección -->
-                <div class="flex flex-col gap-2 min-w-[160px]">
-                    <label class="text-[11px] font-black text-slate-400 uppercase tracking-widest ml-1">Sección</label>
-                    <div class="relative">
-                        <select v-model="sectionId" :disabled="!gradeLevelId"
-                            class="w-full bg-white border-2 border-slate-100 rounded-2xl px-4 py-3 text-slate-700 text-sm font-bold focus:border-primary-400 focus:ring-0 outline-none transition-all appearance-none shadow-sm disabled:opacity-50">
-                            <option value="">Seleccionar sección...</option>
-                            <option v-for="s in filteredSections" :key="s.id" :value="s.id">
-                                Sección {{ s.name }}
-                            </option>
-                        </select>
-                        <i class="fas fa-chevron-down absolute right-4 top-1/2 -translate-y-1/2 text-slate-300 pointer-events-none"></i>
-                    </div>
-                </div>
-
-                <!-- Materia -->
-                <div class="flex flex-col gap-2 min-w-[200px]" v-if="subjects.length > 0">
-                    <label class="text-[11px] font-black text-slate-400 uppercase tracking-widest ml-1">Materia</label>
-                    <div class="relative">
-                        <select v-model="subjectId"
-                            class="w-full bg-white border-2 border-slate-100 rounded-2xl px-4 py-3 text-slate-700 text-sm font-bold focus:border-primary-400 focus:ring-0 outline-none transition-all appearance-none shadow-sm">
-                            <option value="">Seleccionar materia...</option>
-                            <option v-for="s in subjects" :key="s.id" :value="s.id">{{ s.name }}</option>
-                        </select>
-                        <i class="fas fa-chevron-down absolute right-4 top-1/2 -translate-y-1/2 text-slate-300 pointer-events-none"></i>
-                    </div>
-                </div>
-
-                <!-- Lapso -->
-                <div class="flex flex-col gap-2 min-w-[160px]" v-if="lapses.length > 0">
-                    <label class="text-[11px] font-black text-slate-400 uppercase tracking-widest ml-1">Lapso</label>
-                    <div class="relative">
-                        <select v-model="lapseId"
-                            class="w-full bg-white border-2 border-slate-100 rounded-2xl px-4 py-3 text-slate-700 text-sm font-bold focus:border-primary-400 focus:ring-0 outline-none transition-all appearance-none shadow-sm">
-                            <option value="">Seleccionar lapso...</option>
-                            <option v-for="l in lapses" :key="l.id" :value="l.id">{{ l.name }}</option>
-                        </select>
-                        <i class="fas fa-chevron-down absolute right-4 top-1/2 -translate-y-1/2 text-slate-300 pointer-events-none"></i>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Grid -->
+            <!-- Loading State -->
             <div v-if="isLoading" class="glass-card rounded-3xl p-16 text-center animate-fade-in-up">
                 <div class="w-16 h-16 bg-primary-50 rounded-full flex items-center justify-center mx-auto mb-4 text-primary-500 shadow-inner">
                     <i class="fas fa-spinner fa-spin text-2xl"></i>
                 </div>
                 <h3 class="text-lg font-bold text-slate-700">Cargando información...</h3>
-                <p class="text-slate-500 text-sm mt-1">Por favor espera mientras obtenemos los datos.</p>
+                <p class="text-slate-500 text-sm mt-1">Obteniendo datos de los estudiantes.</p>
             </div>
 
-            <div v-else-if="rows.length > 0" class="glass-card rounded-3xl overflow-hidden shadow-2xl animate-fade-in-up" style="animation-delay: 100ms">
-                <!-- Toolbar -->
-                <div class="flex flex-col md:flex-row md:items-center justify-between px-6 py-4 border-b border-slate-100 gap-4">
-                    <div class="flex items-center gap-4 w-full md:w-auto">
-                        <div class="text-sm text-slate-500 font-medium flex items-center gap-2 whitespace-nowrap">
-                            <i class="fas fa-table"></i>
-                            {{ processedRows.length }} estudiante{{ processedRows.length !== 1 ? 's' : '' }}
-                        </div>
-                        
-                        <!-- Buscador -->
-                        <div class="relative w-full md:w-64">
-                            <i class="fas fa-search absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-sm"></i>
-                            <input 
-                                v-model="searchQuery" 
-                                type="text" 
-                                placeholder="Buscar cédula o nombre..." 
-                                class="w-full bg-slate-50 border-2 border-slate-100 rounded-xl pl-9 pr-4 py-2 text-sm text-slate-700 placeholder:text-slate-400 focus:border-primary-400 focus:ring-0 outline-none transition-all shadow-sm"
-                            >
-                        </div>
+            <div v-else-if="localRows.length > 0" class="space-y-4">
+                <!-- Buscador y Ordenamiento -->
+                <div class="flex flex-col sm:flex-row items-center gap-3 w-full animate-fade-in-up" style="animation-delay: 150ms">
+                    <div class="relative w-full flex-1">
+                        <i class="fas fa-search absolute left-4 top-1/2 -translate-y-1/2 text-slate-400"></i>
+                        <input 
+                            v-model="searchQuery" 
+                            type="text" 
+                            placeholder="Buscar estudiante por nombre o cédula..." 
+                            class="w-full bg-white border-2 border-slate-100 rounded-2xl pl-11 pr-4 py-3 text-sm text-slate-700 placeholder:text-slate-400 focus:border-primary-400 focus:ring-0 outline-none transition-all shadow-sm"
+                        >
                     </div>
-
-                    <button @click="saveAll"
-                        class="px-5 py-2 text-xs font-bold uppercase tracking-widest rounded-xl bg-slate-900 text-white shadow-md hover:bg-slate-800 hover:-translate-y-0.5 transition-all flex items-center gap-2">
-                        <i class="fas fa-save"></i> Guardar Todo
-                    </button>
+                    <div class="w-full sm:w-auto relative">
+                        <select v-model="sortOrder" class="w-full sm:w-56 bg-white border-2 border-slate-100 rounded-2xl px-4 py-3 text-slate-700 text-sm font-bold focus:border-primary-400 focus:ring-0 outline-none transition-all shadow-sm appearance-none cursor-pointer">
+                            <option value="name">Ordenar por Apellido</option>
+                            <option value="cedula">Ordenar por Cédula</option>
+                        </select>
+                        <i class="fas fa-sort absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none"></i>
+                    </div>
                 </div>
 
-                <div class="overflow-x-auto">
-                    <table class="w-full text-sm">
-                        <thead>
-                            <tr class="border-b-2 border-slate-100 bg-slate-50/80">
-                                <th class="px-4 py-4 text-left text-xs font-black text-slate-400 uppercase tracking-widest w-8">#</th>
-                                <th @click="toggleSort('student_cedula')" class="px-4 py-4 text-left text-xs font-black text-slate-400 uppercase tracking-widest cursor-pointer hover:bg-slate-100/50 hover:text-slate-600 transition-colors select-none group">
-                                    Cédula
-                                    <span v-if="sortCol === 'student_cedula'" class="ml-1 text-primary-500">
-                                        <i class="fas" :class="sortDir === 'asc' ? 'fa-sort-up' : 'fa-sort-down'"></i>
-                                    </span>
-                                    <span v-else class="ml-1 opacity-0 group-hover:opacity-100 transition-opacity"><i class="fas fa-sort"></i></span>
-                                </th>
-                                <th @click="toggleSort('student_name')" class="px-4 py-4 text-left text-xs font-black text-slate-400 uppercase tracking-widest cursor-pointer hover:bg-slate-100/50 hover:text-slate-600 transition-colors select-none group">
-                                    Estudiante
-                                    <span v-if="sortCol === 'student_name'" class="ml-1 text-primary-500">
-                                        <i class="fas" :class="sortDir === 'asc' ? 'fa-sort-up' : 'fa-sort-down'"></i>
-                                    </span>
-                                    <span v-else class="ml-1 opacity-0 group-hover:opacity-100 transition-opacity"><i class="fas fa-sort"></i></span>
-                                </th>
-                                <th @click="toggleSort('score')" class="px-4 py-4 text-center text-xs font-black text-slate-400 uppercase tracking-widest w-32 cursor-pointer hover:bg-slate-100/50 hover:text-slate-600 transition-colors select-none group">
-                                    Nota Docente
-                                    <span v-if="sortCol === 'score'" class="ml-1 text-primary-500">
-                                        <i class="fas" :class="sortDir === 'asc' ? 'fa-sort-up' : 'fa-sort-down'"></i>
-                                    </span>
-                                    <span v-else class="ml-1 opacity-0 group-hover:opacity-100 transition-opacity"><i class="fas fa-sort"></i></span>
-                                </th>
-                                <th @click="toggleSort('council_adjustment')" class="px-4 py-4 text-center text-xs font-black text-slate-400 uppercase tracking-widest w-36 cursor-pointer hover:bg-slate-100/50 hover:text-slate-600 transition-colors select-none group">
-                                    Ajuste Consejo
-                                    <span v-if="sortCol === 'council_adjustment'" class="ml-1 text-primary-500">
-                                        <i class="fas" :class="sortDir === 'asc' ? 'fa-sort-up' : 'fa-sort-down'"></i>
-                                    </span>
-                                    <span v-else class="ml-1 opacity-0 group-hover:opacity-100 transition-opacity"><i class="fas fa-sort"></i></span>
-                                </th>
-                                <th @click="toggleSort('definitive')" class="px-4 py-4 text-center text-xs font-black text-slate-400 uppercase tracking-widest w-32 cursor-pointer hover:bg-slate-100/50 hover:text-slate-600 transition-colors select-none group">
-                                    Definitiva
-                                    <span v-if="sortCol === 'definitive'" class="ml-1 text-primary-500">
-                                        <i class="fas" :class="sortDir === 'asc' ? 'fa-sort-up' : 'fa-sort-down'"></i>
-                                    </span>
-                                    <span v-else class="ml-1 opacity-0 group-hover:opacity-100 transition-opacity"><i class="fas fa-sort"></i></span>
-                                </th>
-                            </tr>
-                        </thead>
-                        <tbody class="divide-y divide-slate-50">
-                            <tr v-for="(row, idx) in processedRows" :key="row.grade_id" class="hover:bg-primary-50/20 transition-colors">
-                                <td class="px-4 py-3 text-xs text-slate-400 font-mono">{{ idx + 1 }}</td>
-                                <td class="px-4 py-3 font-mono text-sm text-slate-500">{{ row.student_cedula }}</td>
-                                <td class="px-4 py-3 font-black text-slate-700">{{ row.student_name }}</td>
-                                <td class="px-4 py-3 text-center">
-                                    <span class="inline-flex items-center justify-center w-10 h-10 rounded-xl bg-slate-100 text-slate-700 font-black text-sm">
-                                        {{ row.score }}
-                                    </span>
-                                </td>
-                                <td class="px-4 py-3 text-center">
-                                    <input
-                                        v-model.number="adjustments[row.grade_id]"
-                                        type="number"
+                <!-- Lista de Tarjetas -->
+                <div class="space-y-3 animate-fade-in-up" style="animation-delay: 200ms">
+                    <div v-if="processedRows.length === 0" class="p-10 bg-white rounded-3xl shadow-sm border-2 border-slate-100 text-center text-slate-400 font-bold">
+                        <i class="fas fa-search text-3xl mb-3 opacity-20"></i>
+                        <p>No se encontraron estudiantes.</p>
+                    </div>
+
+                    <div 
+                        v-for="(row, idx) in processedRows" 
+                        :key="row.grade_id"
+                        class="bg-white p-4 sm:p-5 rounded-2xl shadow-sm border-2 border-slate-100 hover:shadow-md hover:border-slate-300 transition-all flex flex-col lg:flex-row lg:items-center justify-between gap-4"
+                    >
+                        <!-- Info Estudiante -->
+                        <div class="flex items-center gap-4 flex-1">
+                            <div class="w-8 h-8 rounded-full bg-slate-50 text-slate-500 flex items-center justify-center font-black text-[10px] shrink-0 shadow-sm border border-slate-200">
+                                {{ idx + 1 }}
+                            </div>
+                            <div class="min-w-0">
+                                <h3 class="text-sm font-black text-slate-800 truncate">{{ row.student_name }}</h3>
+                                <p class="text-xs font-bold text-slate-500 mt-0.5 flex items-center gap-1.5">
+                                    <i class="fas fa-id-card opacity-50"></i> {{ row.student_cedula || 'Sin Cédula' }}
+                                </p>
+                            </div>
+                        </div>
+
+                        <!-- Panel de Ajuste y Definitiva -->
+                        <div class="flex flex-wrap lg:flex-nowrap items-center justify-between lg:justify-end gap-4 w-full lg:w-auto bg-slate-50/50 p-2 lg:p-1 rounded-xl">
+                            
+                            <!-- Nota Docente Original -->
+                            <div class="flex flex-col items-center px-4">
+                                <span class="text-[9px] font-black uppercase text-slate-400 tracking-wider mb-1">Docente</span>
+                                <span class="text-lg font-black text-slate-700 bg-slate-100 px-3 py-1 rounded-lg">{{ row.score }}</span>
+                            </div>
+
+                            <div class="h-8 w-px bg-slate-200 hidden sm:block"></div>
+
+                            <!-- Controles de Ajuste -->
+                            <div class="flex items-center gap-2 relative">
+                                <!-- Status Indicator (Spinner/Check) -->
+                                <div class="absolute -left-6 w-6 flex justify-center">
+                                    <i v-if="row.saving" class="fas fa-spinner fa-spin text-slate-400 text-xs"></i>
+                                    <i v-else-if="row.saved" class="fas fa-check-circle text-emerald-500 text-xs animate-bounce"></i>
+                                </div>
+
+                                <button 
+                                    @click="decrementAdjustment(row)"
+                                    class="w-10 h-10 rounded-xl bg-white shadow-sm border-b-2 flex items-center justify-center text-sm transition-all group active:scale-95 disabled:opacity-50"
+                                    :class="[row.council_adjustment > -5 ? 'border-slate-200 hover:border-slate-300' : 'border-slate-100 opacity-50']"
+                                >
+                                    <i class="fas fa-minus" :class="getIconColor(row.council_adjustment)"></i>
+                                </button>
+
+                                <div class="relative w-16 h-10">
+                                    <input 
+                                        v-model="row.council_adjustment"
+                                        @change="validateAndSave(row)"
+                                        @blur="validateAndSave(row)"
+                                        type="number" 
                                         min="-5" max="5"
-                                        class="w-20 text-center bg-white border-2 border-slate-200 rounded-xl px-2 py-2 text-sm font-black text-slate-700 focus:border-primary-400 focus:ring-0 outline-none transition-all shadow-sm"
+                                        class="w-full h-full bg-white border-2 border-slate-200 rounded-xl text-center text-sm font-black text-slate-800 focus:border-primary-400 focus:ring-0 outline-none transition-all shadow-sm"
+                                        placeholder="0"
                                     >
-                                </td>
-                                <td class="px-4 py-3 text-center">
-                                    <span class="inline-flex items-center justify-center w-10 h-10 rounded-xl font-black text-sm shadow-sm"
-                                        :class="definitiveOf(row) < 10
-                                            ? 'bg-red-50 text-red-600 border border-red-100'
-                                            : 'bg-emerald-50 text-emerald-700 border border-emerald-100'">
-                                        {{ definitiveOf(row) }}
-                                    </span>
-                                </td>
-                            </tr>
-                        </tbody>
-                    </table>
+                                </div>
+
+                                <button 
+                                    @click="incrementAdjustment(row)"
+                                    class="w-10 h-10 rounded-xl bg-white shadow-sm border-b-2 flex items-center justify-center text-sm transition-all group active:scale-95 disabled:opacity-50"
+                                    :class="[row.council_adjustment < 5 ? 'border-slate-200 hover:border-slate-300' : 'border-slate-100 opacity-50']"
+                                >
+                                    <i class="fas fa-plus" :class="getIconColor(row.council_adjustment)"></i>
+                                </button>
+                            </div>
+
+                            <div class="h-8 w-px bg-slate-200 hidden sm:block"></div>
+
+                            <!-- Nota Definitiva -->
+                            <div class="flex items-center px-2">
+                                <div class="flex flex-col items-end mr-3">
+                                    <span class="text-[9px] font-black uppercase text-slate-400 tracking-wider">Definitiva</span>
+                                    <span v-if="definitiveOf(row) >= 10" class="text-[10px] text-emerald-500 font-bold">Aprobado</span>
+                                    <span v-else class="text-[10px] text-red-500 font-bold">Reprobado</span>
+                                </div>
+                                <span 
+                                    class="w-14 h-12 flex items-center justify-center rounded-xl text-xl font-black shadow-inner border transition-colors"
+                                    :class="definitiveOf(row) >= 10 
+                                        ? 'bg-emerald-50 text-emerald-600 border-emerald-200' 
+                                        : 'bg-red-50 text-red-600 border-red-200'"
+                                >
+                                    {{ definitiveOf(row) }}
+                                </span>
+                            </div>
+                        </div>
+                    </div>
                 </div>
             </div>
 
@@ -342,3 +390,14 @@ const hasFilters = computed(() => sectionId.value && subjectId.value && lapseId.
         </div>
     </AppLayout>
 </template>
+
+<style scoped>
+input[type=number]::-webkit-inner-spin-button, 
+input[type=number]::-webkit-outer-spin-button { 
+  -webkit-appearance: none; 
+  margin: 0; 
+}
+input[type=number] {
+  -moz-appearance: textfield;
+}
+</style>
