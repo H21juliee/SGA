@@ -183,9 +183,14 @@ const hasFilters = computed(() => sectionId.value && subjectId.value && lapseId.
             <div class="animate-fade-in-up">
                 <div class="flex flex-col lg:flex-row lg:items-end justify-between gap-6 relative z-10 mb-6">
                     <div>
-                        <h1 class="text-3xl font-extrabold text-slate-800">
-                            Ajuste de <span class="gradient-text">Consejo</span>
-                        </h1>
+                        <div class="flex items-center gap-4">
+                            <h1 class="text-3xl font-extrabold text-slate-800">
+                                Ajuste de <span class="gradient-text">Consejo</span>
+                            </h1>
+                            <span v-if="activeYear" class="px-3 py-1 bg-primary-50 text-primary-600 rounded-lg text-xs font-black uppercase tracking-widest border border-primary-100 shadow-sm">
+                                {{ activeYear.name }}
+                            </span>
+                        </div>
                         <p class="text-slate-500 font-bold mt-2">Aplica puntos de ajuste del consejo docente a las notas definitivas.</p>
                     </div>
                 </div>
