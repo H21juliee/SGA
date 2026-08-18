@@ -172,7 +172,7 @@ function openEditModal(student) {
     form.first_name = student.first_name
     form.last_name = student.last_name
     form.cedula = student.cedula
-    form.birth_date = student.birth_date
+    form.birth_date = student.birth_date ? student.birth_date.split('T')[0] : ''
     form.gender = student.gender
     form.status = student.status
     form.guardian_id = student.guardian_id || ''

@@ -2,6 +2,7 @@
 import { ref, computed, watch } from 'vue'
 import { router, Link } from '@inertiajs/vue3'
 import AppLayout from '@/Components/Layout/AppLayout.vue'
+import Swal from 'sweetalert2'
 
 const props = defineProps({
     section: Object,
@@ -15,6 +16,7 @@ const props = defineProps({
 const currentDate = ref(props.date)
 const searchQuery = ref('')
 const activeNoteId = ref(null)
+const today = new Date().toISOString().split('T')[0]
 
 // Initialize local state for immediate visual feedback
 const localRows = ref(
@@ -127,13 +129,30 @@ function markAllPresent() {
 }
 
 function finalizeAttendance() {
-    if (confirm('¿Estás seguro de finalizar la asistencia? Una vez finalizada, no se podrán realizar más cambios para este día.')) {
-        router.post('/attendance/lock', {
-            subject_id: props.subject.id,
-            section_id: props.section.id,
-            date: props.date,
-        })
-    }
+    Swal.fire({
+        title: '¿Finalizar Asistencia?',
+        text: 'Una vez finalizada, no se podrán realizar más cambios para este día.',
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonText: 'Sí, finalizar',
+        cancelButtonText: 'Cancelar',
+        buttonsStyling: false,
+        customClass: {
+            popup: 'rounded-3xl border-2 border-slate-100 shadow-2xl',
+            title: 'text-2xl font-black text-slate-800',
+            htmlContainer: 'text-slate-500 font-medium',
+            confirmButton: 'px-6 py-3 bg-emerald-600 text-white text-[11px] font-black uppercase tracking-widest rounded-2xl shadow-lg shadow-emerald-600/20 hover:bg-emerald-500 transition-all mx-2',
+            cancelButton: 'px-6 py-3 bg-slate-500 text-white text-[11px] font-black uppercase tracking-widest rounded-2xl shadow-lg shadow-slate-500/20 hover:bg-slate-400 transition-all mx-2'
+        }
+    }).then((result) => {
+        if (result.isConfirmed) {
+            router.post('/attendance/lock', {
+                subject_id: props.subject.id,
+                section_id: props.section.id,
+                date: props.date,
+            })
+        }
+    })
 }
 
 function toggleNote(rowId) {
@@ -190,6 +209,7 @@ function toggleNote(rowId) {
                                     <input 
                                         type="date" 
                                         v-model="currentDate" 
+                                        :max="today"
                                         @change="updateDate"
                                         class="w-full bg-slate-50 border-2 border-slate-100 rounded-2xl px-4 py-3 text-slate-700 text-sm font-bold focus:border-emerald-400 focus:ring-0 outline-none transition-all cursor-pointer shadow-sm"
                                     >
