@@ -13,14 +13,13 @@ const props = defineProps({
 })
 
 const schoolYearId = ref(props.filters.school_year_id || '')
-const gradeLevelId = ref(props.filters.grade_level_id || '')
 const showModal = ref(false)
 const editingSection = ref(null)
 const activeLevel = ref(null)
 
 const form = useForm({
     school_year_id: schoolYearId.value,
-    grade_level_id: '',
+    
     name: '',
     capacity: 100,
 })
@@ -56,7 +55,7 @@ function loadSections() {
     activeLevel.value = null // reset accordion state when loading new data
     router.get('/admin/sections', { 
         school_year_id: schoolYearId.value,
-        grade_level_id: gradeLevelId.value
+        
     }, { preserveState: true })
 }
 
@@ -124,17 +123,7 @@ function destroy(section) {
                         <i class="fas fa-calendar absolute right-4 top-1/2 -translate-y-1/2 text-slate-300 pointer-events-none"></i>
                     </div>
 
-                    <div class="relative flex-1 sm:min-w-[200px]">
-                        <select 
-                            v-model="gradeLevelId" 
-                            @change="loadSections" 
-                            class="w-full bg-white border-2 border-slate-100 rounded-2xl px-4 py-3.5 text-slate-700 text-sm font-bold focus:border-primary-400 focus:ring-0 outline-none transition-all appearance-none cursor-pointer shadow-sm"
-                        >
-                            <option value="">Todos los Niveles</option>
-                            <option v-for="lvl in levels" :key="lvl.id" :value="lvl.id">{{ lvl.name }}</option>
-                        </select>
-                        <i class="fas fa-layer-group absolute right-4 top-1/2 -translate-y-1/2 text-slate-300 pointer-events-none"></i>
-                    </div>
+
 
                     <button
                         v-if="schoolYearId"
@@ -189,16 +178,16 @@ function destroy(section) {
                     
                     <!-- Accordion Body -->
                     <transition
-                        enter-active-class="transition-all duration-500 ease-in-out origin-top"
-                        enter-from-class="opacity-0 scale-y-0 h-0"
-                        enter-to-class="opacity-100 scale-y-100 h-auto"
-                        leave-active-class="transition-all duration-300 ease-in-out origin-top"
-                        leave-from-class="opacity-100 scale-y-100 h-auto"
-                        leave-to-class="opacity-0 scale-y-0 h-0"
+                        enter-active-class="transition-all duration-500 ease-in-out overflow-hidden"
+                        enter-from-class="opacity-0 max-h-0"
+                        enter-to-class="opacity-100 max-h-[2000px]"
+                        leave-active-class="transition-all duration-300 ease-in-out overflow-hidden"
+                        leave-from-class="opacity-100 max-h-[2000px]"
+                        leave-to-class="opacity-0 max-h-0"
                     >
                         <div 
                             v-show="activeLevel === levelName"
-                            class="p-5 sm:p-6 pt-2 bg-slate-50/50 border-t-2 border-slate-50 grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 origin-top"
+                            class="p-5 sm:p-6 pt-2 bg-slate-50/50 border-t-2 border-slate-50 grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4"
                         >
                         <!-- Section Card -->
                         <div
