@@ -74,23 +74,33 @@ class UserController extends Controller
 
     public function store(Request $request)
     {
-        $validated = $request->validate([
+        $rules = [
             'name' => 'required|string|max:255',
             'email' => 'required|string|email|max:255|unique:users',
             'cedula' => ['nullable', 'string', 'max:20', 'regex:/^[VEP]-\d{6,10}$/i', 'unique:users'],
             'phone' => 'nullable|string|max:20',
-            'password' => ['required', 'string', \Illuminate\Validation\Rules\Password::min(8)->mixedCase()->numbers()->symbols()],
             'roles' => 'required|array|min:1',
             'roles.*' => 'string|exists:roles,name',
-        ]);
+        ];
+
+        $securityEnabled = env('SECURITY_QUESTIONS_ENABLED', false);
+
+        if (!$securityEnabled) {
+            $rules['password'] = ['required', 'string', \Illuminate\Validation\Rules\Password::min(8)->mixedCase()->numbers()->symbols()];
+        }
+
+        $validated = $request->validate($rules);
+
+        $password = $securityEnabled ? Hash::make($validated['cedula'] ?? '12345678') : Hash::make($validated['password']);
 
         $user = User::create([
             'name' => $validated['name'],
             'email' => $validated['email'],
             'cedula' => $validated['cedula'],
             'phone' => $validated['phone'],
-            'password' => Hash::make($validated['password']),
+            'password' => $password,
             'is_active' => true,
+            'must_change_password' => $securityEnabled,
         ]);
 
         $user->syncRoles($validated['roles']);
@@ -104,16 +114,23 @@ class UserController extends Controller
             return back()->with('error', 'No tienes permiso para modificar a este usuario.');
         }
 
-        $validated = $request->validate([
+        $rules = [
             'name' => 'required|string|max:255',
             'email' => ['required', 'string', 'email', 'max:255', Rule::unique('users')->ignore($user->id)],
             'cedula' => ['nullable', 'string', 'max:20', 'regex:/^[VEP]-\d{6,10}$/i', Rule::unique('users')->ignore($user->id)],
             'phone' => 'nullable|string|max:20',
-            'password' => ['nullable', 'string', \Illuminate\Validation\Rules\Password::min(8)->mixedCase()->numbers()->symbols()],
             'roles' => 'required|array|min:1',
             'roles.*' => 'string|exists:roles,name',
             'is_active' => 'required|boolean',
-        ]);
+        ];
+
+        $securityEnabled = env('SECURITY_QUESTIONS_ENABLED', false);
+
+        if (!$securityEnabled) {
+            $rules['password'] = ['nullable', 'string', \Illuminate\Validation\Rules\Password::min(8)->mixedCase()->numbers()->symbols()];
+        }
+
+        $validated = $request->validate($rules);
 
         $user->update([
             'name' => $validated['name'],
@@ -123,7 +140,7 @@ class UserController extends Controller
             'is_active' => $validated['is_active'],
         ]);
 
-        if (!empty($validated['password'])) {
+        if (!$securityEnabled && !empty($validated['password'])) {
             $user->update([
                 'password' => Hash::make($validated['password']),
             ]);
@@ -147,6 +164,27 @@ class UserController extends Controller
         $user->update(['is_active' => false]);
 
         return back()->with('success', 'Usuario desactivado.');
+    }
+
+    public function resetPassword(User $user)
+    {
+        if ($user->hasRole('SuperAdmin')) {
+            return back()->with('error', 'No se puede resetear la contraseña del SuperAdmin.');
+        }
+
+        if (!$user->cedula) {
+            return back()->with('error', 'Este usuario no tiene cédula registrada. Asígnele una cédula primero.');
+        }
+
+        $user->update([
+            'password' => Hash::make($user->cedula),
+            'must_change_password' => env('SECURITY_QUESTIONS_ENABLED', false),
+        ]);
+
+        // Delete old security questions so user must set new ones
+        $user->securityQuestions()->delete();
+
+        return back()->with('success', "Contraseña reseteada. La nueva clave temporal es la cédula del usuario ({$user->cedula}). Deberá cambiarla en su próximo inicio de sesión.");
     }
 }
 

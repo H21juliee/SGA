@@ -46,6 +46,7 @@ class HandleInertiaRequests extends Middleware
                 'success' => fn () => $request->session()->get('success'),
                 'error' => fn () => $request->session()->get('error'),
             ],
+            'security_questions_enabled' => env('SECURITY_QUESTIONS_ENABLED', false),
         ];
     }
 }

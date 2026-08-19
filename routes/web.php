@@ -2,6 +2,8 @@
 
 use App\Http\Controllers\AttendanceController;
 use App\Http\Controllers\Auth\LoginController;
+use App\Http\Controllers\Auth\PasswordSetupController;
+use App\Http\Controllers\Auth\PasswordRecoveryController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\GradeController;
 use App\Http\Controllers\RevisionController;
@@ -18,18 +20,29 @@ use Illuminate\Support\Facades\Route;
 Route::middleware('guest')->group(function () {
     Route::get('/login', [LoginController::class, 'create'])->name('login');
     Route::post('/login', [LoginController::class, 'store']);
+
+    // Password Recovery (no auth needed)
+    Route::get('/password/recover', [PasswordRecoveryController::class, 'show'])->name('password.recover');
+    Route::post('/password/recover/find', [PasswordRecoveryController::class, 'findUser'])->name('password.recover.find');
+    Route::post('/password/recover/reset', [PasswordRecoveryController::class, 'verifyAndReset'])->name('password.recover.reset');
 });
 
 Route::post('/logout', [LoginController::class, 'destroy'])
     ->middleware('auth')
     ->name('logout');
 
+// Password Setup (first login - auth required but NO password.changed middleware)
+Route::middleware('auth')->group(function () {
+    Route::get('/password/setup', [PasswordSetupController::class, 'show'])->name('password.setup');
+    Route::post('/password/setup', [PasswordSetupController::class, 'store']);
+});
+
 /*
 |--------------------------------------------------------------------------
 | Rutas Protegidas
 |--------------------------------------------------------------------------
 */
-Route::middleware('auth')->group(function () {
+Route::middleware(['auth', 'password.changed'])->group(function () {
     // Dashboard
     Route::get('/', DashboardController::class)->name('dashboard');
     Route::get('/dashboard', DashboardController::class);
@@ -72,6 +85,7 @@ Route::middleware('auth')->group(function () {
     // Módulo de Administración (Solo roles autorizados)
     Route::prefix('admin')->name('admin.')->middleware(['role:SuperAdmin|Administrador|Secretaria'])->group(function () {
         Route::resource('users', \App\Http\Controllers\Admin\UserController::class)->except(['create', 'edit']);
+        Route::post('users/{user}/reset-password', [\App\Http\Controllers\Admin\UserController::class, 'resetPassword'])->name('users.reset-password');
                 Route::get('guardians/search', [\App\Http\Controllers\GuardianController::class, 'search'])->name('guardians.search');
         Route::post('guardians', [\App\Http\Controllers\GuardianController::class, 'store'])->name('guardians.store');
         Route::resource('students', \App\Http\Controllers\Admin\StudentController::class)->except(['create', 'edit']);

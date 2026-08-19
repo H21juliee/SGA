@@ -102,7 +102,7 @@ function submit() {
                             </div>
                             <span class="text-xs font-bold text-slate-500 group-hover:text-slate-700 transition-colors">Recordarme</span>
                         </label>
-                        <a href="#" class="text-xs font-black text-primary-500 hover:text-primary-600 transition-colors uppercase tracking-wider">¿Olvidaste tu clave?</a>
+                        <a v-if="$page.props.security_questions_enabled" href="/password/recover" class="text-xs font-black text-primary-500 hover:text-primary-600 transition-colors uppercase tracking-wider">¿Olvidaste tu clave?</a>
                     </div>
 
                     <!-- Submit -->

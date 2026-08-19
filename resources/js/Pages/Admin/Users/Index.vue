@@ -142,6 +142,25 @@ function destroy(user) {
         }
     })
 }
+
+function resetPassword(user) {
+    Swal.fire({
+        title: '¿Resetear contraseña?',
+        html: `<p class="text-sm text-slate-600">Se establecerá la <strong>cédula</strong> del usuario (<strong>${user.cedula || 'N/A'}</strong>) como contraseña temporal.</p><p class="text-sm text-slate-600 mt-2">El usuario deberá cambiarla y configurar sus preguntas de seguridad en su próximo inicio de sesión.</p>`,
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonColor: '#f59e0b',
+        cancelButtonColor: '#64748b',
+        confirmButtonText: 'Sí, resetear',
+        cancelButtonText: 'Cancelar',
+    }).then((result) => {
+        if (result.isConfirmed) {
+            router.post(`/admin/users/${user.id}/reset-password`, {}, {
+                preserveScroll: true,
+            })
+        }
+    })
+}
 </script>
 
 <template>
@@ -250,6 +269,12 @@ function destroy(user) {
                                         title="Editar">
                                     <i class="fas fa-edit text-[11px]"></i>
                                 </button>
+                                <button @click="resetPassword(user)"
+                                        class="w-9 h-9 rounded-lg bg-white text-slate-500 hover:text-amber-600 hover:bg-amber-50 hover:border-amber-200 hover:shadow-sm transition-all border border-slate-200 flex items-center justify-center"
+                                        title="Resetear Contraseña"
+                                        v-if="user.cedula && $page.props.security_questions_enabled">
+                                    <i class="fas fa-key text-[11px]"></i>
+                                </button>
                                 <button @click="destroy(user)" 
                                         class="w-9 h-9 rounded-lg transition-all border flex items-center justify-center" 
                                         :class="user.is_active ? 'bg-white text-slate-400 border-slate-200 hover:bg-red-50 hover:text-red-500 hover:border-red-200 hover:shadow-sm' : 'bg-red-50 text-red-500 border-red-200 hover:bg-emerald-50 hover:text-emerald-600 hover:border-emerald-200 hover:shadow-sm'"
@@ -353,7 +378,7 @@ function destroy(user) {
                             <p v-if="form.errors.roles" class="text-xs font-bold text-rose-500 ml-1">{{ form.errors.roles }}</p>
                         </div>
 
-                        <div class="space-y-2 md:col-span-2">
+                        <div class="space-y-2 md:col-span-2" v-if="!$page.props.security_questions_enabled">
                             <label class="text-[11px] font-black text-slate-400 uppercase tracking-widest ml-1">Contraseña</label>
                             <input v-model="form.password" type="password" :required="!isEditing" :placeholder="isEditing ? 'Dejar vacío para mantener actual' : 'Escribe una contraseña segura'" class="w-full bg-slate-50 border-2 border-slate-200 rounded-2xl px-4 py-3 text-slate-700 text-sm font-bold focus:border-primary-400 focus:bg-white focus:ring-0 outline-none transition-all shadow-sm">
                             <p class="text-[10px] text-slate-400 mt-1 ml-1 font-medium leading-tight">
