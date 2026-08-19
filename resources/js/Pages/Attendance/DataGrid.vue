@@ -15,6 +15,7 @@ const props = defineProps({
 
 const currentDate = ref(props.date)
 const searchQuery = ref('')
+const sortCol = ref('student_name')
 const activeNoteId = ref(null)
 const today = new Date().toISOString().split('T')[0]
 
@@ -52,7 +53,8 @@ watch(() => props.enrollments, (newVal) => {
 }, { deep: true })
 
 const filteredRows = computed(() => {
-    let result = localRows.value
+    let result = [...localRows.value]
+    
     if (searchQuery.value) {
         const query = searchQuery.value.toLowerCase()
         result = result.filter(row => {
@@ -60,6 +62,13 @@ const filteredRows = computed(() => {
                    (row.cedula && row.cedula.toLowerCase().includes(query))
         })
     }
+    
+    if (sortCol.value === 'cedula') {
+        result.sort((a, b) => (a.cedula || '').localeCompare(b.cedula || ''))
+    } else {
+        result.sort((a, b) => a.student_name.localeCompare(b.student_name))
+    }
+    
     return result
 })
 
@@ -256,26 +265,36 @@ function toggleNote(rowId) {
                     </div>
                 </div>
 
-                <!-- Buscador y Acciones -->
-                <div class="flex items-center gap-3 w-full sm:w-auto">
-                    <div class="relative w-full sm:w-64">
-                        <i class="fas fa-search absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-sm"></i>
-                        <input 
-                            v-model="searchQuery" 
-                            type="text" 
-                            placeholder="Buscar por nombre o cédula..." 
-                            class="w-full bg-white border-2 border-slate-100 rounded-xl pl-9 pr-4 py-2 text-sm text-slate-700 placeholder:text-slate-400 focus:border-emerald-400 focus:ring-0 outline-none transition-all shadow-sm"
-                        >
+                <!-- Buscador, Filtro y Acciones -->
+                <div class="flex flex-col md:flex-row items-center gap-3 w-full md:w-auto">
+                    <div class="flex items-center gap-2 w-full md:w-auto">
+                        <div class="relative flex-1 md:w-56">
+                            <i class="fas fa-search absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-sm"></i>
+                            <input 
+                                v-model="searchQuery" 
+                                type="text" 
+                                placeholder="Buscar por nombre o cédula..." 
+                                class="w-full bg-white border-2 border-slate-100 rounded-xl pl-9 pr-4 py-2 text-sm text-slate-700 placeholder:text-slate-400 focus:border-emerald-400 focus:ring-0 outline-none transition-all shadow-sm"
+                            >
+                        </div>
+                        
+                        <div class="relative w-36 shrink-0">
+                            <select v-model="sortCol" class="w-full bg-white border-2 border-slate-100 rounded-xl px-3 py-2 text-slate-700 text-xs font-bold focus:border-emerald-400 focus:ring-0 outline-none transition-all appearance-none shadow-sm cursor-pointer">
+                                <option value="student_name">Por Apellido</option>
+                                <option value="cedula">Por Cédula</option>
+                            </select>
+                            <i class="fas fa-sort absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 text-xs pointer-events-none"></i>
+                        </div>
                     </div>
                     
                     <button
                         v-if="!isLocked"
                         @click="markAllPresent"
-                        class="shrink-0 w-10 h-10 sm:w-auto sm:px-4 flex items-center justify-center gap-2 bg-slate-900 text-white rounded-xl shadow-md hover:bg-slate-800 transition-all text-xs font-bold uppercase tracking-widest"
+                        class="shrink-0 w-full md:w-auto md:px-4 py-2 h-10 flex items-center justify-center gap-2 bg-slate-900 text-white rounded-xl shadow-md hover:bg-slate-800 transition-all text-xs font-bold uppercase tracking-widest"
                         title="Marcar todos como Presentes"
                     >
                         <i class="fas fa-check-double"></i>
-                        <span class="hidden sm:inline">Todos Presentes</span>
+                        <span class="inline">Todos Presentes</span>
                     </button>
                 </div>
             </div>
