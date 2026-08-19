@@ -100,6 +100,12 @@ function updateNotes(row) {
     saveRow(row)
 }
 
+function saveNote(row) {
+    if (props.isLocked) return
+    saveRow(row)
+    activeNoteId.value = null
+}
+
 function saveRow(row) {
     row.saving = true
     router.patch('/attendance', {
@@ -322,6 +328,7 @@ function toggleNote(rowId) {
                         :key="row.enrollment_id"
                         class="p-4 sm:p-5 hover:bg-slate-50/50 transition-colors flex flex-col sm:flex-row sm:items-center justify-between gap-4"
                         :class="{'opacity-75 grayscale': isLocked}"
+                        :style="activeNoteId === row.enrollment_id ? 'position: relative; z-index: 50;' : 'position: relative; z-index: 0;'"
                     >
                         <!-- Info Estudiante -->
                         <div class="flex items-center gap-4">
@@ -401,12 +408,20 @@ function toggleNote(rowId) {
                                     </div>
                                     <textarea 
                                         v-model="row.notes"
-                                        @blur="updateNotes(row)"
                                         :disabled="isLocked"
                                         class="w-full bg-slate-50 border-2 border-slate-100 rounded-xl px-3 py-2 text-xs text-slate-700 focus:border-indigo-400 focus:ring-0 outline-none resize-none disabled:bg-slate-100 disabled:text-slate-400"
                                         rows="2"
                                         placeholder="Escribe el motivo..."
                                     ></textarea>
+                                    <div class="mt-2 flex justify-end">
+                                        <button 
+                                            v-if="!isLocked"
+                                            @click="saveNote(row)" 
+                                            class="px-4 py-1.5 bg-indigo-600 text-white text-[10px] font-black uppercase tracking-widest rounded-lg hover:bg-indigo-500 transition-all shadow-sm"
+                                        >
+                                            Guardar
+                                        </button>
+                                    </div>
                                 </div>
                             </div>
                         </div>
