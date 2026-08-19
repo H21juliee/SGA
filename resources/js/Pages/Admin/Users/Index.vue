@@ -53,6 +53,22 @@ function formatCedula(value) {
     return val;
 }
 
+
+function formatPhone(value) {
+    if (!value) return '';
+    let val = value.replace(/[^0-9]/g, '');
+    if (val.length > 0 && val[0] !== '0') {
+        val = '0' + val;
+    }
+    if (val.length > 4) {
+        val = val.substring(0, 4) + '-' + val.substring(4);
+    }
+    if (val.length > 12) {
+        val = val.substring(0, 12);
+    }
+    return val;
+}
+
 const showModal = ref(false)
 const isEditing = ref(false)
 const targetUser = ref(null)
@@ -228,17 +244,19 @@ function destroy(user) {
                                   title="Ver Detalles">
                                 <i class="fas fa-eye text-[11px]"></i>
                             </Link>
-                            <button @click="openEditModal(user)" 
-                                    class="w-9 h-9 rounded-lg bg-white text-slate-500 hover:text-primary-600 hover:bg-primary-50 hover:border-primary-200 hover:shadow-sm transition-all border border-slate-200 flex items-center justify-center" 
-                                    title="Editar">
-                                <i class="fas fa-edit text-[11px]"></i>
-                            </button>
-                            <button @click="destroy(user)" 
-                                    class="w-9 h-9 rounded-lg transition-all border flex items-center justify-center" 
-                                    :class="user.is_active ? 'bg-white text-slate-400 border-slate-200 hover:bg-red-50 hover:text-red-500 hover:border-red-200 hover:shadow-sm' : 'bg-red-50 text-red-500 border-red-200 hover:bg-emerald-50 hover:text-emerald-600 hover:border-emerald-200 hover:shadow-sm'"
-                                    :title="user.is_active ? 'Desactivar' : 'Reactivar'">
-                                <i class="fas text-[11px]" :class="user.is_active ? 'fa-power-off' : 'fa-undo'"></i>
-                            </button>
+                            <template v-if="!user.roles.some(r => r.name === 'SuperAdmin')">
+                                <button @click="openEditModal(user)" 
+                                        class="w-9 h-9 rounded-lg bg-white text-slate-500 hover:text-primary-600 hover:bg-primary-50 hover:border-primary-200 hover:shadow-sm transition-all border border-slate-200 flex items-center justify-center" 
+                                        title="Editar">
+                                    <i class="fas fa-edit text-[11px]"></i>
+                                </button>
+                                <button @click="destroy(user)" 
+                                        class="w-9 h-9 rounded-lg transition-all border flex items-center justify-center" 
+                                        :class="user.is_active ? 'bg-white text-slate-400 border-slate-200 hover:bg-red-50 hover:text-red-500 hover:border-red-200 hover:shadow-sm' : 'bg-red-50 text-red-500 border-red-200 hover:bg-emerald-50 hover:text-emerald-600 hover:border-emerald-200 hover:shadow-sm'"
+                                        :title="user.is_active ? 'Desactivar' : 'Reactivar'">
+                                    <i class="fas text-[11px]" :class="user.is_active ? 'fa-power-off' : 'fa-undo'"></i>
+                                </button>
+                            </template>
                         </div>
                     </div>
                 </div>
@@ -315,7 +333,7 @@ function destroy(user) {
 
                         <div class="space-y-2">
                             <label class="text-[11px] font-black text-slate-400 uppercase tracking-widest ml-1">Teléfono</label>
-                            <input v-model="form.phone" type="text" class="w-full bg-slate-50 border-2 border-slate-200 rounded-2xl px-4 py-3 text-slate-700 text-sm font-bold focus:border-primary-400 focus:bg-white focus:ring-0 outline-none transition-all shadow-sm">
+                            <input v-model="form.phone" @input="form.phone = formatPhone($event.target.value)" type="tel" placeholder="0414-1234567" maxlength="12" class="w-full bg-slate-50 border-2 border-slate-200 rounded-2xl px-4 py-3 text-slate-700 text-sm font-bold focus:border-primary-400 focus:bg-white focus:ring-0 outline-none transition-all shadow-sm">
                             <p v-if="form.errors.phone" class="text-xs font-bold text-rose-500 ml-1">{{ form.errors.phone }}</p>
                         </div>
 
@@ -337,7 +355,10 @@ function destroy(user) {
 
                         <div class="space-y-2 md:col-span-2">
                             <label class="text-[11px] font-black text-slate-400 uppercase tracking-widest ml-1">Contraseña</label>
-                            <input v-model="form.password" type="password" :required="!isEditing" :placeholder="isEditing ? 'Dejar vacío para mantener actual' : 'Debe tener al menos 8 caracteres'" class="w-full bg-slate-50 border-2 border-slate-200 rounded-2xl px-4 py-3 text-slate-700 text-sm font-bold focus:border-primary-400 focus:bg-white focus:ring-0 outline-none transition-all shadow-sm">
+                            <input v-model="form.password" type="password" :required="!isEditing" :placeholder="isEditing ? 'Dejar vacío para mantener actual' : 'Escribe una contraseña segura'" class="w-full bg-slate-50 border-2 border-slate-200 rounded-2xl px-4 py-3 text-slate-700 text-sm font-bold focus:border-primary-400 focus:bg-white focus:ring-0 outline-none transition-all shadow-sm">
+                            <p class="text-[10px] text-slate-400 mt-1 ml-1 font-medium leading-tight">
+                                <i class="fas fa-info-circle mr-1"></i> Mínimo 8 caracteres. Debe incluir mayúsculas, minúsculas, números y símbolos (ej. @, #, $).
+                            </p>
                             <p v-if="form.errors.password" class="text-xs font-bold text-rose-500 ml-1">{{ form.errors.password }}</p>
                         </div>
                     </div>

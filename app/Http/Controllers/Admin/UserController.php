@@ -79,7 +79,7 @@ class UserController extends Controller
             'email' => 'required|string|email|max:255|unique:users',
             'cedula' => ['nullable', 'string', 'max:20', 'regex:/^[VEP]-\d{6,10}$/i', 'unique:users'],
             'phone' => 'nullable|string|max:20',
-            'password' => 'required|string|min:8',
+            'password' => ['required', 'string', \Illuminate\Validation\Rules\Password::min(8)->mixedCase()->numbers()->symbols()],
             'roles' => 'required|array|min:1',
             'roles.*' => 'string|exists:roles,name',
         ]);
@@ -109,7 +109,7 @@ class UserController extends Controller
             'email' => ['required', 'string', 'email', 'max:255', Rule::unique('users')->ignore($user->id)],
             'cedula' => ['nullable', 'string', 'max:20', 'regex:/^[VEP]-\d{6,10}$/i', Rule::unique('users')->ignore($user->id)],
             'phone' => 'nullable|string|max:20',
-            'password' => 'nullable|string|min:8',
+            'password' => ['nullable', 'string', \Illuminate\Validation\Rules\Password::min(8)->mixedCase()->numbers()->symbols()],
             'roles' => 'required|array|min:1',
             'roles.*' => 'string|exists:roles,name',
             'is_active' => 'required|boolean',
