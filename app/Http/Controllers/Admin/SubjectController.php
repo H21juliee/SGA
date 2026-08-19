@@ -22,6 +22,7 @@ class SubjectController extends Controller
         }
 
         $subjects = Subject::with('gradeLevel')
+            ->withCount(['academicLoads', 'grades'])
             ->when($search, function ($query, $search) {
                 $query->where('name', 'like', "%{$search}%")
                       ->orWhere('code', 'like', "%{$search}%")

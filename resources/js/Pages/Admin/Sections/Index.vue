@@ -3,6 +3,7 @@ import { ref, computed } from 'vue'
 import { router, useForm } from '@inertiajs/vue3'
 import AppLayout from '@/Components/Layout/AppLayout.vue'
 import Modal from '@/Components/UI/Modal.vue'
+import Swal from 'sweetalert2'
 
 const props = defineProps({
     sections: Array,
@@ -19,7 +20,7 @@ const activeLevel = ref(null)
 
 const form = useForm({
     school_year_id: schoolYearId.value,
-    
+    grade_level_id: '',
     name: '',
     capacity: 100,
 })
@@ -80,21 +81,38 @@ function openEditModal(section) {
 function submit() {
     if (editingSection.value) {
         form.put(`/admin/sections/${editingSection.value.id}`, {
-            onSuccess: () => { showModal.value = false; loadSections() },
+            onSuccess: () => { showModal.value = false },
         })
     } else {
         form.post('/admin/sections', {
-            onSuccess: () => { showModal.value = false; loadSections() },
+            onSuccess: () => { showModal.value = false },
         })
     }
 }
 
 function destroy(section) {
-    if (confirm(`¿Seguro que desea eliminar la sección ${section.name}?`)) {
-        router.delete(`/admin/sections/${section.id}`, {
-            onSuccess: () => loadSections()
+    Swal.fire({
+        title: '¿Confirmar Eliminación?',
+        text: `¿Seguro que desea eliminar: ${section.name}?`,
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonText: 'Sí, eliminar',
+        cancelButtonText: 'Cancelar',
+        buttonsStyling: false,
+        customClass: {
+            popup: 'rounded-3xl border-2 border-slate-100 shadow-2xl',
+            title: 'text-2xl font-black text-slate-800',
+            htmlContainer: 'text-slate-500 font-medium',
+            confirmButton: 'px-6 py-3 bg-red-500 text-white text-[11px] font-black uppercase tracking-widest rounded-2xl shadow-lg shadow-red-500/20 hover:bg-red-400 transition-all mx-2',
+            cancelButton: 'px-6 py-3 bg-slate-500 text-white text-[11px] font-black uppercase tracking-widest rounded-2xl shadow-lg shadow-slate-500/20 hover:bg-slate-400 transition-all mx-2'
+        }
+    }).then((result) => {
+        if (result.isConfirmed) {
+            router.delete(`/admin/sections/${section.id}`, {
+            onSuccess: () => {}
         })
-    }
+        }
+    })
 }
 </script>
 
@@ -201,11 +219,11 @@ function destroy(section) {
                                     {{ section.name }}
                                 </div>
                                 <div class="flex gap-1.5 opacity-100 sm:opacity-0 group-hover:opacity-100 transition-opacity">
-                                    <button @click="openEditModal(section)" class="w-8 h-8 rounded-lg bg-slate-50 text-slate-400 hover:bg-primary-50 hover:text-primary-600 transition-all flex items-center justify-center border border-transparent hover:border-primary-100">
-                                        <i class="fas fa-edit text-[10px]"></i>
+                                    <button @click="openEditModal(section)" class="w-10 h-10 sm:w-8 sm:h-8 rounded-xl sm:rounded-lg bg-slate-50 text-slate-400 hover:bg-primary-50 hover:text-primary-600 transition-all flex items-center justify-center border border-transparent hover:border-primary-100 shadow-sm" title="Editar">
+                                        <i class="fas fa-edit text-sm sm:text-[10px]"></i>
                                     </button>
-                                    <button @click="destroy(section)" class="w-8 h-8 rounded-lg bg-red-50 text-red-400 hover:bg-red-500 hover:text-white transition-all flex items-center justify-center border border-transparent hover:border-red-200">
-                                        <i class="fas fa-trash text-[10px]"></i>
+                                    <button v-if="section.enrollments_count === 0 && section.academic_loads_count === 0" @click="destroy(section)" class="w-10 h-10 sm:w-8 sm:h-8 rounded-xl sm:rounded-lg bg-red-50 text-red-400 hover:bg-red-500 hover:text-white transition-all flex items-center justify-center border border-transparent hover:border-red-200 shadow-sm" title="Eliminar">
+                                        <i class="fas fa-trash text-sm sm:text-[10px]"></i>
                                     </button>
                                 </div>
                             </div>

@@ -28,7 +28,7 @@ class SectionController extends Controller
                 $query->where('grade_level_id', $gradeLevelId);
             }
             
-            $sections = $query->orderBy('grade_level_id')->orderBy('name')->get();
+            $sections = $query->withCount(['enrollments', 'academicLoads'])->orderBy('grade_level_id')->orderBy('name')->get();
         }
 
         return Inertia::render('Admin/Sections/Index', [

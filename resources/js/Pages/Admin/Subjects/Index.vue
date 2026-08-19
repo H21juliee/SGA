@@ -3,6 +3,7 @@ import { ref, computed } from 'vue'
 import { router, useForm, Link } from '@inertiajs/vue3'
 import AppLayout from '@/Components/Layout/AppLayout.vue'
 import Modal from '@/Components/UI/Modal.vue'
+import Swal from 'sweetalert2'
 
 const props = defineProps({
     subjects: Array,
@@ -91,18 +92,35 @@ function openEditModal(subject) {
 
 function submit() {
     if (editingSubject.value) {
-        form.put(`/admin/subjects/${editingSubject.value.id}`, { onSuccess: () => { showModal.value = false; doSearch() } })
+        form.put(`/admin/subjects/${editingSubject.value.id}`, { onSuccess: () => { showModal.value = false } })
     } else {
-        form.post('/admin/subjects', { onSuccess: () => { showModal.value = false; doSearch() } })
+        form.post('/admin/subjects', { onSuccess: () => { showModal.value = false } })
     }
 }
 
 function destroy(subject) {
-    if (confirm(`¿Seguro que desea eliminar la materia ${subject.name}?`)) {
-        router.delete(`/admin/subjects/${subject.id}`, {
-            onSuccess: () => doSearch()
+    Swal.fire({
+        title: '¿Confirmar Eliminación?',
+        text: `¿Seguro que desea eliminar: ${subject.name}?`,
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonText: 'Sí, eliminar',
+        cancelButtonText: 'Cancelar',
+        buttonsStyling: false,
+        customClass: {
+            popup: 'rounded-3xl border-2 border-slate-100 shadow-2xl',
+            title: 'text-2xl font-black text-slate-800',
+            htmlContainer: 'text-slate-500 font-medium',
+            confirmButton: 'px-6 py-3 bg-red-500 text-white text-[11px] font-black uppercase tracking-widest rounded-2xl shadow-lg shadow-red-500/20 hover:bg-red-400 transition-all mx-2',
+            cancelButton: 'px-6 py-3 bg-slate-500 text-white text-[11px] font-black uppercase tracking-widest rounded-2xl shadow-lg shadow-slate-500/20 hover:bg-slate-400 transition-all mx-2'
+        }
+    }).then((result) => {
+        if (result.isConfirmed) {
+            router.delete(`/admin/subjects/${subject.id}`, {
+            onSuccess: () => {}
         })
-    }
+        }
+    })
 }
 </script>
 
@@ -198,11 +216,11 @@ function destroy(subject) {
                                             {{ subject.code }}
                                         </div>
                                         <div class="flex gap-1.5 opacity-100 sm:opacity-0 group-hover:opacity-100 transition-opacity">
-                                            <button @click="openEditModal(subject)" class="w-8 h-8 rounded-lg bg-slate-50 text-slate-400 hover:bg-primary-50 hover:text-primary-600 transition-all flex items-center justify-center border border-transparent hover:border-primary-100" title="Editar">
-                                                <i class="fas fa-edit text-[10px]"></i>
+                                            <button @click="openEditModal(subject)" class="w-10 h-10 sm:w-8 sm:h-8 rounded-xl sm:rounded-lg bg-slate-50 text-slate-400 hover:bg-primary-50 hover:text-primary-600 transition-all flex items-center justify-center border border-transparent hover:border-primary-100 shadow-sm" title="Editar">
+                                                <i class="fas fa-edit text-sm sm:text-[10px]"></i>
                                             </button>
-                                            <button @click="destroy(subject)" class="w-8 h-8 rounded-lg bg-red-50 text-red-400 hover:bg-red-500 hover:text-white transition-all flex items-center justify-center border border-transparent hover:border-red-200" title="Eliminar">
-                                                <i class="fas fa-trash text-[10px]"></i>
+                                            <button v-if="subject.academic_loads_count === 0 && subject.grades_count === 0" @click="destroy(subject)" class="w-10 h-10 sm:w-8 sm:h-8 rounded-xl sm:rounded-lg bg-red-50 text-red-400 hover:bg-red-500 hover:text-white transition-all flex items-center justify-center border border-transparent hover:border-red-200 shadow-sm" title="Eliminar">
+                                                <i class="fas fa-trash text-sm sm:text-[10px]"></i>
                                             </button>
                                         </div>
                                     </div>
