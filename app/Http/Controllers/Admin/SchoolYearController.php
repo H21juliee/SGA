@@ -68,7 +68,16 @@ class SchoolYearController extends Controller
 
     public function toggleLapse(\App\Models\Lapse $lapse)
     {
-        $lapse->update(['is_open' => !$lapse->is_open]);
+        $willBeOpen = !$lapse->is_open;
+        
+        if ($willBeOpen) {
+            // Asegurarnos de cerrar cualquier otro lapso abierto en el mismo año escolar
+            \App\Models\Lapse::where('school_year_id', $lapse->school_year_id)
+                             ->where('id', '!=', $lapse->id)
+                             ->update(['is_open' => false]);
+        }
+        
+        $lapse->update(['is_open' => $willBeOpen]);
         $status = $lapse->is_open ? 'abierto' : 'cerrado';
         return back()->with('success', "El {$lapse->name} ahora está {$status}.");
     }
