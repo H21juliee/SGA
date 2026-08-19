@@ -1,11 +1,11 @@
 <script setup>
-import { ref } from 'vue'
+import { ref, computed } from 'vue'
 import { router, useForm, Link } from '@inertiajs/vue3'
 import AppLayout from '@/Components/Layout/AppLayout.vue'
 import Modal from '@/Components/UI/Modal.vue'
 
 const props = defineProps({
-    subjects: Object,
+    subjects: Array,
     levels: Array,
     filters: Object,
 })
@@ -13,8 +13,7 @@ const props = defineProps({
 const showModal = ref(false)
 const editingSubject = ref(null)
 const searchQuery = ref(props.filters.search || '')
-const sortCol = ref(props.filters.sort || 'grade_level_id')
-const sortDir = ref(props.filters.direction || 'asc')
+const activeLevel = ref(null)
 
 const form = useForm({
     grade_level_id: '',
@@ -24,18 +23,50 @@ const form = useForm({
     grading_type: 'numeric',
 })
 
-function doSearch() {
-    router.get('/admin/subjects', { search: searchQuery.value, sort: sortCol.value, direction: sortDir.value }, { preserveState: true, replace: true })
+const groupedSubjects = computed(() => {
+    const groups = {}
+    
+    // Inicializar grupos según los niveles en orden
+    props.levels.forEach(lvl => {
+        groups[lvl.name] = []
+    })
+    groups['Sin Nivel'] = []
+
+    if (props.subjects && props.subjects.length > 0) {
+        props.subjects.forEach(subject => {
+            const levelName = subject.grade_level?.name || 'Sin Nivel'
+            if (groups[levelName]) {
+                groups[levelName].push(subject)
+            } else {
+                // Por si acaso hay un nivel que no vino en props.levels
+                groups[levelName] = [subject]
+            }
+        })
+    }
+    
+    // Filtrar grupos vacíos
+    const filteredGroups = {}
+    for (const [key, value] of Object.entries(groups)) {
+        if (value.length > 0) {
+            filteredGroups[key] = value
+        }
+    }
+
+    // Auto-abrir el primero si no hay ninguno activo
+    if (activeLevel.value === null && Object.keys(filteredGroups).length > 0) {
+        activeLevel.value = Object.keys(filteredGroups)[0]
+    }
+    
+    return filteredGroups
+})
+
+function toggleLevel(levelName) {
+    activeLevel.value = activeLevel.value === levelName ? null : levelName
 }
 
-function toggleSort(col) {
-    if (sortCol.value === col) {
-        sortDir.value = sortDir.value === 'asc' ? 'desc' : 'asc'
-    } else {
-        sortCol.value = col
-        sortDir.value = 'asc'
-    }
-    doSearch()
+function doSearch() {
+    activeLevel.value = null // reset accordion
+    router.get('/admin/subjects', { search: searchQuery.value }, { preserveState: true, replace: true })
 }
 
 function openCreateModal() {
@@ -60,40 +91,49 @@ function openEditModal(subject) {
 
 function submit() {
     if (editingSubject.value) {
-        form.put(`/admin/subjects/${editingSubject.value.id}`, { onSuccess: () => showModal.value = false })
+        form.put(`/admin/subjects/${editingSubject.value.id}`, { onSuccess: () => { showModal.value = false; doSearch() } })
     } else {
-        form.post('/admin/subjects', { onSuccess: () => showModal.value = false })
+        form.post('/admin/subjects', { onSuccess: () => { showModal.value = false; doSearch() } })
+    }
+}
+
+function destroy(subject) {
+    if (confirm(`¿Seguro que desea eliminar la materia ${subject.name}?`)) {
+        router.delete(`/admin/subjects/${subject.id}`, {
+            onSuccess: () => doSearch()
+        })
     }
 }
 </script>
 
 <template>
     <AppLayout title="Pensum de Materias">
-        <div class="space-y-8 max-w-12xl mx-auto">
+        <div class="space-y-8 max-w-7xl mx-auto pb-10">
             <!-- Header Section -->
-            <div class="flex flex-col sm:flex-row gap-6 items-center justify-between animate-fade-in-up">
+            <div class="flex flex-col lg:flex-row gap-6 items-center justify-between animate-fade-in-up">
                 <div>
                     <h2 class="text-3xl font-extrabold text-slate-800">
                         Materias y <span class="gradient-text">Pensum</span>
                     </h2>
                     <p class="text-slate-400 font-medium mt-2">Gestiona las asignaturas impartidas en cada nivel académico</p>
                 </div>
-                <div class="flex flex-col sm:flex-row items-center gap-4 w-full sm:w-auto">
+                
+                <div class="flex flex-col sm:flex-row gap-4 w-full lg:w-auto">
                     <!-- Buscador -->
-                    <div class="relative w-full sm:w-64">
-                        <i class="fas fa-search absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-sm"></i>
+                    <div class="relative flex-1 sm:min-w-[250px]">
+                        <i class="fas fa-search absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 text-sm"></i>
                         <input 
                             v-model="searchQuery" 
                             @keyup.enter="doSearch"
                             type="text" 
                             placeholder="Buscar por materia o código..." 
-                            class="w-full bg-white border-2 border-slate-100 rounded-xl pl-9 pr-4 py-3 text-sm text-slate-700 placeholder:text-slate-400 focus:border-primary-400 focus:ring-0 outline-none transition-all shadow-sm"
+                            class="w-full bg-white border-2 border-slate-100 rounded-2xl pl-10 pr-4 py-3.5 text-sm text-slate-700 placeholder:text-slate-400 focus:border-primary-400 focus:ring-0 outline-none transition-all shadow-sm"
                         >
                     </div>
                     
                     <button
                         @click="openCreateModal"
-                        class="flex items-center justify-center gap-2 px-6 py-3.5 bg-primary-600 text-white text-[11px] font-black uppercase tracking-widest rounded-2xl shadow-lg shadow-primary-600/20 hover:bg-primary-500 hover:-translate-y-0.5 transition-all w-full sm:w-auto"
+                        class="flex items-center justify-center gap-2 px-6 py-3.5 bg-primary-600 text-white text-[11px] font-black uppercase tracking-widest rounded-2xl shadow-lg shadow-primary-600/20 hover:bg-primary-500 hover:-translate-y-0.5 transition-all w-full sm:w-auto shrink-0"
                     >
                         <i class="fas fa-plus"></i>
                         Nueva Materia
@@ -101,97 +141,99 @@ function submit() {
                 </div>
             </div>
 
-            <!-- Table Container -->
-            <div class="glass-card rounded-3xl overflow-hidden shadow-2xl animate-fade-in-up" style="animation-delay: 100ms">
-                <table class="w-full text-sm text-left">
-                    <thead class="bg-slate-50 text-slate-400 text-[10px] uppercase font-black tracking-[0.2em]">
-                        <tr>
-                            <th @click="toggleSort('grade_level_id')" class="px-8 py-5 cursor-pointer hover:bg-slate-100 hover:text-slate-600 transition-colors select-none group">
-                                Nivel / Año
-                                <span v-if="sortCol === 'grade_level_id'" class="ml-1 text-primary-500">
-                                    <i class="fas" :class="sortDir === 'asc' ? 'fa-sort-up' : 'fa-sort-down'"></i>
-                                </span>
-                                <span v-else class="ml-1 opacity-0 group-hover:opacity-100 transition-opacity"><i class="fas fa-sort"></i></span>
-                            </th>
-                            <th @click="toggleSort('code')" class="px-8 py-5 cursor-pointer hover:bg-slate-100 hover:text-slate-600 transition-colors select-none group">
-                                Código
-                                <span v-if="sortCol === 'code'" class="ml-1 text-primary-500">
-                                    <i class="fas" :class="sortDir === 'asc' ? 'fa-sort-up' : 'fa-sort-down'"></i>
-                                </span>
-                                <span v-else class="ml-1 opacity-0 group-hover:opacity-100 transition-opacity"><i class="fas fa-sort"></i></span>
-                            </th>
-                            <th @click="toggleSort('name')" class="px-8 py-5 cursor-pointer hover:bg-slate-100 hover:text-slate-600 transition-colors select-none group">
-                                Materia
-                                <span v-if="sortCol === 'name'" class="ml-1 text-primary-500">
-                                    <i class="fas" :class="sortDir === 'asc' ? 'fa-sort-up' : 'fa-sort-down'"></i>
-                                </span>
-                                <span v-else class="ml-1 opacity-0 group-hover:opacity-100 transition-opacity"><i class="fas fa-sort"></i></span>
-                            </th>
-                            <th class="px-8 py-5 text-right">Acciones</th>
-                        </tr>
-                    </thead>
-                    <tbody class="divide-y divide-slate-100">
-                        <tr v-for="subject in subjects.data" :key="subject.id" class="group hover:bg-slate-50 transition-colors">
-                            <td class="px-8 py-4">
-                                <span class="px-2.5 py-1 rounded-lg bg-slate-100 text-slate-400 text-[10px] font-black uppercase tracking-wider border border-slate-200">
-                                    {{ subject.grade_level?.name }}
-                                </span>
-                            </td>
-                            <td class="px-8 py-4">
-                                <span class="px-3 py-1.5 rounded-xl bg-primary-50 text-primary-600 text-[11px] font-black border border-primary-100 shadow-sm group-hover:bg-primary-500 group-hover:text-white transition-all">
-                                    {{ subject.code }}
-                                </span>
-                            </td>
-                            <td class="px-8 py-4">
-                                <div class="font-black text-slate-700 text-base group-hover:text-primary-700 transition-colors">
-                                    {{ subject.name }}
+            <!-- Accordion Layout -->
+            <div class="space-y-4">
+                <div 
+                    v-for="(subjectsList, levelName) in groupedSubjects" 
+                    :key="levelName"
+                    class="glass-card rounded-3xl overflow-hidden shadow-xl border-2 transition-all animate-fade-in-up"
+                    :class="activeLevel === levelName ? 'border-primary-100' : 'border-transparent'"
+                >
+                    <!-- Accordion Header -->
+                    <button 
+                        @click="toggleLevel(levelName)"
+                        class="w-full flex items-center justify-between p-5 sm:p-6 bg-white hover:bg-slate-50 transition-colors"
+                    >
+                        <div class="flex items-center gap-4">
+                            <div class="w-12 h-12 bg-primary-50 text-primary-600 rounded-2xl flex items-center justify-center text-xl shadow-sm transition-transform"
+                                :class="activeLevel === levelName ? 'rotate-6 bg-primary-500 text-white shadow-primary-500/30' : ''"
+                            >
+                                <i class="fas fa-book"></i>
+                            </div>
+                            <div class="text-left">
+                                <h3 class="text-lg sm:text-xl font-black text-slate-800">{{ levelName }}</h3>
+                                <p class="text-xs font-bold text-slate-400 mt-0.5">{{ subjectsList.length }} Materias Asignadas</p>
+                            </div>
+                        </div>
+                        <div class="w-10 h-10 rounded-full bg-slate-50 flex items-center justify-center text-slate-400 transition-transform"
+                            :class="activeLevel === levelName ? 'rotate-180 bg-primary-100 text-primary-600' : ''"
+                        >
+                            <i class="fas fa-chevron-down"></i>
+                        </div>
+                    </button>
+                    
+                    <!-- Accordion Body -->
+                    <transition
+                        enter-active-class="transition-all duration-500 ease-in-out overflow-hidden"
+                        enter-from-class="opacity-0 max-h-0"
+                        enter-to-class="opacity-100 max-h-[3000px]"
+                        leave-active-class="transition-all duration-300 ease-in-out overflow-hidden"
+                        leave-from-class="opacity-100 max-h-[3000px]"
+                        leave-to-class="opacity-0 max-h-0"
+                    >
+                        <div 
+                            v-show="activeLevel === levelName"
+                            class="p-5 sm:p-6 pt-2 bg-slate-50/50 border-t-2 border-slate-50 grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4"
+                        >
+                            <!-- Subject Card -->
+                            <div
+                                v-for="subject in subjectsList"
+                                :key="subject.id"
+                                class="bg-white rounded-2xl p-5 relative overflow-hidden transition-all duration-300 group hover:-translate-y-1 shadow-sm border-2 border-slate-100 hover:border-primary-200 hover:shadow-md flex flex-col justify-between"
+                            >
+                                <!-- Header -->
+                                <div>
+                                    <div class="flex justify-between items-start mb-4">
+                                        <div class="px-3 py-1 bg-slate-50 text-slate-500 rounded-lg text-[10px] font-black uppercase tracking-widest border border-slate-200">
+                                            {{ subject.code }}
+                                        </div>
+                                        <div class="flex gap-1.5 opacity-100 sm:opacity-0 group-hover:opacity-100 transition-opacity">
+                                            <button @click="openEditModal(subject)" class="w-8 h-8 rounded-lg bg-slate-50 text-slate-400 hover:bg-primary-50 hover:text-primary-600 transition-all flex items-center justify-center border border-transparent hover:border-primary-100" title="Editar">
+                                                <i class="fas fa-edit text-[10px]"></i>
+                                            </button>
+                                            <button @click="destroy(subject)" class="w-8 h-8 rounded-lg bg-red-50 text-red-400 hover:bg-red-500 hover:text-white transition-all flex items-center justify-center border border-transparent hover:border-red-200" title="Eliminar">
+                                                <i class="fas fa-trash text-[10px]"></i>
+                                            </button>
+                                        </div>
+                                    </div>
+                                    
+                                    <!-- Body -->
+                                    <h4 class="text-sm font-bold text-slate-800 leading-tight mb-2">
+                                        {{ subject.name }}
+                                    </h4>
                                 </div>
-                                <span v-if="subject.grading_type === 'qualitative'"
-                                    class="text-[9px] font-black uppercase tracking-widest px-2 py-0.5 rounded-full bg-amber-100 text-amber-600 border border-amber-200">
-                                    Cualitativa
-                                </span>
-                            </td>
-                            <td class="px-8 py-4 text-right">
-                                <button 
-                                    @click="openEditModal(subject)" 
-                                    class="w-10 h-10 rounded-xl bg-slate-50 text-slate-400 hover:text-primary-600 hover:bg-primary-50 transition-all border border-transparent hover:border-primary-100"
-                                    title="Editar Materia"
-                                >
-                                    <i class="fas fa-edit"></i>
-                                </button>
-                            </td>
-                        </tr>
-                        <tr v-if="subjects.data.length === 0">
-                            <td colspan="4" class="px-8 py-20 text-center">
-                                <div class="w-16 h-16 bg-slate-50 rounded-full flex items-center justify-center mx-auto mb-4 text-slate-200">
-                                    <i class="fas fa-book-open text-2xl"></i>
+                                
+                                <!-- Stats/Footer -->
+                                <div class="flex items-center justify-between pt-4 mt-2 border-t border-slate-50">
+                                    <span v-if="subject.grading_type === 'qualitative'" class="px-2 py-1 rounded-md bg-amber-50 text-amber-600 border border-amber-100 text-[9px] font-black uppercase tracking-widest flex items-center gap-1">
+                                        <i class="fas fa-font"></i> Cualitativa
+                                    </span>
+                                    <span v-else class="px-2 py-1 rounded-md bg-emerald-50 text-emerald-600 border border-emerald-100 text-[9px] font-black uppercase tracking-widest flex items-center gap-1">
+                                        <i class="fas fa-hashtag"></i> Numérica
+                                    </span>
                                 </div>
-                                <h3 class="text-lg font-bold text-slate-400">No hay materias para mostrar</h3>
-                                <p class="text-slate-300 text-sm mt-1">Ajusta tu búsqueda o agrega una nueva materia.</p>
-                            </td>
-                        </tr>
-                    </tbody>
-                </table>
-            </div>
+                            </div>
+                        </div>
+                    </transition>
+                </div>
 
-            <!-- Pagination Info -->
-            <div class="flex flex-col sm:flex-row items-center justify-between gap-4 px-4 animate-fade-in-up" style="animation-delay: 200ms">
-                <span class="text-xs font-bold text-slate-400 uppercase tracking-widest">
-                    Mostrando {{ subjects.data.length }} de {{ subjects.total }} registros
-                </span>
-                
-                <div class="flex flex-wrap justify-center items-center gap-1.5 w-full sm:w-auto" v-if="subjects.links && subjects.links.length > 3">
-                    <Link
-                        v-for="(link, i) in subjects.links"
-                        :key="i"
-                        :href="link.url || '#'"
-                        class="px-3 sm:px-4 py-2 sm:py-2.5 rounded-xl text-[10px] sm:text-xs font-black uppercase tracking-widest transition-all shadow-sm"
-                        :class="[
-                            link.active ? 'bg-primary-500 text-white ring-2 ring-primary-500/20' : 'bg-white text-slate-500 hover:bg-slate-50 border border-slate-200/60',
-                            !link.url ? 'opacity-40 cursor-not-allowed border-transparent shadow-none' : 'cursor-pointer hover:-translate-y-0.5'
-                        ]"
-                        v-html="link.label.replace(/pagination\.previous|previous/i, '&laquo;').replace(/pagination\.next|next/i, '&raquo;')"
-                    ></Link>
+                <!-- Empty Subjects -->
+                <div v-if="Object.keys(groupedSubjects).length === 0" class="glass-card rounded-3xl p-20 text-center animate-fade-in-up">
+                    <div class="w-16 h-16 bg-slate-50 rounded-full flex items-center justify-center mx-auto mb-4 text-slate-200">
+                        <i class="fas fa-search text-2xl"></i>
+                    </div>
+                    <h3 class="text-lg font-bold text-slate-400">No se encontraron materias</h3>
+                    <p class="text-slate-300 text-sm mt-1">Intenta con otros términos de búsqueda o crea una nueva.</p>
                 </div>
             </div>
         </div>
@@ -206,7 +248,7 @@ function submit() {
                         </h3>
                         <p class="text-sm font-medium text-slate-400 mt-1">Configura los detalles de la asignatura</p>
                     </div>
-                    <button @click="showModal = false" class="w-10 h-10 rounded-full bg-slate-50 text-slate-400 hover:bg-slate-100 transition-all">
+                    <button @click="showModal = false" class="w-10 h-10 rounded-full bg-slate-50 text-slate-400 hover:bg-slate-100 transition-all shadow-sm">
                         <i class="fas fa-times"></i>
                     </button>
                 </div>
@@ -215,7 +257,7 @@ function submit() {
                     <div class="space-y-2">
                         <label class="text-[11px] font-black text-slate-400 uppercase tracking-widest ml-1">Nivel / Año Académico</label>
                         <div class="relative">
-                            <select v-model="form.grade_level_id" class="w-full bg-slate-50 border-2 border-slate-400 rounded-2xl px-4 py-3 text-slate-700 text-sm font-bold focus:border-primary-400 focus:bg-white focus:ring-0 outline-none transition-all appearance-none cursor-pointer" required>
+                            <select v-model="form.grade_level_id" class="w-full bg-slate-50 border-2 border-slate-200 rounded-2xl px-4 py-3 text-slate-700 text-sm font-bold focus:border-primary-400 focus:bg-white focus:ring-0 outline-none transition-all appearance-none cursor-pointer shadow-sm" required>
                                 <option v-for="lvl in levels" :key="lvl.id" :value="lvl.id">{{ lvl.name }}</option>
                             </select>
                             <i class="fas fa-chevron-down absolute right-4 top-1/2 -translate-y-1/2 text-slate-300 pointer-events-none"></i>
@@ -224,22 +266,22 @@ function submit() {
 
                     <div class="space-y-2">
                         <label class="text-[11px] font-black text-slate-400 uppercase tracking-widest ml-1">Nombre de la Materia</label>
-                        <input v-model="form.name" type="text" class="w-full bg-slate-50 border-2 border-slate-400 rounded-2xl px-4 py-3 text-slate-700 text-sm font-bold focus:border-primary-400 focus:bg-white focus:ring-0 outline-none transition-all" required>
+                        <input v-model="form.name" type="text" class="w-full bg-slate-50 border-2 border-slate-200 rounded-2xl px-4 py-3 text-slate-700 text-sm font-bold focus:border-primary-400 focus:bg-white focus:ring-0 outline-none transition-all shadow-sm" required>
                     </div>
 
                     <div class="space-y-2">
                         <label class="text-[11px] font-black text-slate-400 uppercase tracking-widest ml-1">Código Único</label>
-                        <input v-model="form.code" type="text" class="w-full bg-slate-50 border-2 border-slate-400 rounded-2xl px-4 py-3 text-slate-700 text-sm font-bold focus:border-primary-400 focus:bg-white focus:ring-0 outline-none transition-all" required placeholder="ej. MAT-101">
+                        <input v-model="form.code" type="text" class="w-full bg-slate-50 border-2 border-slate-200 rounded-2xl px-4 py-3 text-slate-700 text-sm font-bold focus:border-primary-400 focus:bg-white focus:ring-0 outline-none transition-all shadow-sm" required placeholder="ej. MAT-101">
                     </div>
 
                     <div class="space-y-2">
                         <label class="text-[11px] font-black text-slate-400 uppercase tracking-widest ml-1">Tipo de Calificación</label>
                         <div class="grid grid-cols-2 gap-3">
                             <label class="flex items-center gap-3 p-3 rounded-2xl border-2 cursor-pointer transition-all"
-                                :class="form.grading_type === 'numeric' ? 'border-primary-400 bg-primary-50' : 'border-slate-200 bg-slate-50 hover:border-slate-300'">
+                                :class="form.grading_type === 'numeric' ? 'border-primary-400 bg-primary-50 shadow-sm' : 'border-slate-200 bg-slate-50 hover:border-slate-300'">
                                 <input type="radio" v-model="form.grading_type" value="numeric" class="hidden">
-                                <div class="w-8 h-8 rounded-xl flex items-center justify-center text-sm font-black"
-                                    :class="form.grading_type === 'numeric' ? 'bg-primary-500 text-white' : 'bg-slate-200 text-slate-500'">
+                                <div class="w-8 h-8 rounded-xl flex items-center justify-center text-sm font-black transition-all"
+                                    :class="form.grading_type === 'numeric' ? 'bg-primary-500 text-white shadow-md' : 'bg-slate-200 text-slate-500'">
                                     20
                                 </div>
                                 <div>
@@ -248,10 +290,10 @@ function submit() {
                                 </div>
                             </label>
                             <label class="flex items-center gap-3 p-3 rounded-2xl border-2 cursor-pointer transition-all"
-                                :class="form.grading_type === 'qualitative' ? 'border-amber-400 bg-amber-50' : 'border-slate-200 bg-slate-50 hover:border-slate-300'">
+                                :class="form.grading_type === 'qualitative' ? 'border-amber-400 bg-amber-50 shadow-sm' : 'border-slate-200 bg-slate-50 hover:border-slate-300'">
                                 <input type="radio" v-model="form.grading_type" value="qualitative" class="hidden">
-                                <div class="w-8 h-8 rounded-xl flex items-center justify-center text-sm font-black"
-                                    :class="form.grading_type === 'qualitative' ? 'bg-amber-500 text-white' : 'bg-slate-200 text-slate-500'">
+                                <div class="w-8 h-8 rounded-xl flex items-center justify-center text-sm font-black transition-all"
+                                    :class="form.grading_type === 'qualitative' ? 'bg-amber-500 text-white shadow-md' : 'bg-slate-200 text-slate-500'">
                                     A
                                 </div>
                                 <div>
@@ -262,14 +304,14 @@ function submit() {
                         </div>
                     </div>
 
-                    <div class="flex items-center justify-end gap-4 mt-12">
+                    <div class="flex items-center justify-end gap-4 mt-8 pt-4">
                         <button type="button" @click="showModal = false" class="px-6 py-3 text-sm font-black uppercase tracking-widest text-slate-400 hover:text-slate-600 transition-all">
                             Cancelar
                         </button>
                         <button 
                             type="submit" 
                             :disabled="form.processing" 
-                            class="px-10 py-3.5 bg-primary-600 text-white text-[11px] font-black uppercase tracking-widest rounded-2xl shadow-lg shadow-primary-600/20 hover:bg-primary-500 hover:-translate-y-0.5 transition-all"
+                            class="px-10 py-3.5 bg-primary-600 text-white text-[11px] font-black uppercase tracking-widest rounded-2xl shadow-lg shadow-primary-600/20 hover:bg-primary-500 hover:-translate-y-0.5 transition-all disabled:opacity-50 disabled:translate-y-0"
                         >
                             <i class="fas fa-save mr-2"></i>
                             Guardar Materia

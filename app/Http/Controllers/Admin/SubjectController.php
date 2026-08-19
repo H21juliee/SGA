@@ -30,8 +30,7 @@ class SubjectController extends Controller
                       });
             })
             ->orderBy($sort, $direction)
-            ->paginate(15)
-            ->withQueryString();
+            ->get();
 
         return Inertia::render('Admin/Subjects/Index', [
             'subjects' => $subjects,
