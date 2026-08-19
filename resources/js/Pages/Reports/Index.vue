@@ -180,7 +180,7 @@ function downloadBatch() {
                                     @click="printSabana(section.id, lapse.id)"
                                     class="flex-1 py-2 bg-indigo-50 text-indigo-600 hover:bg-indigo-600 hover:text-white rounded-xl text-[10px] font-bold uppercase transition-colors"
                                 >
-                                    L{{ lapse.order_num }}
+                                    Lapso {{ lapse.number }}
                                 </button>
                             </div>
 
