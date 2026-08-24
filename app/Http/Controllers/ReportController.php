@@ -88,7 +88,7 @@ class ReportController extends Controller
     }
 
     
-        public function printSabana($sectionId, $lapseId)
+    public function printSabana($sectionId, $lapseId)
     {
         Gate::authorize('reports.generate');
 
@@ -117,6 +117,7 @@ class ReportController extends Controller
         $fileName = sprintf('Sabana_%s_%s_Lapso%s.pdf', $section->gradeLevel->name, $section->name, $lapse->order_num);
         return $pdf->download($fileName);
     }
+    
     public function downloadReportCard(Request $request, Enrollment $enrollment, CalculateAverageAction $calcAverage)
     {
         Gate::authorize('reports.generate');
@@ -205,7 +206,7 @@ class ReportController extends Controller
                 'lapses'     => $row,
                 'final'      => $finalGrade,
                 'revision'   => $revision ? (float) $revision->score : null,
-                'is_pending' => $finalGrade !== null && $finalGrade < 10 && (!$revision || $revision->score < 10),
+                'is_pending' => $finalGrade !== null && $finalGrade < 9.5 && (!$revision || $revision->score < 9.5),
             ];
         }
 

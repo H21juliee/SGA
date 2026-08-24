@@ -67,7 +67,7 @@ final class CalculateAverageAction
     }
 
     /**
-     * Verifica si el estudiante aprobó todas las materias (nota final >= 10).
+     * Verifica si el estudiante aprobó todas las materias (nota final >= 9.5).
      */
     public function isApproved(Enrollment $enrollment): bool
     {
@@ -89,13 +89,13 @@ final class CalculateAverageAction
 
         foreach ($subjects as $subject) {
             $finalGrade = $this->forSubject($enrollment, $subject);
-            if ($finalGrade === null || $finalGrade < 10) {
+            if ($finalGrade === null || $finalGrade < 9.5) {
                 // Verificar si tiene nota de revisión aprobada
                 $revision = RevisionGrade::where('enrollment_id', $enrollment->id)
                     ->where('subject_id', $subject->id)
                     ->first();
 
-                if ($revision && $revision->score >= 10) {
+                if ($revision && $revision->score >= 9.5) {
                     continue;
                 }
 

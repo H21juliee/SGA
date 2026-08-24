@@ -36,6 +36,6 @@ class RevisionGrade extends Model
 
     public function isApproved(): bool
     {
-        return $this->score >= 10;
+        return $this->score >= 9.5;
     }
 }

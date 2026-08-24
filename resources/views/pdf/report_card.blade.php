@@ -236,20 +236,20 @@
                     @php
                         $data    = $gradesMatrix[$subject->id] ?? ['lapses' => [], 'final' => null, 'revision' => null, 'is_pending' => false];
                         $final   = $data['final'];
-                        $isFailed = $final !== null && $final < 10;
+                        $isFailed = $final !== null && $final < 9.5;
                     @endphp
                     <tr>
                         <td class="subject-col">{{ strtoupper($subject->name) }}</td>
 
                         @foreach($lapses as $lapse)
                             @php $lapseData = $data['lapses'][$lapse->id] ?? null; @endphp
-                            <td class="score-col {{ $lapseData && $lapseData['definitive'] < 10 ? 'failed' : '' }}">
+                            <td class="score-col {{ $lapseData && $lapseData['definitive'] < 9.5 ? 'failed' : '' }}">
                                 {{ $lapseData ? number_format($lapseData['score'], 0) : '—' }}
                             </td>
                             <td class="adj-col">
                                 {{ $lapseData && $lapseData['council_adjustment'] != 0 ? ($lapseData['council_adjustment'] > 0 ? '+' : '') . $lapseData['council_adjustment'] : '0' }}
                             </td>
-                            <td class="def-col {{ $lapseData && $lapseData['definitive'] < 10 ? 'failed' : '' }}">
+                            <td class="def-col {{ $lapseData && $lapseData['definitive'] < 9.5 ? 'failed' : '' }}">
                                 {{ $lapseData ? number_format($lapseData['definitive'], 0) : '—' }}
                             </td>
                         @endforeach
@@ -265,7 +265,7 @@
 
                         <td class="rev-col">
                             @if($data['revision'] !== null)
-                                <span class="{{ $data['revision'] >= 10 ? 'approved' : 'failed' }}">
+                                <span class="{{ $data['revision'] >= 9.5 ? 'approved' : 'failed' }}">
                                     {{ number_format($data['revision'], 0) }}
                                 </span>
                             @else

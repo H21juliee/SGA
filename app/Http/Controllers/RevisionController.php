@@ -63,7 +63,7 @@ class RevisionController extends Controller
 
     /**
      * Muestra el DataGrid de revisión para una sección/materia específica.
-     * Solo muestra estudiantes que aplazaron la materia (promedio < 10 en los 3 lapsos).
+     * Solo muestra estudiantes que aplazaron la materia (promedio < 9.5 en los 3 lapsos).
      */
     public function datagrid(Request $request, Section $section, Subject $subject, CalculateAverageAction $calcAverage)
     {
@@ -81,7 +81,7 @@ class RevisionController extends Controller
         // Filtrar solo los estudiantes que aplazaron esta materia
         $failedEnrollments = $enrollments->filter(function ($enrollment) use ($subject, $calcAverage) {
             $finalGrade = $calcAverage->forSubject($enrollment, $subject);
-            return $finalGrade === null || $finalGrade < 10;
+            return $finalGrade === null || $finalGrade < 9.5;
         });
 
         // Verificar si el año está cerrado (revisiones bloqueadas)
@@ -114,7 +114,7 @@ class RevisionController extends Controller
             return back()->withErrors(['message' => 'El año escolar ya fue cerrado. No se pueden cargar revisiones.']);
         }
 
-        $status = $validated['score'] >= 10 ? 'approved' : 'failed';
+        $status = $validated['score'] >= 9.5 ? 'approved' : 'failed';
 
         RevisionGrade::updateOrCreate(
             [
@@ -153,7 +153,7 @@ class RevisionController extends Controller
         }
 
         foreach ($request->input('changes') as $change) {
-            $status = $change['score'] >= 10 ? 'approved' : 'failed';
+            $status = $change['score'] >= 9.5 ? 'approved' : 'failed';
 
             RevisionGrade::updateOrCreate(
                 [
