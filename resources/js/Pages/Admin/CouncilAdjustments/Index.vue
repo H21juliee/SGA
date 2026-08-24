@@ -15,7 +15,12 @@ const props = defineProps({
 const gradeLevelId = ref(props.filters.grade_level_id ? (parseInt(props.filters.grade_level_id) || '') : '')
 const sectionId = ref(props.filters.section_id ? (parseInt(props.filters.section_id) || '') : '')
 const subjectId = ref(props.filters.subject_id ? (parseInt(props.filters.subject_id) || '') : '')
-const lapseId   = ref(props.filters.lapse_id   ? (parseInt(props.filters.lapse_id) || '') : '')
+
+const activeLapse = props.lapses.find(l => l.is_open)
+const lapseId   = ref(props.filters.lapse_id   ? (parseInt(props.filters.lapse_id) || '') : (activeLapse ? activeLapse.id : ''))
+
+const selectedLapseObj = computed(() => props.lapses.find(l => l.id === lapseId.value))
+const showLapseWarning = computed(() => selectedLapseObj.value && !selectedLapseObj.value.is_open)
 
 // Si hay una sección pero no hay grade_level_id en la URL, inicializarlo
 if (!gradeLevelId.value && sectionId.value) {
@@ -212,8 +217,11 @@ const hasFilters = computed(() => sectionId.value && subjectId.value && lapseId.
                                     {{ g.name }}
                                 </option>
                             </select>
-                            <i class="fas fa-chevron-down absolute right-4 top-1/2 -translate-y-1/2 text-slate-300 pointer-events-none"></i>
+                            <i class="fas fa-chevron-down absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none" :class="showLapseWarning ? 'text-amber-400' : 'text-slate-300'"></i>
                         </div>
+                        <p v-if="showLapseWarning" class="absolute -bottom-5 left-1 text-[9.5px] font-black text-amber-500 flex items-center gap-1 animate-fade-in whitespace-nowrap uppercase tracking-widest">
+                            <i class="fas fa-exclamation-triangle"></i> Editando lapso inactivo
+                        </p>
                     </div>
 
                     <!-- Sección -->
@@ -227,8 +235,11 @@ const hasFilters = computed(() => sectionId.value && subjectId.value && lapseId.
                                     Sec. {{ s.name }}
                                 </option>
                             </select>
-                            <i class="fas fa-chevron-down absolute right-4 top-1/2 -translate-y-1/2 text-slate-300 pointer-events-none"></i>
+                            <i class="fas fa-chevron-down absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none" :class="showLapseWarning ? 'text-amber-400' : 'text-slate-300'"></i>
                         </div>
+                        <p v-if="showLapseWarning" class="absolute -bottom-5 left-1 text-[9.5px] font-black text-amber-500 flex items-center gap-1 animate-fade-in whitespace-nowrap uppercase tracking-widest">
+                            <i class="fas fa-exclamation-triangle"></i> Editando lapso inactivo
+                        </p>
                     </div>
 
                     <!-- Materia -->
@@ -240,8 +251,11 @@ const hasFilters = computed(() => sectionId.value && subjectId.value && lapseId.
                                 <option value="">Materia...</option>
                                 <option v-for="s in subjects" :key="s.id" :value="s.id">{{ s.name }}</option>
                             </select>
-                            <i class="fas fa-chevron-down absolute right-4 top-1/2 -translate-y-1/2 text-slate-300 pointer-events-none"></i>
+                            <i class="fas fa-chevron-down absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none" :class="showLapseWarning ? 'text-amber-400' : 'text-slate-300'"></i>
                         </div>
+                        <p v-if="showLapseWarning" class="absolute -bottom-5 left-1 text-[9.5px] font-black text-amber-500 flex items-center gap-1 animate-fade-in whitespace-nowrap uppercase tracking-widest">
+                            <i class="fas fa-exclamation-triangle"></i> Editando lapso inactivo
+                        </p>
                     </div>
 
                     <!-- Lapso -->
@@ -249,12 +263,16 @@ const hasFilters = computed(() => sectionId.value && subjectId.value && lapseId.
                         <label class="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Lapso</label>
                         <div class="relative">
                             <select v-model="lapseId"
-                                class="w-full bg-white border-2 border-slate-100 rounded-2xl px-4 py-3 text-slate-700 text-sm font-bold focus:border-primary-400 focus:ring-0 outline-none transition-all appearance-none shadow-sm">
+                                class="w-full bg-white border-2 border-slate-100 rounded-2xl px-4 py-3 text-slate-700 text-sm font-bold focus:border-primary-400 focus:ring-0 outline-none transition-all appearance-none shadow-sm"
+                                :class="{'border-amber-300 ring-4 ring-amber-50 text-amber-800': showLapseWarning}">
                                 <option value="">Lapso...</option>
                                 <option v-for="l in lapses" :key="l.id" :value="l.id">{{ l.name }}</option>
                             </select>
-                            <i class="fas fa-chevron-down absolute right-4 top-1/2 -translate-y-1/2 text-slate-300 pointer-events-none"></i>
+                            <i class="fas fa-chevron-down absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none" :class="showLapseWarning ? 'text-amber-400' : 'text-slate-300'"></i>
                         </div>
+                        <p v-if="showLapseWarning" class="absolute -bottom-5 left-1 text-[9.5px] font-black text-amber-500 flex items-center gap-1 animate-fade-in whitespace-nowrap uppercase tracking-widest">
+                            <i class="fas fa-exclamation-triangle"></i> Editando lapso inactivo
+                        </p>
                     </div>
                 </div>
             </div>
