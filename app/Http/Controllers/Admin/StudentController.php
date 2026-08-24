@@ -59,7 +59,9 @@ class StudentController extends Controller
                 'schoolYear',
                 'section.gradeLevel',
                 'grades.subject',
-                'grades.lapse'
+                'grades.lapse',
+                'attendances',
+                'revisionGrades.subject',
             ])
             ->orderByDesc('school_year_id')
             ->get();

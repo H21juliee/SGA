@@ -57,11 +57,24 @@ const matrix = computed(() => {
         return {
             id: en.id,
             name: `${en.student.last_name}, ${en.student.first_name}`,
+            cedula: en.student.cedula ?? '\u2014',
             attendance: studentData,
             totalAbsences,
             attendanceRate
         }
     })
+})
+
+// Search
+const search = ref('')
+
+const filteredMatrix = computed(() => {
+    const q = search.value.trim().toLowerCase()
+    if (!q) return matrix.value
+    return matrix.value.filter(row =>
+        row.name.toLowerCase().includes(q) ||
+        (row.cedula && row.cedula.toLowerCase().includes(q))
+    )
 })
 
 const formatDate = (dateStr) => {
@@ -77,11 +90,18 @@ const formatDate = (dateStr) => {
         <div class="space-y-8 max-w-12xl mx-auto">
             <!-- Header & Breadcrumbs -->
             <div class="animate-fade-in-up">
-                <nav class="flex items-center gap-3 text-[10px] font-black uppercase tracking-widest text-slate-400 mb-4">
-                    <Link href="/attendance" class="hover:text-emerald-600 transition-colors">Asistencia</Link>
-                    <i class="fas fa-chevron-right text-[8px]"></i>
-                    <span class="text-slate-600">Historial de Matriz</span>
-                </nav>
+                <div class="flex items-center gap-3 mb-4">
+                    <Link href="/attendance"
+                          class="w-9 h-9 rounded-xl bg-white text-slate-400 hover:text-emerald-600 shadow-sm flex items-center justify-center transition-all hover:-translate-x-1 border border-slate-100"
+                          title="Volver a Asistencia">
+                        <i class="fas fa-arrow-left text-xs"></i>
+                    </Link>
+                    <nav class="flex items-center gap-3 text-[10px] font-black uppercase tracking-widest text-slate-400">
+                        <Link href="/attendance" class="hover:text-emerald-600 transition-colors">Asistencia</Link>
+                        <i class="fas fa-chevron-right text-[8px]"></i>
+                        <span class="text-slate-600">Historial de Matriz</span>
+                    </nav>
+                </div>
 
                 <div class="flex flex-col lg:flex-row lg:items-end justify-between gap-6">
                     <div>
@@ -93,8 +113,24 @@ const formatDate = (dateStr) => {
                         </p>
                     </div>
 
-                    <div class="flex flex-col gap-2 min-w-[200px]">
-                        <label class="text-[11px] font-black text-slate-400 uppercase tracking-widest ml-1">Filtrar por Lapso</label>
+                    <div class="flex flex-col sm:flex-row items-end gap-3">
+                        <div class="flex flex-col gap-2 w-full sm:w-72">
+                            <label class="text-[11px] font-black text-slate-400 uppercase tracking-widest ml-1">Buscar Estudiante</label>
+                            <div class="relative">
+                                <i class="fas fa-search absolute left-4 top-1/2 -translate-y-1/2 text-slate-300 text-xs pointer-events-none"></i>
+                                <input
+                                    v-model="search"
+                                    type="text"
+                                    placeholder="Nombre o cédula..."
+                                    class="w-full bg-white border-2 border-slate-100 rounded-2xl pl-10 pr-4 py-3 text-slate-700 text-sm font-bold focus:border-emerald-400 focus:ring-0 outline-none transition-all shadow-sm placeholder:text-slate-300 placeholder:font-medium"
+                                />
+                                <button v-if="search" @click="search = ''" class="absolute right-3 top-1/2 -translate-y-1/2 text-slate-300 hover:text-slate-500 transition-colors">
+                                    <i class="fas fa-times-circle"></i>
+                                </button>
+                            </div>
+                        </div>
+                        <div class="flex flex-col gap-2 min-w-[200px]">
+                            <label class="text-[11px] font-black text-slate-400 uppercase tracking-widest ml-1">Filtrar por Lapso</label>
                         <div class="relative">
                             <select 
                                 v-model="selectedLapseId" 
@@ -105,7 +141,8 @@ const formatDate = (dateStr) => {
                             </select>
                             <i class="fas fa-filter absolute right-4 top-1/2 -translate-y-1/2 text-slate-300 pointer-events-none"></i>
                         </div>
-                    </div>
+                        </div><!-- end lapse selector -->
+                    </div><!-- end flex row -->
                 </div>
             </div>
 
@@ -115,7 +152,7 @@ const formatDate = (dateStr) => {
                     <table class="w-full text-sm text-left border-collapse">
                         <thead>
                             <tr class="bg-slate-50/80 border-b border-slate-100">
-                                <th class="px-6 py-4 text-xs font-black text-slate-400 uppercase tracking-widest sticky left-0 bg-slate-50 z-20 min-w-[240px]">Estudiante</th>
+                                <th class="px-6 py-4 text-xs font-black text-slate-400 uppercase tracking-widest sticky left-0 bg-slate-50 z-20 min-w-[220px]">Estudiante</th>
                                 <th v-for="date in dates" :key="date" class="px-2 py-4 text-center text-[10px] font-black text-slate-500 uppercase min-w-[70px] leading-tight border-l border-slate-100/50">
                                     {{ formatDate(date).split('/').slice(0,2).join('/') }}<br/>
                                     <span class="text-[8px] text-slate-300 font-bold">{{ formatDate(date).split('/')[2] }}</span>
@@ -125,9 +162,10 @@ const formatDate = (dateStr) => {
                             </tr>
                         </thead>
                         <tbody class="divide-y divide-slate-100">
-                            <tr v-for="row in matrix" :key="row.id" class="group hover:bg-slate-50 transition-colors">
-                                <td class="px-6 py-4 font-bold text-slate-700 sticky left-0 bg-white group-hover:bg-slate-50 z-10 border-r border-slate-100 transition-colors">
-                                    {{ row.name }}
+                            <tr v-for="row in filteredMatrix" :key="row.id" class="group hover:bg-slate-50 transition-colors">
+                                <td class="px-6 py-4 sticky left-0 bg-white group-hover:bg-slate-50 z-10 border-r border-slate-100 transition-colors">
+                                    <p class="font-bold text-slate-700 leading-tight">{{ row.name }}</p>
+                                    <p class="text-[11px] font-medium text-slate-400 mt-0.5">{{ row.cedula }}</p>
                                 </td>
                                 <td v-for="date in dates" :key="date" class="px-1 py-3 text-center border-l border-slate-50">
                                     <div 
@@ -171,13 +209,22 @@ const formatDate = (dateStr) => {
                     </table>
                 </div>
                 
+                <!-- Empty search state -->
+                <div v-if="dates.length > 0 && filteredMatrix.length === 0" class="p-12 text-center">
+                    <div class="w-14 h-14 bg-slate-50 rounded-full flex items-center justify-center mx-auto mb-3 text-slate-200">
+                        <i class="fas fa-search text-xl"></i>
+                    </div>
+                    <p class="text-slate-400 font-bold text-sm">Sin resultados para <span class="text-slate-600">"{{ search }}"</span></p>
+                    <button @click="search = ''" class="mt-3 text-xs font-black text-emerald-500 hover:text-emerald-600 uppercase tracking-wider">Limpiar búsqueda</button>
+                </div>
+
                 <!-- Empty State -->
-                <div v-if="dates.length === 0" class="p-20 text-center animate-fade-in">
+                <div v-if="enrollments.length === 0" class="p-20 text-center animate-fade-in">
                     <div class="w-16 h-16 bg-slate-50 rounded-full flex items-center justify-center mx-auto mb-4 text-slate-200">
                         <i class="fas fa-folder-open text-2xl"></i>
                     </div>
-                    <h3 class="text-lg font-bold text-slate-400">Sin registros de asistencia</h3>
-                    <p class="text-slate-300 text-sm mt-1">No hay datos para mostrar en este lapso.</p>
+                    <h3 class="text-lg font-bold text-slate-400">Sin estudiantes inscritos</h3>
+                    <p class="text-slate-300 text-sm mt-1">No hay estudiantes inscritos en esta sección para este lapso.</p>
                 </div>
             </div>
 
@@ -211,3 +258,4 @@ const formatDate = (dateStr) => {
     left: 0;
 }
 </style>
+
