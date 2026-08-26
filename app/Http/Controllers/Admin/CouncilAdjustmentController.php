@@ -47,7 +47,7 @@ class CouncilAdjustmentController extends Controller implements \Illuminate\Rout
         if ($resolvedGradeLevelId) {
             $subjects = Subject::where('grade_level_id', $resolvedGradeLevelId)
                 ->where('grading_type', 'numeric')
-                ->get();
+            ->get();
         }
 
         if ($sectionId && $subjectId && $lapseId) {
