@@ -5,8 +5,14 @@ namespace App\Http\Controllers;
 use App\Models\Guardian;
 use Illuminate\Http\Request;
 
-class GuardianController extends Controller
+class GuardianController extends Controller implements \Illuminate\Routing\Controllers\HasMiddleware
 {
+    public static function middleware(): array
+    {
+        return [
+        new \Illuminate\Routing\Controllers\Middleware('permission:students.create|permission:students.edit', only: ['search', 'store']),
+        ];
+    }
     public function search(Request $request)
     {
         $request->validate([

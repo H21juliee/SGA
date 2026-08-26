@@ -232,8 +232,7 @@ function toggleNote(rowId) {
                                 </div>
                             </div>
 
-                            <button
-                                v-if="!isLocked"
+                            <button v-if="!isLocked && $can('attendance.manage')" 
                                 @click="finalizeAttendance"
                                 class="w-full sm:w-auto flex items-center justify-center gap-3 px-6 py-3.5 bg-emerald-600 text-white text-[11px] font-black uppercase tracking-widest rounded-2xl shadow-lg shadow-emerald-600/20 hover:bg-emerald-500 hover:-translate-y-0.5 transition-all group"
                             >
@@ -293,8 +292,7 @@ function toggleNote(rowId) {
                         </div>
                     </div>
                     
-                    <button
-                        v-if="!isLocked"
+                    <button v-if="!isLocked && $can('attendance.manage')" 
                         @click="markAllPresent"
                         class="shrink-0 w-full md:w-auto md:px-4 py-2 h-10 flex items-center justify-center gap-2 bg-slate-900 text-white rounded-xl shadow-md hover:bg-slate-800 transition-all text-xs font-bold uppercase tracking-widest"
                         title="Marcar todos como Presentes"
@@ -346,7 +344,7 @@ function toggleNote(rowId) {
                             <!-- Presente -->
                             <button 
                                 @click="setStatus(row, 'present')"
-                                :disabled="isLocked"
+                                :disabled="isLocked || !$can('attendance.manage')"
                                 class="w-10 h-10 sm:w-12 sm:h-12 rounded-2xl flex items-center justify-center text-sm font-black transition-all transform active:scale-95 disabled:active:scale-100 disabled:cursor-not-allowed"
                                 :class="row.status === 'present' ? 'bg-emerald-500 text-white shadow-lg shadow-emerald-500/30 scale-110 z-10' : 'bg-slate-100 text-slate-400 hover:bg-slate-200'"
                                 title="Presente"
@@ -356,7 +354,7 @@ function toggleNote(rowId) {
                             <!-- Ausente -->
                             <button 
                                 @click="setStatus(row, 'absent')"
-                                :disabled="isLocked"
+                                :disabled="isLocked || !$can('attendance.manage')"
                                 class="w-10 h-10 sm:w-12 sm:h-12 rounded-2xl flex items-center justify-center text-sm font-black transition-all transform active:scale-95 disabled:active:scale-100 disabled:cursor-not-allowed"
                                 :class="row.status === 'absent' ? 'bg-red-500 text-white shadow-lg shadow-red-500/30 scale-110 z-10' : 'bg-slate-100 text-slate-400 hover:bg-slate-200'"
                                 title="Ausente"
@@ -366,7 +364,7 @@ function toggleNote(rowId) {
                             <!-- Tardanza -->
                             <button 
                                 @click="setStatus(row, 'late')"
-                                :disabled="isLocked"
+                                :disabled="isLocked || !$can('attendance.manage')"
                                 class="w-10 h-10 sm:w-12 sm:h-12 rounded-2xl flex items-center justify-center text-sm font-black transition-all transform active:scale-95 disabled:active:scale-100 disabled:cursor-not-allowed"
                                 :class="row.status === 'late' ? 'bg-amber-500 text-white shadow-lg shadow-amber-500/30 scale-110 z-10' : 'bg-slate-100 text-slate-400 hover:bg-slate-200'"
                                 title="Tardanza"
@@ -376,7 +374,7 @@ function toggleNote(rowId) {
                             <!-- Justificado -->
                             <button 
                                 @click="setStatus(row, 'excused')"
-                                :disabled="isLocked"
+                                :disabled="isLocked || !$can('attendance.manage')"
                                 class="w-10 h-10 sm:w-12 sm:h-12 rounded-2xl flex items-center justify-center text-sm font-black transition-all transform active:scale-95 disabled:active:scale-100 disabled:cursor-not-allowed"
                                 :class="row.status === 'excused' ? 'bg-sky-500 text-white shadow-lg shadow-sky-500/30 scale-110 z-10' : 'bg-slate-100 text-slate-400 hover:bg-slate-200'"
                                 title="Justificado"
@@ -408,7 +406,7 @@ function toggleNote(rowId) {
                                     </div>
                                     <textarea 
                                         v-model="row.notes"
-                                        :disabled="isLocked"
+                                        :disabled="isLocked || !$can('attendance.manage')"
                                         class="w-full bg-slate-50 border-2 border-slate-100 rounded-xl px-3 py-2 text-xs text-slate-700 focus:border-indigo-400 focus:ring-0 outline-none resize-none disabled:bg-slate-100 disabled:text-slate-400"
                                         rows="2"
                                         placeholder="Escribe el motivo..."

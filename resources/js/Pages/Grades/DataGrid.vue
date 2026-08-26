@@ -296,7 +296,7 @@ function saveToServer(row) {
                         <!-- Decrement -->
                         <button 
                             @click="decrementScore(row)"
-                            :disabled="!lapse.is_open"
+                            :disabled="!lapse.is_open || !$can('grades.edit')"
                             class="w-10 h-10 rounded-xl bg-white shadow-sm border-b-2 flex items-center justify-center text-lg transition-all group active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed"
                             :class="[row.score > 1 ? 'border-slate-200 hover:border-slate-300' : 'border-slate-100 opacity-50']"
                         >
@@ -309,7 +309,7 @@ function saveToServer(row) {
                                 v-model="row.score"
                                 @change="validateAndSave(row)"
                                 @blur="validateAndSave(row)"
-                                :disabled="!lapse.is_open"
+                                :disabled="!lapse.is_open || !$can('grades.edit')"
                                 type="number" 
                                 min="1" 
                                 max="20"
@@ -321,7 +321,7 @@ function saveToServer(row) {
                         <!-- Increment -->
                         <button 
                             @click="incrementScore(row)"
-                            :disabled="!lapse.is_open"
+                            :disabled="!lapse.is_open || !$can('grades.edit')"
                             class="w-10 h-10 rounded-xl bg-white shadow-sm border-b-2 flex items-center justify-center text-lg transition-all group active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed"
                             :class="[row.score < 20 ? 'border-slate-200 hover:border-slate-300' : 'border-slate-100 opacity-50']"
                         >

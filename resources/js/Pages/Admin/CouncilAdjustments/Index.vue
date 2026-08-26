@@ -295,7 +295,7 @@ const hasFilters = computed(() => sectionId.value && subjectId.value && lapseId.
                             v-model="searchQuery" 
                             type="text" 
                             placeholder="Buscar estudiante por nombre o cédula..." 
-                            class="w-full bg-white border-2 border-slate-100 rounded-2xl pl-11 pr-4 py-3 text-sm text-slate-700 placeholder:text-slate-400 focus:border-primary-400 focus:ring-0 outline-none transition-all shadow-sm"
+                            class="w-full bg-white border-2 border-slate-100 rounded-2xl pl-11 pr-4 py-3 text-sm text-slate-700 placeholder:text-slate-400 focus:border-primary-400 focus:ring-0 outline-none transition-all shadow-sm disabled:bg-slate-50 disabled:text-slate-500"
                         >
                     </div>
                     <div class="w-full sm:w-auto relative">
@@ -352,7 +352,7 @@ const hasFilters = computed(() => sectionId.value && subjectId.value && lapseId.
                                 </div>
 
                                 <button 
-                                    @click="decrementAdjustment(row)"
+                                    @click="decrementAdjustment(row)" :disabled="!$can('council.manage')"
                                     class="w-10 h-10 rounded-xl bg-white shadow-sm border-b-2 flex items-center justify-center text-sm transition-all group active:scale-95 disabled:opacity-50"
                                     :class="[row.council_adjustment > -5 ? 'border-slate-200 hover:border-slate-300' : 'border-slate-100 opacity-50']"
                                 >
@@ -364,15 +364,15 @@ const hasFilters = computed(() => sectionId.value && subjectId.value && lapseId.
                                         v-model="row.council_adjustment"
                                         @change="validateAndSave(row)"
                                         @blur="validateAndSave(row)"
-                                        type="number" 
+                                        :disabled="!$can('council.manage')" type="number" 
                                         min="-5" max="5"
-                                        class="w-full h-full bg-white border-2 border-slate-200 rounded-xl text-center text-sm font-black text-slate-800 focus:border-primary-400 focus:ring-0 outline-none transition-all shadow-sm"
+                                        class="w-full h-full bg-white border-2 border-slate-200 rounded-xl text-center text-sm font-black text-slate-800 focus:border-primary-400 focus:ring-0 outline-none transition-all shadow-sm disabled:bg-slate-50 disabled:text-slate-500"
                                         placeholder="0"
                                     >
                                 </div>
 
                                 <button 
-                                    @click="incrementAdjustment(row)"
+                                    @click="incrementAdjustment(row)" :disabled="!$can('council.manage')"
                                     class="w-10 h-10 rounded-xl bg-white shadow-sm border-b-2 flex items-center justify-center text-sm transition-all group active:scale-95 disabled:opacity-50"
                                     :class="[row.council_adjustment < 5 ? 'border-slate-200 hover:border-slate-300' : 'border-slate-100 opacity-50']"
                                 >

@@ -3,6 +3,7 @@ import { ref, computed } from 'vue'
 import { router, useForm } from '@inertiajs/vue3'
 import AppLayout from '@/Components/Layout/AppLayout.vue'
 import Modal from '@/Components/UI/Modal.vue'
+import Swal from 'sweetalert2'
 
 const props = defineProps({
     activeYear: Object,
@@ -137,9 +138,20 @@ function enroll(studentId) {
 }
 
 function destroy(id) {
-    if(confirm('¿Seguro que desea eliminar a este estudiante de la sección?')) {
-        router.delete(`/admin/enrollments/${id}`, { preserveScroll: true })
-    }
+    Swal.fire({
+        title: '¿Seguro que desea eliminar a este estudiante de la sección?',
+        text: 'Esta acción no se puede deshacer.',
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonColor: '#ef4444',
+        cancelButtonColor: '#94a3b8',
+        confirmButtonText: 'Sí, eliminar',
+        cancelButtonText: 'Cancelar'
+    }).then((result) => {
+        if (result.isConfirmed) {
+            router.delete(`/admin/enrollments/${id}`, { preserveScroll: true })
+        }
+    })
 }
 </script>
 
@@ -249,9 +261,10 @@ function destroy(id) {
                                 </div>
                             </div>
                             <button 
+                                v-if="$can('enrollments.manage') || $can('enrollments.create')"
                                 @click="enroll(student.id)" 
                                 :disabled="form.processing"
-                                class="w-8 h-8 shrink-0 rounded-xl bg-primary-50 text-primary-600 flex items-center justify-center lg:opacity-0 group-hover:opacity-100 transition-all hover:bg-primary-600 hover:text-white shadow-sm disabled:opacity-50"
+                                class="w-8 h-8 shrink-0 rounded-xl bg-primary-50 text-primary-600 flex items-center justify-center transition-all hover:bg-primary-600 hover:text-white shadow-sm disabled:opacity-50"
                                 title="Inscribir"
                             >
                                 <i class="fas fa-plus text-[10px]"></i>
@@ -344,21 +357,20 @@ function destroy(id) {
 
                                 <!-- Action Buttons -->
                                 <div class="flex items-center gap-2 bg-slate-50 p-1.5 rounded-xl border border-slate-100">
-                                    <button 
-                                        @click="openStatusModal(enrollment)" 
+                                    <button v-if="$can('enrollments.update_status')" @click="openStatusModal(enrollment)" 
                                         class="w-8 h-8 rounded-lg bg-white text-slate-500 hover:text-slate-800 hover:shadow-sm transition-all border border-slate-200 flex items-center justify-center"
                                         title="Cambiar Estatus"
                                     >
                                         <i class="fas fa-cog text-xs"></i>
                                     </button>
-                                    <button 
-                                        @click="openTransferModal(enrollment)" 
+                                    <button v-if="$can('enrollments.transfer')" @click="openTransferModal(enrollment)" 
                                         class="w-8 h-8 rounded-lg bg-white text-sky-500 hover:bg-sky-50 hover:text-sky-600 hover:border-sky-200 hover:shadow-sm transition-all border border-slate-200 flex items-center justify-center"
                                         title="Transferir de Sección"
                                     >
                                         <i class="fas fa-exchange-alt text-xs"></i>
                                     </button>
                                     <button 
+                                        v-if="$can('enrollments.manage') || $can('enrollments.delete')"
                                         @click="destroy(enrollment.id)" 
                                         class="w-8 h-8 rounded-lg bg-white text-red-400 hover:bg-red-50 hover:text-red-500 hover:border-red-200 hover:shadow-sm transition-all border border-slate-200 flex items-center justify-center"
                                         title="Eliminar Inscripción"

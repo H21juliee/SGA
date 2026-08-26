@@ -12,8 +12,16 @@ use App\Models\GradeLevel;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 
-class AcademicLoadController extends Controller
+class AcademicLoadController extends Controller implements \Illuminate\Routing\Controllers\HasMiddleware
 {
+    public static function middleware(): array
+    {
+        return [
+        new \Illuminate\Routing\Controllers\Middleware('permission:academic_load.view', only: ['index']),
+        new \Illuminate\Routing\Controllers\Middleware('permission:academic_load.manage', only: ['store', 'update', 'destroy']),
+        new \Illuminate\Routing\Controllers\Middleware('permission:academic_load.assign', only: ['assign']),
+        ];
+    }
     public function index(Request $request)
     {
         $schoolYearId = $request->input('school_year_id', SchoolYear::active()->first()?->id);

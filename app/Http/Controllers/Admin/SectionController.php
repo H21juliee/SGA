@@ -9,8 +9,15 @@ use App\Models\Section;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 
-class SectionController extends Controller
+class SectionController extends Controller implements \Illuminate\Routing\Controllers\HasMiddleware
 {
+    public static function middleware(): array
+    {
+        return [
+        new \Illuminate\Routing\Controllers\Middleware('permission:sections.view', only: ['index', 'show']),
+        new \Illuminate\Routing\Controllers\Middleware('permission:sections.manage', only: ['store', 'update', 'destroy']),
+        ];
+    }
     public function index(Request $request)
     {
         $activeYear = SchoolYear::active()->first();

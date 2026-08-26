@@ -149,8 +149,7 @@ function destroy(subject) {
                         >
                     </div>
                     
-                    <button
-                        @click="openCreateModal"
+                    <button v-if="$can('subjects.manage')" @click="openCreateModal"
                         class="flex items-center justify-center gap-2 px-6 py-3.5 bg-primary-600 text-white text-[11px] font-black uppercase tracking-widest rounded-2xl shadow-lg shadow-primary-600/20 hover:bg-primary-500 hover:-translate-y-0.5 transition-all w-full sm:w-auto shrink-0"
                     >
                         <i class="fas fa-plus"></i>
@@ -216,7 +215,7 @@ function destroy(subject) {
                                             {{ subject.code }}
                                         </div>
                                         <div class="flex gap-1.5 opacity-100 sm:opacity-0 group-hover:opacity-100 transition-opacity">
-                                            <button @click="openEditModal(subject)" class="w-10 h-10 sm:w-8 sm:h-8 rounded-xl sm:rounded-lg bg-slate-50 text-slate-400 hover:bg-primary-50 hover:text-primary-600 transition-all flex items-center justify-center border border-transparent hover:border-primary-100 shadow-sm" title="Editar">
+                                            <button v-if="$can('subjects.manage')" @click="openEditModal(subject)" class="w-10 h-10 sm:w-8 sm:h-8 rounded-xl sm:rounded-lg bg-slate-50 text-slate-400 hover:bg-primary-50 hover:text-primary-600 transition-all flex items-center justify-center border border-transparent hover:border-primary-100 shadow-sm" title="Editar">
                                                 <i class="fas fa-edit text-sm sm:text-[10px]"></i>
                                             </button>
                                             <button v-if="subject.academic_loads_count === 0 && subject.grades_count === 0" @click="destroy(subject)" class="w-10 h-10 sm:w-8 sm:h-8 rounded-xl sm:rounded-lg bg-red-50 text-red-400 hover:bg-red-500 hover:text-white transition-all flex items-center justify-center border border-transparent hover:border-red-200 shadow-sm" title="Eliminar">

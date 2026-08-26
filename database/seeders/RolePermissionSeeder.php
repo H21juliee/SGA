@@ -14,17 +14,19 @@ class RolePermissionSeeder extends Seeder
 
         $permissions = [
             'students.view', 'students.create', 'students.edit', 'students.delete',
+            'enrollments.update_status', 'enrollments.transfer',
             'enrollments.view', 'enrollments.create', 'enrollments.edit', 'enrollments.delete',
-            'attendance.view', 'attendance.manage',
+            'attendance.view', 'attendance.manage', 'attendance.lock',
             'grades.view', 'grades.edit',
             'revisions.view', 'revisions.edit',
-            'council.view', 'council.manage',
-            'school_years.view', 'school_years.manage',
+            'council.view', 'council.manage', 'council.batch_update',
+            'school_years.view', 'school_years.manage', 'school_years.toggle', 'school_years.promote', 'school_years.toggle_lapse',
             'sections.view', 'sections.manage',
             'subjects.view', 'subjects.manage',
-            'academic_load.view', 'academic_load.manage',
+            'academic_load.view', 'academic_load.manage', 'academic_load.assign',
+            'school_years.manage', 'school_years.toggle', 'school_years.promote', 'school_years.toggle_lapse', 'academic_load.assign',
             'reports.generate',
-            'users.view', 'users.manage',
+            'users.view', 'users.manage', 'users.reset_password',
             'roles.view', 'roles.manage',
             'settings.manage',
         ];
@@ -46,7 +48,7 @@ class RolePermissionSeeder extends Seeder
         // Docente (Foco en lo académico)
         $docente = Role::firstOrCreate(['name' => 'Docente', 'guard_name' => 'web']);
         $docente->syncPermissions([
-            'attendance.view', 'attendance.manage',
+            'attendance.view', 'attendance.manage', 'attendance.lock',
             'grades.view', 'grades.edit',
         ]);
 
@@ -54,14 +56,16 @@ class RolePermissionSeeder extends Seeder
         $secretaria = Role::firstOrCreate(['name' => 'Secretaria', 'guard_name' => 'web']);
         $secretaria->syncPermissions([
             'students.view', 'students.create', 'students.edit', 'students.delete',
+            'enrollments.update_status', 'enrollments.transfer',
             'enrollments.view', 'enrollments.create', 'enrollments.edit', 'enrollments.delete',
-            'attendance.view', 'attendance.manage',
+            'attendance.view', 'attendance.manage', 'attendance.lock',
             'grades.view',
             'revisions.view',
             'school_years.view',
             'sections.view', 'sections.manage',
             'subjects.view', 'subjects.manage',
-            'academic_load.view', 'academic_load.manage',
+            'academic_load.view', 'academic_load.manage', 'academic_load.assign',
+            'school_years.manage', 'school_years.toggle', 'school_years.promote', 'school_years.toggle_lapse', 'academic_load.assign',
             'reports.generate'
         ]);
     }

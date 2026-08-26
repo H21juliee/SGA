@@ -210,8 +210,7 @@ function submit() {
                 </div>
 
                 <div class="flex flex-col sm:flex-row gap-4 w-full lg:w-auto">
-                    <button
-                        @click="openCreateModal"
+                    <button v-if="$can('students.create')" @click="openCreateModal"
                         class="flex items-center justify-center gap-2 px-6 py-3.5 bg-primary-600 text-white text-[11px] font-black uppercase tracking-widest rounded-2xl shadow-lg shadow-primary-600/20 hover:bg-primary-500 hover:-translate-y-0.5 transition-all"
                     >
                         <i class="fas fa-plus"></i>
@@ -331,8 +330,7 @@ function submit() {
                             >
                                 <i class="fas fa-folder-open text-[11px]"></i>
                             </Link>
-                            <button 
-                                @click="openEditModal(student)" 
+                            <button v-if="$can('students.edit')" @click="openEditModal(student)" 
                                 class="w-9 h-9 rounded-lg bg-white text-slate-500 hover:text-primary-600 hover:bg-primary-50 hover:border-primary-200 hover:shadow-sm transition-all border border-slate-200 flex items-center justify-center"
                                 title="Editar Estudiante"
                             >

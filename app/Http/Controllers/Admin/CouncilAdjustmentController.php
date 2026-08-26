@@ -12,8 +12,16 @@ use App\Models\Subject;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 
-class CouncilAdjustmentController extends Controller
+class CouncilAdjustmentController extends Controller implements \Illuminate\Routing\Controllers\HasMiddleware
 {
+    public static function middleware(): array
+    {
+        return [
+        new \Illuminate\Routing\Controllers\Middleware('permission:council.view', only: ['index']),
+        new \Illuminate\Routing\Controllers\Middleware('permission:council.manage', only: ['update']),
+        new \Illuminate\Routing\Controllers\Middleware('permission:council.batch_update', only: ['batchUpdate']),
+        ];
+    }
     public function index(Request $request)
     {
 

@@ -83,10 +83,10 @@ Route::middleware(['auth', 'password.changed'])->group(function () {
     });
 
     // Módulo de Administración (Solo roles autorizados)
-    Route::prefix('admin')->name('admin.')->middleware(['role:SuperAdmin|Administrador|Secretaria'])->group(function () {
+    Route::prefix('admin')->name('admin.')->group(function () {
         Route::resource('users', \App\Http\Controllers\Admin\UserController::class)->except(['create', 'edit']);
         Route::post('users/{user}/reset-password', [\App\Http\Controllers\Admin\UserController::class, 'resetPassword'])->name('users.reset-password');
-                Route::get('guardians/search', [\App\Http\Controllers\GuardianController::class, 'search'])->name('guardians.search');
+        Route::get('guardians/search', [\App\Http\Controllers\GuardianController::class, 'search'])->name('guardians.search');
         Route::post('guardians', [\App\Http\Controllers\GuardianController::class, 'store'])->name('guardians.store');
         Route::resource('students', \App\Http\Controllers\Admin\StudentController::class)->except(['create', 'edit']);
         Route::resource('school-years', \App\Http\Controllers\Admin\SchoolYearController::class)->except(['create', 'show', 'edit']);

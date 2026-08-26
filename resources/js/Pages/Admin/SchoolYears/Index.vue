@@ -128,8 +128,7 @@ function toggleLapse(lapse) {
                     </h2>
                     <p class="text-slate-400 font-medium mt-2">Administra los periodos académicos y lapsos escolares</p>
                 </div>
-                <button
-                    @click="openCreateModal"
+                <button v-if="$can('school_years.manage')" @click="openCreateModal"
                     class="flex items-center justify-center gap-2 px-6 py-3.5 bg-primary-600 text-white text-[11px] font-black uppercase tracking-widest rounded-2xl shadow-lg shadow-primary-600/20 hover:bg-primary-500 hover:-translate-y-0.5 transition-all w-full sm:w-auto"
                 >
                     <i class="fas fa-plus"></i>
@@ -182,8 +181,7 @@ function toggleLapse(lapse) {
                                 </div>
                                 <span class="text-xs font-black text-slate-600 uppercase tracking-wider">{{ lapse.name }}</span>
                             </div>
-                            <button
-                                @click="toggleLapse(lapse)"
+                            <button v-if="$can('school_years.toggle_lapse')" @click="toggleLapse(lapse)"
                                 class="px-4 py-2 text-[9px] font-black uppercase tracking-widest rounded-xl transition-all border shadow-sm"
                                 :class="lapse.is_open 
                                     ? 'bg-emerald-500 text-white border-emerald-400 hover:bg-emerald-600' 
@@ -205,7 +203,7 @@ function toggleLapse(lapse) {
                             Cerrar y Promover
                         </button>
                         <button
-                            v-if="!year.is_active && !year.is_closed"
+                            v-if="$can('school_years.toggle') && !year.is_active && !year.is_closed"
                             @click="toggleActive(year)"
                             class="flex-1 flex items-center justify-center gap-2 py-3 text-[10px] font-black uppercase tracking-widest bg-primary-50 text-primary-600 hover:bg-primary-600 hover:text-white rounded-2xl transition-all border-2 border-primary-100 hover:border-primary-600 shadow-sm"
                         >
@@ -213,7 +211,7 @@ function toggleLapse(lapse) {
                             Hacer Activo
                         </button>
                         <button
-                            v-if="!year.is_closed"
+                            v-if="$can('school_years.manage') && !year.is_closed"
                             @click="openEditModal(year)"
                             class="flex-1 flex items-center justify-center gap-2 py-3 text-[10px] font-black uppercase tracking-widest bg-slate-50 text-slate-500 hover:bg-slate-800 hover:text-white rounded-2xl transition-all border-2 border-slate-100 hover:border-slate-800 shadow-sm"
                         >
@@ -287,7 +285,7 @@ function toggleLapse(lapse) {
                             Cierre definitivo del año <span class="text-slate-700 font-black">{{ promoteYear?.name }}</span>
                         </p>
                     </div>
-                    <button @click="showPromoteModal = false" class="w-10 h-10 rounded-full bg-slate-50 text-slate-400 hover:bg-slate-100 transition-all">
+                    <button v-if="$can('school_years.promote')" @click="showPromoteModal = false" class="w-10 h-10 rounded-full bg-slate-50 text-slate-400 hover:bg-slate-100 transition-all">
                         <i class="fas fa-times"></i>
                     </button>
                 </div>
@@ -334,7 +332,7 @@ function toggleLapse(lapse) {
                     </div>
 
                     <div class="flex items-center justify-end gap-4">
-                        <button type="button" @click="showPromoteModal = false" class="px-6 py-3 text-sm font-black uppercase tracking-widest text-slate-400 hover:text-slate-600 transition-all">
+                        <button v-if="$can('school_years.promote')" type="button" @click="showPromoteModal = false" class="px-6 py-3 text-sm font-black uppercase tracking-widest text-slate-400 hover:text-slate-600 transition-all">
                             Cancelar
                         </button>
                         <button 

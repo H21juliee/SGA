@@ -10,8 +10,16 @@ use Illuminate\Validation\Rule;
 use Inertia\Inertia;
 use Spatie\Permission\Models\Role;
 
-class UserController extends Controller
+class UserController extends Controller implements \Illuminate\Routing\Controllers\HasMiddleware
 {
+    public static function middleware(): array
+    {
+        return [
+        new \Illuminate\Routing\Controllers\Middleware('permission:users.view', only: ['index', 'show']),
+        new \Illuminate\Routing\Controllers\Middleware('permission:users.manage', only: ['store', 'update', 'destroy']),
+        new \Illuminate\Routing\Controllers\Middleware('permission:users.reset_password', only: ['resetPassword']),
+        ];
+    }
     public function index(Request $request)
     {
         $search = $request->input('search');

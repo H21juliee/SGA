@@ -131,8 +131,7 @@ function uploadLogo() {
                     </div>
 
                     <div class="flex justify-end pt-4 border-t border-slate-100">
-                        <button
-                            type="submit"
+                        <button v-if="$can('settings.manage')" type="submit"
                             :disabled="form.processing"
                             class="px-10 py-3.5 bg-primary-600 text-white text-[11px] font-black uppercase tracking-widest rounded-2xl shadow-lg shadow-primary-600/20 hover:bg-primary-500 hover:-translate-y-0.5 transition-all flex items-center gap-2"
                         >

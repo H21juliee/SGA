@@ -8,8 +8,15 @@ use App\Models\Subject;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 
-class SubjectController extends Controller
+class SubjectController extends Controller implements \Illuminate\Routing\Controllers\HasMiddleware
 {
+    public static function middleware(): array
+    {
+        return [
+        new \Illuminate\Routing\Controllers\Middleware('permission:subjects.view', only: ['index', 'show']),
+        new \Illuminate\Routing\Controllers\Middleware('permission:subjects.manage', only: ['store', 'update', 'destroy']),
+        ];
+    }
     public function index(Request $request)
     {
         $search = $request->input('search');
@@ -50,7 +57,7 @@ class SubjectController extends Controller
             'grade_level_id' => 'required|exists:grade_levels,id',
             'name'           => 'required|string|max:100',
             'code'           => 'required|string|max:20|unique:subjects,code',
-            'weight'         => 'integer|min:1|max:10',
+            // 'weight'         => 'integer|min:1|max:10',
             'grading_type'   => 'in:numeric,qualitative',
         ]);
 
@@ -66,9 +73,10 @@ class SubjectController extends Controller
     public function update(Request $request, Subject $subject)
     {
         $validated = $request->validate([
+            'grade_level_id' => 'required|exists:grade_levels,id',
             'name'         => 'required|string|max:100',
             'code'         => 'required|string|max:20|unique:subjects,code,' . $subject->id,
-            'weight'       => 'integer|min:1|max:10',
+            // 'weight'       => 'integer|min:1|max:10',
             'grading_type' => 'in:numeric,qualitative',
         ]);
 

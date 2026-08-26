@@ -8,6 +8,7 @@ import axios from 'axios'
 const props = defineProps({
     roles: Array,
     groupedPermissions: Object,
+    permissionLabels: Object,
 })
 
 // ── Modal state ──────────────────────────────────────
@@ -126,7 +127,7 @@ function roleColor(name) {
                     </h2>
                     <p class="text-slate-400 font-medium mt-1">Crea roles personalizados y asigna los permisos que necesitan</p>
                 </div>
-                <button @click="openCreateModal" class="flex items-center gap-2 px-6 py-3.5 bg-primary-600 text-white text-[11px] font-black uppercase tracking-widest rounded-2xl shadow-lg shadow-primary-600/20 hover:bg-primary-500 hover:-translate-y-0.5 transition-all">
+                <button v-if="$can('roles.manage')" @click="openCreateModal" class="flex items-center gap-2 px-6 py-3.5 bg-primary-600 text-white text-[11px] font-black uppercase tracking-widest rounded-2xl shadow-lg shadow-primary-600/20 hover:bg-primary-500 hover:-translate-y-0.5 transition-all">
                     <i class="fas fa-plus"></i>
                     Nuevo Rol
                 </button>
@@ -153,10 +154,10 @@ function roleColor(name) {
                         </div>
                         <!-- Actions -->
                         <div class="flex gap-1.5" v-if="!role.is_system">
-                            <button @click="openEditModal(role)" class="w-9 h-9 rounded-xl bg-slate-50 text-slate-400 hover:bg-primary-500 hover:text-white transition-all shadow-sm flex items-center justify-center text-sm" title="Editar Rol">
+                            <button v-if="$can('roles.manage')" @click="openEditModal(role)" class="w-9 h-9 rounded-xl bg-slate-50 text-slate-400 hover:bg-primary-500 hover:text-white transition-all shadow-sm flex items-center justify-center text-sm" title="Editar Rol">
                                 <i class="fas fa-edit"></i>
                             </button>
-                            <button @click="deleteRole(role)" class="w-9 h-9 rounded-xl bg-slate-50 text-slate-400 hover:bg-rose-500 hover:text-white transition-all shadow-sm flex items-center justify-center text-sm" title="Eliminar">
+                            <button v-if="$can('roles.manage')" @click="deleteRole(role)" class="w-9 h-9 rounded-xl bg-slate-50 text-slate-400 hover:bg-rose-500 hover:text-white transition-all shadow-sm flex items-center justify-center text-sm" title="Eliminar">
                                 <i class="fas fa-trash"></i>
                             </button>
                         </div>
@@ -248,7 +249,7 @@ function roleColor(name) {
                                             @change="togglePermission(perm)"
                                             class="rounded accent-primary-600 w-4 h-4"
                                         >
-                                        <span class="text-xs font-semibold text-slate-500 group-hover:text-slate-700 transition-colors">{{ perm }}</span>
+                                        <span class="text-xs font-semibold text-slate-500 group-hover:text-slate-700 transition-colors">{{ permissionLabels?.[perm] || perm }}</span>
                                     </label>
                                 </div>
                             </div>

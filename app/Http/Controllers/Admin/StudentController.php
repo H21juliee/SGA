@@ -9,8 +9,17 @@ use App\Models\Student;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 
-class StudentController extends Controller
+class StudentController extends Controller implements \Illuminate\Routing\Controllers\HasMiddleware
 {
+    public static function middleware(): array
+    {
+        return [
+        new \Illuminate\Routing\Controllers\Middleware('permission:students.view', only: ['index', 'show']),
+        new \Illuminate\Routing\Controllers\Middleware('permission:students.create', only: ['store']),
+        new \Illuminate\Routing\Controllers\Middleware('permission:students.edit', only: ['update']),
+        new \Illuminate\Routing\Controllers\Middleware('permission:students.delete', only: ['destroy']),
+        ];
+    }
     public function index(Request $request)
     {
         $search = $request->input('search');

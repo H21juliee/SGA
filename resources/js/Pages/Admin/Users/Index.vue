@@ -175,7 +175,7 @@ function resetPassword(user) {
                     <p class="text-slate-400 font-medium mt-1">Administra accesos y roles del sistema (Docentes, Administrativos)</p>
                 </div>
                 
-                <button @click="openCreateModal" class="flex items-center justify-center gap-2 px-6 py-3.5 bg-primary-600 text-white text-[11px] font-black uppercase tracking-widest rounded-2xl shadow-lg shadow-primary-600/20 hover:bg-primary-500 hover:-translate-y-0.5 transition-all w-full lg:w-auto">
+                <button v-if="$can('users.manage')" @click="openCreateModal" class="flex items-center justify-center gap-2 px-6 py-3.5 bg-primary-600 text-white text-[11px] font-black uppercase tracking-widest rounded-2xl shadow-lg shadow-primary-600/20 hover:bg-primary-500 hover:-translate-y-0.5 transition-all w-full lg:w-auto">
                     <i class="fas fa-plus"></i>
                     <span>Nuevo Registro</span>
                 </button>
@@ -264,15 +264,14 @@ function resetPassword(user) {
                                 <i class="fas fa-eye text-[11px]"></i>
                             </Link>
                             <template v-if="!user.roles.some(r => r.name === 'SuperAdmin')">
-                                <button @click="openEditModal(user)" 
+                                <button v-if="$can('users.manage')" @click="openEditModal(user)" 
                                         class="w-9 h-9 rounded-lg bg-white text-slate-500 hover:text-primary-600 hover:bg-primary-50 hover:border-primary-200 hover:shadow-sm transition-all border border-slate-200 flex items-center justify-center" 
                                         title="Editar">
                                     <i class="fas fa-edit text-[11px]"></i>
                                 </button>
-                                <button @click="resetPassword(user)"
+                                <button v-if="$can('users.reset_password') && user.cedula && $page.props.security_questions_enabled" @click="resetPassword(user)"
                                         class="w-9 h-9 rounded-lg bg-white text-slate-500 hover:text-amber-600 hover:bg-amber-50 hover:border-amber-200 hover:shadow-sm transition-all border border-slate-200 flex items-center justify-center"
-                                        title="Resetear Contraseña"
-                                        v-if="user.cedula && $page.props.security_questions_enabled">
+                                        title="Resetear Contraseña">
                                     <i class="fas fa-key text-[11px]"></i>
                                 </button>
                                 <button @click="destroy(user)" 

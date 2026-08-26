@@ -8,8 +8,14 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
 use Inertia\Inertia;
 
-class SchoolSettingController extends Controller
+class SchoolSettingController extends Controller implements \Illuminate\Routing\Controllers\HasMiddleware
 {
+    public static function middleware(): array
+    {
+        return [
+        new \Illuminate\Routing\Controllers\Middleware('permission:settings.manage', only: ['index', 'update', 'uploadLogo']),
+        ];
+    }
     public function index()
     {
 

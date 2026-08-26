@@ -11,8 +11,19 @@ use App\Models\Student;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 
-class EnrollmentController extends Controller
+class EnrollmentController extends Controller implements \Illuminate\Routing\Controllers\HasMiddleware
 {
+    public static function middleware(): array
+    {
+        return [
+        new \Illuminate\Routing\Controllers\Middleware('permission:enrollments.view', only: ['index', 'show']),
+        new \Illuminate\Routing\Controllers\Middleware('permission:enrollments.create', only: ['store']),
+        new \Illuminate\Routing\Controllers\Middleware('permission:enrollments.edit', only: ['update']),
+        new \Illuminate\Routing\Controllers\Middleware('permission:enrollments.delete', only: ['destroy']),
+        new \Illuminate\Routing\Controllers\Middleware('permission:enrollments.update_status', only: ['updateStatus']),
+        new \Illuminate\Routing\Controllers\Middleware('permission:enrollments.transfer', only: ['transfer']),
+        ];
+    }
     public function index(Request $request)
     {
         $activeYear = SchoolYear::active()->first();

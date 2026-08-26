@@ -7,8 +7,18 @@ use App\Models\SchoolYear;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 
-class SchoolYearController extends Controller
+class SchoolYearController extends Controller implements \Illuminate\Routing\Controllers\HasMiddleware
 {
+    public static function middleware(): array
+    {
+        return [
+        new \Illuminate\Routing\Controllers\Middleware('permission:school_years.view', only: ['index']),
+        new \Illuminate\Routing\Controllers\Middleware('permission:school_years.manage', only: ['store', 'update', 'destroy']),
+        new \Illuminate\Routing\Controllers\Middleware('permission:school_years.toggle', only: ['toggleActive']),
+        new \Illuminate\Routing\Controllers\Middleware('permission:school_years.promote', only: ['closeAndPromote']),
+        new \Illuminate\Routing\Controllers\Middleware('permission:school_years.toggle_lapse', only: ['toggleLapse']),
+        ];
+    }
     public function index()
     {
         $years = SchoolYear::with('lapses')->orderByDesc('start_date')->get();
