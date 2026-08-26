@@ -21,6 +21,10 @@ const props = defineProps({
     required: {
         type: Boolean,
         default: false
+    },
+    disabled: {
+        type: Boolean,
+        default: false
     }
 })
 
@@ -107,16 +111,18 @@ onBeforeUnmount(() => {
         <input 
             type="text" 
             v-model="searchQuery"
-            @focus="openDropdown"
-            @input="handleInput"
+            @focus="!disabled && openDropdown()"
+            @input="!disabled && handleInput()"
             :placeholder="placeholder"
             :required="required && !modelValue"
-            class="w-full bg-slate-50 border-2 border-slate-200 rounded-xl px-4 py-2 text-slate-700 text-sm font-bold focus:border-primary-400 focus:bg-white focus:ring-0 outline-none transition-all cursor-text pr-10"
+            :disabled="disabled"
+            class="w-full bg-slate-50 border-2 border-slate-200 rounded-xl px-4 py-2 text-slate-700 text-sm font-bold focus:border-primary-400 focus:bg-white focus:ring-0 outline-none transition-all pr-10 disabled:opacity-50 disabled:cursor-not-allowed"
+            :class="[disabled ? 'cursor-not-allowed' : 'cursor-text']"
         >
         
         <!-- Clear button / Icon -->
         <button 
-            v-if="modelValue && !required"
+            v-if="modelValue && !required && !disabled"
             @click.stop="clearSelection"
             class="absolute right-3 top-1/2 -translate-y-1/2 w-6 h-6 flex items-center justify-center text-slate-400 hover:text-rose-500 hover:bg-rose-50 rounded-full transition-colors z-10"
             title="Quitar asignación"

@@ -33,8 +33,8 @@ class PermissionSeeder extends Seeder
      * Convención de nombres: {módulo}.{acción}
      * Ejemplos: teachers.view, teachers.create, guardians.view
      */
-        protected array $permissions = [
-        'students.view', 'students.create', 'students.edit', 'students.delete',
+    protected array $permissions = [
+        'students.view', 'students.create', 'students.edit', 'students.delete', 'students.import',
         'enrollments.update_status', 'enrollments.transfer',
         'enrollments.view', 'enrollments.create', 'enrollments.edit', 'enrollments.delete',
         'attendance.view', 'attendance.manage', 'attendance.lock',

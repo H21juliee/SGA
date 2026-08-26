@@ -197,6 +197,20 @@ const navigation = computed(() => {
         },
         { name: 'Reportes', href: '/reports', icon: 'reports', show: can('reports.generate') },
         {
+            name: 'Importación',
+            icon: 'import',
+            show: can('students.import'),
+            // Ampliar show cuando se agreguen más importaciones:
+            // show: can('students.import') || can('guardians.import') || can('subjects.import') || can('teachers.import'),
+            children: [
+                { name: 'Estudiantes', href: '/import/students', show: can('students.import') },
+                // Futuras opciones (habilitar cuando se implementen):
+                // { name: 'Representantes', href: '/import/guardians', show: can('guardians.import') },
+                // { name: 'Materias',       href: '/import/subjects',  show: can('subjects.import') },
+                // { name: 'Docentes',       href: '/import/teachers',  show: can('teachers.import') },
+            ]
+        },
+        {
             name: 'Administración',
             icon: 'admin',
             show: can('users.view') || can('roles.view') || can('settings.manage'),
@@ -231,6 +245,7 @@ function getIcon(name) {
         'admin': 'fas fa-cog',
         'students': 'fas fa-user-graduate',
         'calendar': 'fas fa-calendar-alt',
+        'import': 'fas fa-file-import',
     }
     return icons[name] || 'fas fa-circle'
 }

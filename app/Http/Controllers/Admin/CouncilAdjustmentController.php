@@ -72,7 +72,12 @@ class CouncilAdjustmentController extends Controller implements \Illuminate\Rout
             'subjects'   => $subjects,
             'lapses'     => $lapses,
             'rows'       => $rows,
-            'filters'    => compact('sectionId', 'subjectId', 'lapseId'),
+            'filters' => [
+                'grade_level_id' => $resolvedGradeLevelId,
+                'section_id'     => $sectionId,
+                'subject_id'     => $subjectId,
+                'lapse_id'       => $lapseId,
+            ],
         ]);
     }
 

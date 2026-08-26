@@ -13,7 +13,7 @@ class RolePermissionSeeder extends Seeder
         app()[\Spatie\Permission\PermissionRegistrar::class]->forgetCachedPermissions();
 
         $permissions = [
-            'students.view', 'students.create', 'students.edit', 'students.delete',
+            'students.view', 'students.create', 'students.edit', 'students.delete', 'students.import',
             'enrollments.update_status', 'enrollments.transfer',
             'enrollments.view', 'enrollments.create', 'enrollments.edit', 'enrollments.delete',
             'attendance.view', 'attendance.manage', 'attendance.lock',
@@ -55,7 +55,7 @@ class RolePermissionSeeder extends Seeder
         // Secretaria (Foco en administración estudiantil e inscripciones)
         $secretaria = Role::firstOrCreate(['name' => 'Secretaria', 'guard_name' => 'web']);
         $secretaria->syncPermissions([
-            'students.view', 'students.create', 'students.edit', 'students.delete',
+            'students.view', 'students.create', 'students.edit', 'students.delete', 'students.import',
             'enrollments.update_status', 'enrollments.transfer',
             'enrollments.view', 'enrollments.create', 'enrollments.edit', 'enrollments.delete',
             'attendance.view', 'attendance.manage', 'attendance.lock',

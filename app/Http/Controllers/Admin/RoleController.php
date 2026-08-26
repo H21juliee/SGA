@@ -32,6 +32,7 @@ class RoleController extends Controller implements \Illuminate\Routing\Controlle
             'Planif. — Materias'          => ['subjects.view', 'subjects.manage'],
             'Planif. — Carga Académica'   => ['academic_load.view', 'academic_load.manage', 'academic_load.assign'],
             'Reportes'                    => ['reports.generate'],
+            'Importación'                 => ['students.import'],
             'Admin — Usuarios'            => ['users.view', 'users.manage', 'users.reset_password'],
             'Admin — Roles y Permisos'    => ['roles.view', 'roles.manage'],
             'Admin — Configuración'       => ['settings.manage'],
@@ -95,7 +96,10 @@ class RoleController extends Controller implements \Illuminate\Routing\Controlle
             
             // Reportes
             'reports.generate' => 'Generar y descargar reportes',
-            
+
+            // Importación
+            'students.import' => 'Importar estudiantes desde Excel/CSV',
+
             // Admin
             'users.view' => 'Ver usuarios',
             'users.manage' => 'Crear/Editar/Eliminar usuarios',

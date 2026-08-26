@@ -293,40 +293,60 @@ function saveToServer(row) {
                             <i v-else-if="row.saved" class="fas fa-check-circle text-emerald-500 text-sm animate-bounce"></i>
                         </div>
 
-                        <!-- Decrement -->
-                        <button 
-                            @click="decrementScore(row)"
-                            :disabled="!lapse.is_open || !$can('grades.edit')"
-                            class="w-10 h-10 rounded-xl bg-white shadow-sm border-b-2 flex items-center justify-center text-lg transition-all group active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed"
-                            :class="[row.score > 1 ? 'border-slate-200 hover:border-slate-300' : 'border-slate-100 opacity-50']"
-                        >
-                            <i class="fas fa-minus" :class="getIconColor(row.score)"></i>
-                        </button>
-
-                        <!-- Input Note -->
-                        <div class="relative w-16 h-12">
-                            <input 
-                                v-model="row.score"
-                                @change="validateAndSave(row)"
-                                @blur="validateAndSave(row)"
+                        <template v-if="subject.grading_type !== 'qualitative'">
+                            <!-- Decrement -->
+                            <button 
+                                @click="decrementScore(row)"
                                 :disabled="!lapse.is_open || !$can('grades.edit')"
-                                type="number" 
-                                min="1" 
-                                max="20"
-                                class="w-full h-full bg-white border-2 border-slate-200 rounded-xl text-center text-lg font-black text-slate-800 focus:border-primary-400 focus:ring-0 outline-none transition-all shadow-sm disabled:bg-slate-50 disabled:text-slate-500"
-                                placeholder="--"
+                                class="w-10 h-10 rounded-xl bg-white shadow-sm border-b-2 flex items-center justify-center text-lg transition-all group active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed"
+                                :class="[row.score > 1 ? 'border-slate-200 hover:border-slate-300' : 'border-slate-100 opacity-50']"
                             >
-                        </div>
+                                <i class="fas fa-minus" :class="getIconColor(row.score)"></i>
+                            </button>
 
-                        <!-- Increment -->
-                        <button 
-                            @click="incrementScore(row)"
-                            :disabled="!lapse.is_open || !$can('grades.edit')"
-                            class="w-10 h-10 rounded-xl bg-white shadow-sm border-b-2 flex items-center justify-center text-lg transition-all group active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed"
-                            :class="[row.score < 20 ? 'border-slate-200 hover:border-slate-300' : 'border-slate-100 opacity-50']"
-                        >
-                            <i class="fas fa-plus" :class="getIconColor(row.score)"></i>
-                        </button>
+                            <!-- Input Note -->
+                            <div class="relative w-16 h-12">
+                                <input 
+                                    v-model="row.score"
+                                    @change="validateAndSave(row)"
+                                    @blur="validateAndSave(row)"
+                                    :disabled="!lapse.is_open || !$can('grades.edit')"
+                                    type="number" 
+                                    min="1" 
+                                    max="20"
+                                    class="w-full h-full bg-white border-2 border-slate-200 rounded-xl text-center text-lg font-black text-slate-800 focus:border-primary-400 focus:ring-0 outline-none transition-all shadow-sm disabled:bg-slate-50 disabled:text-slate-500"
+                                    placeholder="--"
+                                >
+                            </div>
+
+                            <!-- Increment -->
+                            <button 
+                                @click="incrementScore(row)"
+                                :disabled="!lapse.is_open || !$can('grades.edit')"
+                                class="w-10 h-10 rounded-xl bg-white shadow-sm border-b-2 flex items-center justify-center text-lg transition-all group active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed"
+                                :class="[row.score < 20 ? 'border-slate-200 hover:border-slate-300' : 'border-slate-100 opacity-50']"
+                            >
+                                <i class="fas fa-plus" :class="getIconColor(row.score)"></i>
+                            </button>
+                        </template>
+                        <template v-else>
+                            <div class="relative w-24 h-12">
+                                <select 
+                                    v-model="row.score"
+                                    @change="validateAndSave(row)"
+                                    :disabled="!lapse.is_open || !$can('grades.edit')"
+                                    class="w-full h-full bg-white border-2 border-slate-200 rounded-xl text-center text-lg font-black text-slate-800 focus:border-primary-400 focus:ring-0 outline-none transition-all shadow-sm disabled:bg-slate-50 disabled:text-slate-500 appearance-none px-2"
+                                >
+                                    <option :value="null">--</option>
+                                    <option value="20.00">A</option>
+                                    <option value="16.00">B</option>
+                                    <option value="12.00">C</option>
+                                    <option value="10.00">D</option>
+                                    <option value="5.00">E</option>
+                                </select>
+                                <i class="fas fa-chevron-down absolute right-3 top-1/2 -translate-y-1/2 text-slate-300 pointer-events-none text-xs"></i>
+                            </div>
+                        </template>
                     </div>
                 </div>
             </div>

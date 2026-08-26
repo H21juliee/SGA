@@ -84,6 +84,7 @@
                                                     :options="teachersOptions"
                                                     placeholder="Sin asignar"
                                                     @update:modelValue="handleTeacherChange(section, subject, $event)"
+                                                    :disabled="!$can('academic_load.assign')"
                                                 />
                                             </div>
                                         </div>

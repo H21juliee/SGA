@@ -141,6 +141,14 @@ function decrementAdjustment(row) {
     }
 }
 
+function updateQualitativeAdjustment(row) {
+    if (row.qualitative_definitive !== undefined) {
+        let diff = parseInt(row.qualitative_definitive) - parseInt(row.score);
+        row.council_adjustment = diff;
+        validateAndSave(row);
+    }
+}
+
 function validateAndSave(row) {
     let s = parseInt(row.council_adjustment)
     if (isNaN(s)) {
@@ -395,7 +403,12 @@ const hasFilters = computed(() => sectionId.value && subjectId.value && lapseId.
                                         ? 'bg-emerald-50 text-emerald-600 border-emerald-200' 
                                         : 'bg-red-50 text-red-600 border-red-200'"
                                 >
-                                    {{ definitiveOf(row) }}
+                                    <template v-if="selectedSubject && selectedSubject.grading_type === 'qualitative'">
+                                        {{ definitiveOf(row) >= 20 ? 'A' : (definitiveOf(row) >= 16 ? 'B' : (definitiveOf(row) >= 12 ? 'C' : (definitiveOf(row) >= 10 ? 'D' : 'E'))) }}
+                                    </template>
+                                    <template v-else>
+                                        {{ definitiveOf(row) }}
+                                    </template>
                                 </span>
                             </div>
                         </div>

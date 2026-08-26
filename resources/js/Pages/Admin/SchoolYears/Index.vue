@@ -195,7 +195,7 @@ function toggleLapse(lapse) {
                     <!-- Actions Footer -->
                     <div class="flex items-center gap-3 pt-6 border-t-2 border-slate-50">
                         <button
-                            v-if="year.is_active"
+                            v-if="year.is_active && $can('school_years.promote')"
                             @click="openPromoteModal(year)"
                             class="flex-1 flex items-center justify-center gap-2 py-3 text-[10px] font-black uppercase tracking-widest bg-red-50 text-red-600 hover:bg-red-600 hover:text-white rounded-2xl transition-all border-2 border-red-100 hover:border-red-600 shadow-sm"
                         >
