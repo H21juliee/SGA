@@ -10,6 +10,9 @@ USER root
 # Install Node.js
 RUN apk add --no-cache nodejs npm
 
+# Install PHP GD extension (required by PhpSpreadsheet)
+RUN install-php-extensions gd
+
 # Copy project files
 COPY --chown=www-data:www-data . .
 
