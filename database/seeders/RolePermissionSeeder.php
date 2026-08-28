@@ -29,6 +29,7 @@ class RolePermissionSeeder extends Seeder
             'users.view', 'users.manage', 'users.reset_password',
             'roles.view', 'roles.manage',
             'settings.manage',
+            'audit.view',
         ];
 
         foreach ($permissions as $permission) {
@@ -39,10 +40,10 @@ class RolePermissionSeeder extends Seeder
         $superAdmin = Role::firstOrCreate(['name' => 'SuperAdmin', 'guard_name' => 'web']);
         $superAdmin->syncPermissions(Permission::all());
 
-        // Administrador (Todo menos roles)
+        // Administrador (Todo menos roles y auditoría — solo SuperAdmin ve el log)
         $admin = Role::firstOrCreate(['name' => 'Administrador', 'guard_name' => 'web']);
         $admin->syncPermissions(
-            collect($permissions)->reject(fn($p) => in_array($p, ['roles.view', 'roles.manage']))->toArray()
+            collect($permissions)->reject(fn($p) => in_array($p, ['roles.view', 'roles.manage', 'audit.view']))->toArray()
         );
 
         // Docente (Foco en lo académico)

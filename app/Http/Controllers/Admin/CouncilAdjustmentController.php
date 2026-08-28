@@ -9,11 +9,13 @@ use App\Models\Lapse;
 use App\Models\SchoolYear;
 use App\Models\Section;
 use App\Models\Subject;
+use App\Traits\LogsActivity;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 
 class CouncilAdjustmentController extends Controller implements \Illuminate\Routing\Controllers\HasMiddleware
 {
+    use LogsActivity;
     public static function middleware(): array
     {
         return [
@@ -90,7 +92,20 @@ class CouncilAdjustmentController extends Controller implements \Illuminate\Rout
         ]);
 
         $grade = Grade::findOrFail($validated['grade_id']);
+        $oldAdj = $grade->council_adjustment;
         $grade->update(['council_adjustment' => $validated['council_adjustment']]);
+
+        // Cargar datos del alumno para la descripción
+        $grade->load('enrollment.student', 'subject', 'lapse');
+        $studentName = $grade->enrollment->student->full_name ?? 'Desconocido';
+        $subjectName = $grade->subject->name ?? 'Desconocida';
+        $lapseName   = $grade->lapse->name ?? 'Desconocido';
+
+        $this->auditLog('consejo', 'council_updated',
+            "Ajuste de consejo para {$studentName} — {$subjectName} ({$lapseName}): {$oldAdj} → {$validated['council_adjustment']}",
+            $grade,
+            ['old' => ['council_adjustment' => $oldAdj], 'new' => ['council_adjustment' => $validated['council_adjustment']]]
+        );
 
         return redirect()->back()->with('success', 'Ajuste guardado.');
     }
@@ -105,8 +120,22 @@ class CouncilAdjustmentController extends Controller implements \Illuminate\Rout
         ]);
 
         foreach ($validated['changes'] as $change) {
-            Grade::where('id', $change['grade_id'])
-                ->update(['council_adjustment' => $change['council_adjustment']]);
+            $grade = Grade::where('id', $change['grade_id'])->first();
+            if (!$grade) continue;
+
+            $oldAdj = $grade->council_adjustment;
+            $grade->update(['council_adjustment' => $change['council_adjustment']]);
+
+            $grade->load('enrollment.student', 'subject', 'lapse');
+            $studentName = $grade->enrollment->student->full_name ?? 'Desconocido';
+            $subjectName = $grade->subject->name ?? 'Desconocida';
+            $lapseName   = $grade->lapse->name ?? 'Desconocido';
+
+            $this->auditLog('consejo', 'council_updated',
+                "Ajuste de consejo para {$studentName} — {$subjectName} ({$lapseName}): {$oldAdj} → {$change['council_adjustment']}",
+                $grade,
+                ['old' => ['council_adjustment' => $oldAdj], 'new' => ['council_adjustment' => $change['council_adjustment']]]
+            );
         }
 
         return redirect()->back()->with('success', 'Ajustes guardados correctamente.');

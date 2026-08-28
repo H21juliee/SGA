@@ -49,6 +49,7 @@ class PermissionSeeder extends Seeder
         'users.view', 'users.manage', 'users.reset_password',
         'roles.view', 'roles.manage',
         'settings.manage',
+        'audit.view',
     ];
 
     public function run(): void

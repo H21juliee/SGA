@@ -11,11 +11,13 @@ use App\Models\Lapse;
 use App\Models\SchoolYear;
 use App\Models\Section;
 use App\Models\Subject;
+use App\Traits\ValidatesTeacherLoad;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 
 class GradeController extends Controller
 {
+    use ValidatesTeacherLoad;
     public function index(Request $request)
     {
         $user = $request->user();
@@ -59,6 +61,8 @@ class GradeController extends Controller
 
     public function datagrid(Request $request, Section $section, Subject $subject, Lapse $lapse)
     {
+        $this->authorizeLoad($section->id, $subject->id);
+
         $enrollments = Enrollment::where('section_id', $section->id)
             ->where('school_year_id', $section->school_year_id)
             ->active()
@@ -80,6 +84,9 @@ class GradeController extends Controller
 
     public function update(StoreGradeRequest $request, StoreGradeAction $action)
     {
+        $enrollment = Enrollment::findOrFail($request->input('enrollment_id'));
+        $this->authorizeLoad($enrollment->section_id, $request->input('subject_id'));
+
         $lapse = Lapse::findOrFail($request->input('lapse_id'));
         
         if (!$lapse->is_open) {
@@ -102,8 +109,12 @@ class GradeController extends Controller
             'changes.*.score' => ['required', 'numeric', 'min:1', 'max:20'],
         ]);
 
-        // Validar que el lapso del primer cambio esté abierto
+        // Validar que el docente tenga acceso a la carga (usamos el primer registro)
         $first = $request->input('changes')[0];
+        $enrollment = Enrollment::findOrFail($first['enrollment_id']);
+        $this->authorizeLoad($enrollment->section_id, $first['subject_id']);
+
+        // Validar que el lapso del primer cambio esté abierto
         $lapse = Lapse::findOrFail($first['lapse_id']);
 
         if (!$lapse->is_open) {

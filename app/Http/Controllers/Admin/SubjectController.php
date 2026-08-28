@@ -5,11 +5,13 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use App\Models\GradeLevel;
 use App\Models\Subject;
+use App\Traits\LogsActivity;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 
 class SubjectController extends Controller implements \Illuminate\Routing\Controllers\HasMiddleware
 {
+    use LogsActivity;
     public static function middleware(): array
     {
         return [
@@ -65,7 +67,9 @@ class SubjectController extends Controller implements \Illuminate\Routing\Contro
         $validated['weight']       = $validated['weight'] ?? 10;
         $validated['grading_type'] = $validated['grading_type'] ?? 'numeric';
 
-        Subject::create($validated);
+        $subject = Subject::create($validated);
+
+        $this->auditLog('materias', 'created', "Creó la materia {$subject->name}", $subject);
 
         return back()->with('success', 'Materia creada exitosamente.');
     }
@@ -83,7 +87,11 @@ class SubjectController extends Controller implements \Illuminate\Routing\Contro
         $validated['weight']       = $validated['weight'] ?? $subject->weight ?? 10;
         $validated['grading_type'] = $validated['grading_type'] ?? $subject->grading_type ?? 'numeric';
 
+        $before = $subject->only(['name', 'code', 'grade_level_id']);
         $subject->update($validated);
+        $diff = $this->diffProperties($before, array_intersect_key($validated, array_flip(['name', 'code', 'grade_level_id'])));
+
+        $this->auditLog('materias', 'updated', "Editó la materia {$subject->name}", $subject, $diff);
 
         return back()->with('success', 'Materia actualizada.');
     }
@@ -94,7 +102,11 @@ class SubjectController extends Controller implements \Illuminate\Routing\Contro
             return back()->with('error', 'No se puede eliminar la materia porque ya está en uso en cargas o notas.');
         }
 
+        $name = $subject->name;
         $subject->delete();
+
+        $this->auditLog('materias', 'deleted', "Eliminó la materia {$name}");
+
         return back()->with('success', 'Materia eliminada.');
     }
 }

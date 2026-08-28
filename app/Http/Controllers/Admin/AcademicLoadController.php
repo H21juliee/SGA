@@ -9,11 +9,13 @@ use App\Models\Section;
 use App\Models\Subject;
 use App\Models\User;
 use App\Models\GradeLevel;
+use App\Traits\LogsActivity;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 
 class AcademicLoadController extends Controller implements \Illuminate\Routing\Controllers\HasMiddleware
 {
+    use LogsActivity;
     public static function middleware(): array
     {
         return [
@@ -116,12 +118,17 @@ class AcademicLoadController extends Controller implements \Illuminate\Routing\C
         AcademicLoad::updateOrCreate(
             [
                 'school_year_id' => $validated['school_year_id'],
-                'section_id' => $validated['section_id'],
-                'subject_id' => $validated['subject_id'],
+                'section_id'     => $validated['section_id'],
+                'subject_id'     => $validated['subject_id'],
             ],
-            [
-                'teacher_id' => $validated['teacher_id'],
-            ]
+            ['teacher_id' => $validated['teacher_id']]
+        );
+
+        $teacher = User::find($validated['teacher_id']);
+        $subject = Subject::find($validated['subject_id']);
+        $section = Section::find($validated['section_id']);
+        $this->auditLog('carga_academica', 'updated',
+            "Asignó a {$teacher->name} en {$subject->name} / {$section->name}"
         );
 
         return back()->with('success', 'Docente asignado a la materia.');

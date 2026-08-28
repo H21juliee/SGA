@@ -6,11 +6,13 @@ use App\Http\Controllers\Controller;
 use App\Models\GradeLevel;
 use App\Models\SchoolYear;
 use App\Models\Section;
+use App\Traits\LogsActivity;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 
 class SectionController extends Controller implements \Illuminate\Routing\Controllers\HasMiddleware
 {
+    use LogsActivity;
     public static function middleware(): array
     {
         return [
@@ -59,7 +61,9 @@ class SectionController extends Controller implements \Illuminate\Routing\Contro
             'capacity' => 'required|integer|min:1|max:100',
         ]);
 
-        Section::create($validated);
+        $section = Section::create($validated);
+
+        $this->auditLog('secciones', 'created', "Creó la sección {$section->name}", $section);
 
         return back()->with('success', 'Sección creada exitosamente.');
     }
@@ -71,7 +75,11 @@ class SectionController extends Controller implements \Illuminate\Routing\Contro
             'capacity' => 'required|integer|min:1|max:100',
         ]);
 
+        $before = $section->only(['name', 'capacity']);
         $section->update($validated);
+        $diff = $this->diffProperties($before, $validated);
+
+        $this->auditLog('secciones', 'updated', "Editó la sección {$section->name}", $section, $diff);
 
         return back()->with('success', 'Sección actualizada.');
     }
@@ -82,7 +90,11 @@ class SectionController extends Controller implements \Illuminate\Routing\Contro
             return back()->with('error', 'No se puede eliminar la sección porque tiene estudiantes inscritos o carga asignada.');
         }
 
+        $name = $section->name;
         $section->delete();
+
+        $this->auditLog('secciones', 'deleted', "Eliminó la sección {$name}");
+
         return back()->with('success', 'Sección eliminada.');
     }
 }

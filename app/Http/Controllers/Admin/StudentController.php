@@ -6,11 +6,13 @@ use App\Enums\StudentStatus;
 use Illuminate\Validation\Rule;
 use App\Http\Controllers\Controller;
 use App\Models\Student;
+use App\Traits\LogsActivity;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 
 class StudentController extends Controller implements \Illuminate\Routing\Controllers\HasMiddleware
 {
+    use LogsActivity;
     public static function middleware(): array
     {
         return [
@@ -93,7 +95,9 @@ class StudentController extends Controller implements \Illuminate\Routing\Contro
             'guardian_id' => 'nullable|exists:guardians,id',
         ]);
 
-        Student::create($validated);
+        $student = Student::create($validated);
+
+        $this->auditLog('estudiantes', 'created', "Creó al estudiante {$student->full_name}", $student);
 
         return back()->with('success', 'Estudiante creado exitosamente.');
     }
@@ -111,7 +115,11 @@ class StudentController extends Controller implements \Illuminate\Routing\Contro
             'status' => ['required', Rule::enum(StudentStatus::class)],
         ]);
 
+        $before = $student->only(array_keys($validated));
         $student->update($validated);
+        $diff = $this->diffProperties($before, $validated);
+
+        $this->auditLog('estudiantes', 'updated', "Editó al estudiante {$student->full_name}", $student, $diff);
 
         return back()->with('success', 'Estudiante actualizado exitosamente.');
     }
@@ -119,6 +127,8 @@ class StudentController extends Controller implements \Illuminate\Routing\Contro
     public function destroy(Student $student)
     {
         $student->update(['status' => StudentStatus::WITHDRAWN]);
+
+        $this->auditLog('estudiantes', 'deleted', "Retiró al estudiante {$student->full_name}", $student);
 
         return back()->with('success', 'Estudiante retirado.');
     }

@@ -12,11 +12,13 @@ use App\Models\Lapse;
 use App\Models\SchoolYear;
 use App\Models\Section;
 use App\Models\Subject;
+use App\Traits\ValidatesTeacherLoad;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 
 class AttendanceController extends Controller
 {
+    use ValidatesTeacherLoad;
     public function index(Request $request)
     {
         $user = $request->user();
@@ -74,6 +76,8 @@ class AttendanceController extends Controller
     public function datagrid(Request $request, Section $section)
     {
         $subjectId = $request->input('subject_id');
+        $this->authorizeLoad($section->id, $subjectId);
+
         $subject = \App\Models\Subject::findOrFail($subjectId);
         
         $date = $request->input('date', now()->toDateString());
@@ -110,6 +114,8 @@ class AttendanceController extends Controller
 
     public function history(Request $request, Section $section, Subject $subject, Lapse $lapse)
     {
+        $this->authorizeLoad($section->id, $subject->id);
+
         // Obtener todas las fechas únicas de asistencia para esta sesión
         $dates = \App\Models\Attendance::where('subject_id', $subject->id)
             ->whereHas('enrollment', fn($q) => $q->where('section_id', $section->id))
@@ -150,6 +156,8 @@ class AttendanceController extends Controller
             'date' => ['required', 'date'],
         ]);
 
+        $this->authorizeLoad($data['section_id'], $data['subject_id']);
+
         AttendanceLock::create([
             'subject_id' => $data['subject_id'],
             'section_id' => $data['section_id'],
@@ -164,7 +172,9 @@ class AttendanceController extends Controller
     {
         $subjectId = $request->input('subject_id');
         $date = $request->input('date');
-        $enrollment = Enrollment::find($request->input('enrollment_id'));
+        $enrollment = Enrollment::findOrFail($request->input('enrollment_id'));
+
+        $this->authorizeLoad($enrollment->section_id, $subjectId);
 
         $isLocked = AttendanceLock::where('subject_id', $subjectId)
             ->where('section_id', $enrollment->section_id)
@@ -195,8 +205,10 @@ class AttendanceController extends Controller
 
         // Verificar bloqueo (tomamos el primero para validar la sesion)
         $first = $request->input('changes')[0];
-        $enrollment = Enrollment::find($first['enrollment_id']);
+        $enrollment = Enrollment::findOrFail($first['enrollment_id']);
         
+        $this->authorizeLoad($enrollment->section_id, $first['subject_id']);
+
         $isLocked = AttendanceLock::where('subject_id', $first['subject_id'])
             ->where('section_id', $enrollment->section_id)
             ->where('date', $first['date'])

@@ -9,11 +9,14 @@ use App\Models\RevisionGrade;
 use App\Models\SchoolYear;
 use App\Models\Section;
 use App\Models\Subject;
+use App\Traits\LogsActivity;
+use App\Traits\ValidatesTeacherLoad;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 
 class RevisionController extends Controller
 {
+    use LogsActivity, ValidatesTeacherLoad;
     /**
      * Muestra la pantalla principal de Revisiones con las cargas académicas.
      */
@@ -67,6 +70,8 @@ class RevisionController extends Controller
      */
     public function datagrid(Request $request, Section $section, Subject $subject, CalculateAverageAction $calcAverage)
     {
+        $this->authorizeLoad($section->id, $subject->id);
+
         $enrollments = Enrollment::where('section_id', $section->id)
             ->where('school_year_id', $section->school_year_id)
             ->active()
@@ -108,6 +113,8 @@ class RevisionController extends Controller
         ]);
 
         $enrollment = Enrollment::findOrFail($validated['enrollment_id']);
+        $this->authorizeLoad($enrollment->section_id, $validated['subject_id']);
+
         $schoolYear = SchoolYear::findOrFail($enrollment->school_year_id);
 
         if ($schoolYear->is_closed) {
@@ -116,16 +123,23 @@ class RevisionController extends Controller
 
         $status = $validated['score'] >= 9.5 ? 'approved' : 'failed';
 
-        RevisionGrade::updateOrCreate(
-            [
-                'enrollment_id' => $validated['enrollment_id'],
-                'subject_id' => $validated['subject_id'],
-            ],
-            [
-                'score' => $validated['score'],
-                'status' => $status,
-                'evaluated_at' => now()->toDateString(),
-            ]
+        $existing = RevisionGrade::where('enrollment_id', $validated['enrollment_id'])
+            ->where('subject_id', $validated['subject_id'])->first();
+        $oldScore = $existing?->score;
+
+        $revision = RevisionGrade::updateOrCreate(
+            ['enrollment_id' => $validated['enrollment_id'], 'subject_id' => $validated['subject_id']],
+            ['score' => $validated['score'], 'status' => $status, 'evaluated_at' => now()->toDateString()]
+        );
+
+        $revision->load('enrollment.student', 'subject');
+        $studentName = $revision->enrollment->student->full_name ?? 'Desconocido';
+        $subjectName = $revision->subject->name ?? 'Desconocida';
+
+        $this->auditLog('revisiones', 'revision_updated',
+            "Nota de revisión para {$studentName} — {$subjectName}: {$oldScore} → {$validated['score']}",
+            $revision,
+            ['old' => ['score' => $oldScore], 'new' => ['score' => $validated['score']]]
         );
 
         return back()->with('success', 'Nota de revisión guardada correctamente.');
@@ -146,6 +160,9 @@ class RevisionController extends Controller
         // Validar que el año no esté cerrado
         $first = $request->input('changes')[0];
         $enrollment = Enrollment::findOrFail($first['enrollment_id']);
+        
+        $this->authorizeLoad($enrollment->section_id, $first['subject_id']);
+
         $schoolYear = SchoolYear::findOrFail($enrollment->school_year_id);
 
         if ($schoolYear->is_closed) {
@@ -155,16 +172,23 @@ class RevisionController extends Controller
         foreach ($request->input('changes') as $change) {
             $status = $change['score'] >= 9.5 ? 'approved' : 'failed';
 
-            RevisionGrade::updateOrCreate(
-                [
-                    'enrollment_id' => $change['enrollment_id'],
-                    'subject_id' => $change['subject_id'],
-                ],
-                [
-                    'score' => $change['score'],
-                    'status' => $status,
-                    'evaluated_at' => now()->toDateString(),
-                ]
+            $existing = RevisionGrade::where('enrollment_id', $change['enrollment_id'])
+                ->where('subject_id', $change['subject_id'])->first();
+            $oldScore = $existing?->score;
+
+            $revision = RevisionGrade::updateOrCreate(
+                ['enrollment_id' => $change['enrollment_id'], 'subject_id' => $change['subject_id']],
+                ['score' => $change['score'], 'status' => $status, 'evaluated_at' => now()->toDateString()]
+            );
+
+            $revision->load('enrollment.student', 'subject');
+            $studentName = $revision->enrollment->student->full_name ?? 'Desconocido';
+            $subjectName = $revision->subject->name ?? 'Desconocida';
+
+            $this->auditLog('revisiones', 'revision_updated',
+                "Nota de revisión para {$studentName} — {$subjectName}: {$oldScore} → {$change['score']}",
+                $revision,
+                ['old' => ['score' => $oldScore], 'new' => ['score' => $change['score']]]
             );
         }
 

@@ -4,11 +4,13 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Models\SchoolYear;
+use App\Traits\LogsActivity;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 
 class SchoolYearController extends Controller implements \Illuminate\Routing\Controllers\HasMiddleware
 {
+    use LogsActivity;
     public static function middleware(): array
     {
         return [
@@ -41,13 +43,15 @@ class SchoolYearController extends Controller implements \Illuminate\Routing\Con
         // Generar automáticamente los 3 lapsos por defecto
         for ($i = 1; $i <= 3; $i++) {
             $year->lapses()->create([
-                'name' => "{$i}er Lapso",
-                'number' => $i,
-                'is_open' => false,
+                'name'       => "{$i}er Lapso",
+                'number'     => $i,
+                'is_open'    => false,
                 'start_date' => $year->start_date,
-                'end_date' => $year->end_date,
+                'end_date'   => $year->end_date,
             ]);
         }
+
+        $this->auditLog('años_escolares', 'created', "Creó el año escolar {$year->name}", $year);
 
         return back()->with('success', 'Año escolar creado exitosamente con sus 3 lapsos.');
     }
@@ -60,18 +64,24 @@ class SchoolYearController extends Controller implements \Illuminate\Routing\Con
             'end_date' => 'required|date|after:start_date',
         ]);
 
+        $before = $schoolYear->only(['name', 'start_date', 'end_date']);
         $schoolYear->update($validated);
+        $diff = $this->diffProperties($before, $validated);
+
+        $this->auditLog('años_escolares', 'updated', "Editó el año escolar {$schoolYear->name}", $schoolYear, $diff);
 
         return back()->with('success', 'Año escolar actualizado exitosamente.');
     }
 
     public function toggleActive(SchoolYear $school_year)
     {
-        // Desactivar todos
         SchoolYear::where('is_active', true)->update(['is_active' => false]);
-        
-        // Activar el seleccionado
         $school_year->update(['is_active' => true]);
+
+        $this->auditLog('años_escolares', 'updated',
+            "Cambió el año activo a {$school_year->name}",
+            $school_year
+        );
 
         return back()->with('success', "El año escolar {$school_year->name} ahora es el año activo.");
     }
@@ -89,6 +99,12 @@ class SchoolYearController extends Controller implements \Illuminate\Routing\Con
         
         $lapse->update(['is_open' => $willBeOpen]);
         $status = $lapse->is_open ? 'abierto' : 'cerrado';
+
+        $this->auditLog('años_escolares', 'updated',
+            "{$lapse->name} marcado como {$status}",
+            $lapse
+        );
+
         return back()->with('success', "El {$lapse->name} ahora está {$status}.");
     }
 
@@ -99,6 +115,9 @@ class SchoolYearController extends Controller implements \Illuminate\Routing\Con
         }
 
         $schoolYear->delete();
+
+        $this->auditLog('años_escolares', 'deleted', "Eliminó el año escolar {$schoolYear->name}");
+
         return back()->with('success', 'Año escolar eliminado.');
     }
 
@@ -112,6 +131,14 @@ class SchoolYearController extends Controller implements \Illuminate\Routing\Con
 
         try {
             $result = $promotionService->promoteAll($school_year, $nextYear);
+
+            $this->auditLog('años_escolares', 'promoted',
+                "Ejecutó cierre y promoción de {$school_year->name}: "
+                . "Promovidos: {$result['total_promoted']}, Con pendientes: {$result['total_promoted_pending']}, "
+                . "Repitientes: {$result['total_failed']}, Graduados: {$result['total_graduated']}",
+                $school_year
+            );
+
             return back()->with('success', "Cierre exitoso. Promovidos: {$result['total_promoted']}, Con pendientes: {$result['total_promoted_pending']}, Repitientes: {$result['total_failed']}, Graduados: {$result['total_graduated']}");
         } catch (\Exception $e) {
             return back()->with('error', $e->getMessage());

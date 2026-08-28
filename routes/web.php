@@ -7,6 +7,7 @@ use App\Http\Controllers\Auth\PasswordRecoveryController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\GradeController;
 use App\Http\Controllers\RevisionController;
+use App\Http\Controllers\Admin\AuditController;
 use App\Http\Controllers\Admin\SchoolSettingController;
 use App\Http\Controllers\Admin\RoleController;
 use App\Http\Controllers\Admin\CouncilAdjustmentController;
@@ -113,6 +114,9 @@ Route::middleware(['auth', 'password.changed'])->group(function () {
         Route::get('council-adjustments', [CouncilAdjustmentController::class, 'index'])->name('council-adjustments.index');
         Route::patch('council-adjustments', [CouncilAdjustmentController::class, 'update'])->name('council-adjustments.update');
         Route::post('council-adjustments/batch', [CouncilAdjustmentController::class, 'batchUpdate'])->name('council-adjustments.batch');
+
+        // Auditoría y Trazabilidad
+        Route::get('audit', [AuditController::class, 'index'])->name('audit.index');
     });
 
     // -----------------------------------------------------------------------

@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Models\User;
+use App\Traits\LogsActivity;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Validation\Rule;
@@ -12,6 +13,7 @@ use Spatie\Permission\Models\Role;
 
 class UserController extends Controller implements \Illuminate\Routing\Controllers\HasMiddleware
 {
+    use LogsActivity;
     public static function middleware(): array
     {
         return [
@@ -113,6 +115,8 @@ class UserController extends Controller implements \Illuminate\Routing\Controlle
 
         $user->syncRoles($validated['roles']);
 
+        $this->auditLog('usuarios', 'created', "Creó al usuario {$user->name} ({$user->email})", $user);
+
         return back()->with('success', 'Usuario creado exitosamente.');
     }
 
@@ -140,21 +144,24 @@ class UserController extends Controller implements \Illuminate\Routing\Controlle
 
         $validated = $request->validate($rules);
 
+        $before = $user->only(['name', 'email', 'cedula', 'phone', 'is_active']);
+
         $user->update([
-            'name' => $validated['name'],
-            'email' => $validated['email'],
-            'cedula' => $validated['cedula'],
-            'phone' => $validated['phone'],
+            'name'      => $validated['name'],
+            'email'     => $validated['email'],
+            'cedula'    => $validated['cedula'],
+            'phone'     => $validated['phone'],
             'is_active' => $validated['is_active'],
         ]);
 
         if (!$securityEnabled && !empty($validated['password'])) {
-            $user->update([
-                'password' => Hash::make($validated['password']),
-            ]);
+            $user->update(['password' => Hash::make($validated['password'])]);
         }
 
         $user->syncRoles($validated['roles']);
+
+        $diff = $this->diffProperties($before, $user->only(['name', 'email', 'cedula', 'phone', 'is_active']));
+        $this->auditLog('usuarios', 'updated', "Editó al usuario {$user->name}", $user, $diff);
 
         return back()->with('success', 'Usuario actualizado exitosamente.');
     }
@@ -170,6 +177,9 @@ class UserController extends Controller implements \Illuminate\Routing\Controlle
         }
 
         $user->update(['is_active' => false]);
+
+        $this->auditLog('usuarios', 'updated', "Desactivó al usuario {$user->name}", $user,
+            ['old' => ['is_active' => true], 'new' => ['is_active' => false]]);
 
         return back()->with('success', 'Usuario desactivado.');
     }
@@ -191,6 +201,8 @@ class UserController extends Controller implements \Illuminate\Routing\Controlle
 
         // Delete old security questions so user must set new ones
         $user->securityQuestions()->delete();
+
+        $this->auditLog('usuarios', 'updated', "Reestableció la contraseña del usuario {$user->name}", $user);
 
         return back()->with('success', "Contraseña reseteada. La nueva clave temporal es la cédula del usuario ({$user->cedula}). Deberá cambiarla en su próximo inicio de sesión.");
     }

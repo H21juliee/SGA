@@ -4,12 +4,14 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Models\SchoolSetting;
+use App\Traits\LogsActivity;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
 use Inertia\Inertia;
 
 class SchoolSettingController extends Controller implements \Illuminate\Routing\Controllers\HasMiddleware
 {
+    use LogsActivity;
     public static function middleware(): array
     {
         return [
@@ -40,6 +42,10 @@ class SchoolSettingController extends Controller implements \Illuminate\Routing\
             SchoolSetting::set($key, $value);
         }
 
+        $this->auditLog('configuracion', 'updated', 'Actualizó la configuración institucional', null,
+            ['new' => $validated]
+        );
+
         return redirect()->back()->with('success', 'Configuración guardada correctamente.');
     }
 
@@ -58,6 +64,8 @@ class SchoolSettingController extends Controller implements \Illuminate\Routing\
 
         $path = $request->file('logo')->store('logo', 'public');
         SchoolSetting::set('logo_path', $path);
+
+        $this->auditLog('configuracion', 'updated', 'Actualizó el logo institucional');
 
         return redirect()->back()->with('success', 'Logo actualizado correctamente.');
     }

@@ -8,11 +8,13 @@ use App\Models\Enrollment;
 use App\Models\SchoolYear;
 use App\Models\Section;
 use App\Models\Student;
+use App\Traits\LogsActivity;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 
 class EnrollmentController extends Controller implements \Illuminate\Routing\Controllers\HasMiddleware
 {
+    use LogsActivity;
     public static function middleware(): array
     {
         return [
@@ -90,13 +92,19 @@ class EnrollmentController extends Controller implements \Illuminate\Routing\Con
         }
 
         // Crear la inscripcion
-        Enrollment::create([
+        $enrollment = Enrollment::create([
             'school_year_id' => $activeYear->id,
-            'section_id' => $validated['section_id'],
-            'student_id' => $validated['student_id'],
-            'status' => EnrollmentStatus::ACTIVE,
-            'enrolled_at' => now(),
+            'section_id'     => $validated['section_id'],
+            'student_id'     => $validated['student_id'],
+            'status'         => EnrollmentStatus::ACTIVE,
+            'enrolled_at'    => now(),
         ]);
+
+        $student = Student::find($validated['student_id']);
+        $this->auditLog('inscripciones', 'created',
+            "Matriculó al estudiante {$student->full_name} en la sección {$section->name}",
+            $enrollment
+        );
 
         return back()->with('success', 'Estudiante matriculado exitosamente en la sección.');
     }
@@ -107,7 +115,14 @@ class EnrollmentController extends Controller implements \Illuminate\Routing\Con
             return back()->with('error', 'No se puede eliminar la inscripción porque el estudiante ya tiene notas o asistencia registrada. Modifica su estado a Retirado.');
         }
 
+        $enrollment->load('student');
         $enrollment->delete();
+
+        $this->auditLog('inscripciones', 'deleted',
+            "Eliminó la inscripción de {$enrollment->student->full_name}",
+            $enrollment
+        );
+
         return back()->with('success', 'Inscripción eliminada.');
     }
 
@@ -117,7 +132,15 @@ class EnrollmentController extends Controller implements \Illuminate\Routing\Con
             'status' => ['required', \Illuminate\Validation\Rule::enum(EnrollmentStatus::class)],
         ]);
 
+        $oldStatus = $enrollment->status->value;
+        $enrollment->load('student');
         $enrollment->update(['status' => $validated['status']]);
+
+        $this->auditLog('inscripciones', 'updated',
+            "Cambió estado de la inscripción de {$enrollment->student->full_name}: {$oldStatus} → {$validated['status']}",
+            $enrollment,
+            ['old' => ['status' => $oldStatus], 'new' => ['status' => $validated['status']]]
+        );
 
         return back()->with('success', 'Estado de la inscripción actualizado.');
     }
@@ -139,7 +162,15 @@ class EnrollmentController extends Controller implements \Illuminate\Routing\Con
         //     return back()->with('error', 'La sección destino ya alcanzó su capacidad máxima.');
         // }
 
+        $oldSection = $enrollment->section->name ?? '—';
         $enrollment->update(['section_id' => $newSection->id]);
+        $enrollment->load('student');
+
+        $this->auditLog('inscripciones', 'updated',
+            "Transfirió a {$enrollment->student->full_name} de sección {$oldSection} → {$newSection->name}",
+            $enrollment,
+            ['old' => ['section_id' => $oldSection], 'new' => ['section_id' => $newSection->name]]
+        );
 
         return back()->with('success', 'Estudiante transferido exitosamente a la nueva sección.');
     }

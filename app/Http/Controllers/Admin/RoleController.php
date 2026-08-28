@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
+use App\Traits\LogsActivity;
 use Illuminate\Http\Request;
 use Illuminate\Validation\Rule;
 use Inertia\Inertia;
@@ -11,6 +12,7 @@ use Spatie\Permission\Models\Role;
 
 class RoleController extends Controller implements \Illuminate\Routing\Controllers\HasMiddleware
 {
+    use LogsActivity;
     public static function middleware(): array
     {
         return [
@@ -33,6 +35,7 @@ class RoleController extends Controller implements \Illuminate\Routing\Controlle
             'Planif. — Carga Académica'   => ['academic_load.view', 'academic_load.manage', 'academic_load.assign'],
             'Reportes'                    => ['reports.generate'],
             'Importación'                 => ['students.import'],
+            'Auditoría'                  => ['audit.view'],
             'Admin — Usuarios'            => ['users.view', 'users.manage', 'users.reset_password'],
             'Admin — Roles y Permisos'    => ['roles.view', 'roles.manage'],
             'Admin — Configuración'       => ['settings.manage'],
@@ -100,6 +103,9 @@ class RoleController extends Controller implements \Illuminate\Routing\Controlle
             // Importación
             'students.import' => 'Importar estudiantes desde Excel/CSV',
 
+            // Auditoría
+            'audit.view' => 'Ver registro de auditoría y trazabilidad (solo SuperAdmin)',
+
             // Admin
             'users.view' => 'Ver usuarios',
             'users.manage' => 'Crear/Editar/Eliminar usuarios',
@@ -154,6 +160,8 @@ class RoleController extends Controller implements \Illuminate\Routing\Controlle
         $role = Role::create(['name' => $validated['name'], 'guard_name' => 'web']);
         $role->syncPermissions($validated['permissions'] ?? []);
 
+        $this->auditLog('roles', 'created', "Creó el rol \"{$validated['name']}\"", $role);
+
         return back()->with('success', "Rol \"{$validated['name']}\" creado exitosamente.");
     }
 
@@ -169,8 +177,14 @@ class RoleController extends Controller implements \Illuminate\Routing\Controlle
             'permissions.*' => 'string|exists:permissions,name',
         ]);
 
+        $oldName = $role->name;
         $role->update(['name' => $validated['name']]);
         $role->syncPermissions($validated['permissions'] ?? []);
+
+        $diff = $oldName !== $validated['name']
+            ? ['old' => ['name' => $oldName], 'new' => ['name' => $validated['name']]]
+            : [];
+        $this->auditLog('roles', 'updated', "Editó el rol \"{$validated['name']}\"", $role, $diff);
 
         return back()->with('success', "Rol \"{$validated['name']}\" actualizado exitosamente.");
     }
@@ -187,6 +201,8 @@ class RoleController extends Controller implements \Illuminate\Routing\Controlle
 
         $name = $role->name;
         $role->delete();
+
+        $this->auditLog('roles', 'deleted', "Eliminó el rol \"{$name}\"");
 
         return back()->with('success', "Rol \"{$name}\" eliminado.");
     }

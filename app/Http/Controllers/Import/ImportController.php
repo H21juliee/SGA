@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Import;
 
 use App\Http\Controllers\Controller;
 use App\Imports\StudentsImport;
+use App\Traits\LogsActivity;
 use Illuminate\Http\Request;
 use Illuminate\Routing\Controllers\HasMiddleware;
 use Illuminate\Routing\Controllers\Middleware;
@@ -18,6 +19,7 @@ use Maatwebsite\Excel\Facades\Excel;
  */
 class ImportController extends Controller implements HasMiddleware
 {
+    use LogsActivity;
     public static function middleware(): array
     {
         return [
@@ -71,6 +73,10 @@ class ImportController extends Controller implements HasMiddleware
         if ($skipped > 0) {
             $message .= " {$skipped} fila(s) omitida(s) (cédulas duplicadas o datos inválidos).";
         }
+
+        $this->auditLog('importacion', 'imported',
+            "Importó estudiantes desde archivo: {$created} creado(s), {$skipped} omitido(s)"
+        );
 
         return back()->with('success', $message);
     }
