@@ -14,15 +14,13 @@ class DatabaseSeeder extends Seeder
             GradeLevelSeeder::class,
             SubjectSeeder::class,
             LargeDataSeeder::class,
-            AcademicLoadSeeder::class,
-            MassGradeSeeder::class,
         ]);
 
         // Crear SuperAdmin por defecto
         $admin = User::updateOrCreate(
             ['email' => 'admin@sge.test'],
             [
-                'name' => 'Administrador SGE',
+                'name' => 'Administrador SGA',
                 'password' => bcrypt('password'),
                 'cedula' => 'V-00000000',
                 'is_active' => true,
@@ -30,24 +28,40 @@ class DatabaseSeeder extends Seeder
         );
         $admin->assignRole('SuperAdmin');
 
+        // Crear Administrador (Rol secundario)
+        $administrador = User::updateOrCreate(
+            ['email' => 'admin_secundario@sge.test'],
+            [
+                'name' => 'Director SGE',
+                'password' => bcrypt('password'),
+                'cedula' => 'V-11111111',
+                'is_active' => true,
+            ]
+        );
+        $administrador->assignRole('Administrador');
+
         // Crear Docente de prueba
-        $docente = User::create([
-            'name' => 'María Rodríguez',
-            'email' => 'docente@sge.test',
-            'password' => bcrypt('password'),
-            'cedula' => 'V-12345678',
-            'is_active' => true,
-        ]);
+        $docente = User::updateOrCreate(
+            ['email' => 'docente@sge.test'],
+            [
+                'name' => 'María Rodríguez',
+                'password' => bcrypt('password'),
+                'cedula' => 'V-12345678',
+                'is_active' => true,
+            ]
+        );
         $docente->assignRole('Docente');
 
         // Crear Secretaria de prueba
-        $secretaria = User::create([
-            'name' => 'Ana García',
-            'email' => 'secretaria@sge.test',
-            'password' => bcrypt('password'),
-            'cedula' => 'V-87654321',
-            'is_active' => true,
-        ]);
+        $secretaria = User::updateOrCreate(
+            ['email' => 'secretaria@sge.test'],
+            [
+                'name' => 'Ana García',
+                'password' => bcrypt('password'),
+                'cedula' => 'V-87654321',
+                'is_active' => true,
+            ]
+        );
         $secretaria->assignRole('Secretaria');
     }
 }

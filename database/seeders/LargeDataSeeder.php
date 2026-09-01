@@ -5,9 +5,6 @@ namespace Database\Seeders;
 use App\Models\GradeLevel;
 use App\Models\SchoolYear;
 use App\Models\Section;
-use App\Models\Student;
-use App\Models\Enrollment;
-use App\Enums\EnrollmentStatus;
 use Illuminate\Database\Seeder;
 
 class LargeDataSeeder extends Seeder
@@ -15,12 +12,6 @@ class LargeDataSeeder extends Seeder
     public function run(): void
     {
         $activeYear = SchoolYear::active()->first();
-
-        // Evitar duplicar datos si el seeder ya corrió parcialmente
-        if (Student::count() >= 100) {
-            $this->command->info('Los datos masivos ya parecen estar cargados. Saltando...');
-            return;
-        }
 
         if (!$activeYear) {
             $activeYear = SchoolYear::firstOrCreate(
@@ -37,7 +28,7 @@ class LargeDataSeeder extends Seeder
                 $activeYear->lapses()->create([
                     'name' => "{$i}er Lapso",
                     'number' => $i,
-                    'is_open' => true,
+                    'is_open' => false,
                     'start_date' => $activeYear->start_date,
                     'end_date' => $activeYear->end_date,
                 ]);
@@ -45,7 +36,7 @@ class LargeDataSeeder extends Seeder
         }
 
         $levels = GradeLevel::orderBy('order_num')->get();
-        $sections = ['A', 'B', 'C'];
+        $sections = ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I'];
         $allCreatedSections = [];
 
         foreach ($levels as $level) {
@@ -60,24 +51,6 @@ class LargeDataSeeder extends Seeder
             }
         }
 
-        $this->command->info('Creando 700 alumnos...');
-        $students = Student::factory()->count(700)->create();
-
-        $this->command->info('Inscribiendo alumnos en las secciones...');
-        $sectionCount = count($allCreatedSections);
-        
-        foreach ($students as $index => $student) {
-            $section = $allCreatedSections[$index % $sectionCount];
-            
-            Enrollment::create([
-                'student_id' => $student->id,
-                'section_id' => $section->id,
-                'school_year_id' => $activeYear->id,
-                'status' => EnrollmentStatus::ACTIVE,
-                'enrolled_at' => $activeYear->start_date,
-            ]);
-        }
-
-        $this->command->info('Seeder completado con éxito.');
+        $this->command->info('Año Escolar, Lapsos y Secciones (A,B,C) creados con éxito.');
     }
 }
