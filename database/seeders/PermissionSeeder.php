@@ -43,13 +43,14 @@ class PermissionSeeder extends Seeder
         'council.view', 'council.manage', 'council.batch_update',
         'school_years.view', 'school_years.manage', 'school_years.toggle', 'school_years.promote', 'school_years.toggle_lapse',
         'sections.view', 'sections.manage',
-        'subjects.view', 'subjects.manage',
+        'subjects.view', 'subjects.manage', 'subjects.import',
         'academic_load.view', 'academic_load.manage', 'academic_load.assign',
         'reports.generate',
         'users.view', 'users.manage', 'users.reset_password',
         'roles.view', 'roles.manage',
         'settings.manage',
         'audit.view',
+        'teachers.import',
     ];
 
     public function run(): void

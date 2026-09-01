@@ -43,8 +43,9 @@ class HandleInertiaRequests extends Middleware
                 'permissions' => $request->user() ? $request->user()->getAllPermissions()->pluck('name') : [],
             ],
             'flash' => [
-                'success' => fn () => $request->session()->get('success'),
-                'error' => fn () => $request->session()->get('error'),
+                'success'       => fn () => $request->session()->get('success'),
+                'error'         => fn () => $request->session()->get('error'),
+                'import_result' => fn () => $request->session()->get('import_result'),
             ],
             'security_questions_enabled' => env('SECURITY_QUESTIONS_ENABLED', false),
         ];

@@ -4,6 +4,8 @@ namespace App\Http\Controllers\Import;
 
 use App\Http\Controllers\Controller;
 use App\Imports\StudentsImport;
+use App\Imports\SubjectsImport;
+use App\Imports\TeachersImport;
 use App\Traits\LogsActivity;
 use Illuminate\Http\Request;
 use Illuminate\Routing\Controllers\HasMiddleware;
@@ -14,20 +16,19 @@ use Maatwebsite\Excel\Facades\Excel;
 /**
  * ImportController — Controlador del módulo de importación masiva.
  *
- * Diseñado para escalar: cuando se agreguen importaciones de representantes,
- * materias o docentes, solo se añaden nuevos métodos aquí y rutas en web.php.
+ * Diseñado para escalar: cuando se agreguen importaciones adicionales,
+ * solo se añaden nuevos métodos aquí y rutas en web.php.
  */
 class ImportController extends Controller implements HasMiddleware
 {
     use LogsActivity;
+
     public static function middleware(): array
     {
         return [
             new Middleware('permission:students.import', only: ['students', 'importStudents']),
-            // Futuras importaciones:
-            // new Middleware('permission:guardians.import', only: ['guardians', 'importGuardians']),
-            // new Middleware('permission:subjects.import',  only: ['subjects',  'importSubjects']),
-            // new Middleware('permission:teachers.import',  only: ['teachers',  'importTeachers']),
+            new Middleware('permission:subjects.import', only: ['subjects', 'importSubjects']),
+            new Middleware('permission:teachers.import', only: ['teachers', 'importTeachers']),
         ];
     }
 
@@ -49,12 +50,7 @@ class ImportController extends Controller implements HasMiddleware
     public function importStudents(Request $request)
     {
         $request->validate([
-            'file' => [
-                'required',
-                'file',
-                'mimes:xlsx,xls,csv',
-                'max:10240', // 10 MB máximo
-            ],
+            'file' => ['required', 'file', 'mimes:xlsx,xls,csv', 'max:10240'],
         ], [
             'file.required' => 'Debes seleccionar un archivo para importar.',
             'file.mimes'    => 'El archivo debe ser de tipo Excel (.xlsx, .xls) o CSV (.csv).',
@@ -62,35 +58,109 @@ class ImportController extends Controller implements HasMiddleware
         ]);
 
         $import = new StudentsImport();
-
-        // Importación síncrona directamente desde el archivo subido
         Excel::import($import, $request->file('file'));
 
         $created = $import->created;
         $skipped = $import->skipped;
 
-        $message = "✅ Importación completada: {$created} estudiante(s) registrado(s).";
-        if ($skipped > 0) {
-            $message .= " {$skipped} fila(s) omitida(s) (cédulas duplicadas o datos inválidos).";
-        }
-
         $this->auditLog('importacion', 'imported',
             "Importó estudiantes desde archivo: {$created} creado(s), {$skipped} omitido(s)"
         );
 
-        return back()->with('success', $message);
+        return back()
+            ->with('import_result', [
+                'type'        => 'students',
+                'created'     => $created,
+                'skipped'     => $skipped,
+                'skippedRows' => $import->skippedRows,
+            ]);
     }
 
     // -----------------------------------------------------------------------
-    // Futuras importaciones (descomentar cuando se implementen)
+    // Materias
     // -----------------------------------------------------------------------
 
-    // public function guardians() { ... }
-    // public function importGuardians(Request $request) { ... }
+    /**
+     * Muestra la página de importación de materias.
+     */
+    public function subjects()
+    {
+        return Inertia::render('Import/Subjects');
+    }
 
-    // public function subjects() { ... }
-    // public function importSubjects(Request $request) { ... }
+    /**
+     * Recibe el archivo, ejecuta la importación de materias.
+     */
+    public function importSubjects(Request $request)
+    {
+        $request->validate([
+            'file' => ['required', 'file', 'mimes:xlsx,xls,csv', 'max:10240'],
+        ], [
+            'file.required' => 'Debes seleccionar un archivo para importar.',
+            'file.mimes'    => 'El archivo debe ser de tipo Excel (.xlsx, .xls) o CSV (.csv).',
+            'file.max'      => 'El archivo no debe superar los 10 MB.',
+        ]);
 
-    // public function teachers() { ... }
-    // public function importTeachers(Request $request) { ... }
+        $import = new SubjectsImport();
+        Excel::import($import, $request->file('file'));
+
+        $created = $import->created;
+        $skipped = $import->skipped;
+
+        $this->auditLog('importacion', 'imported',
+            "Importó materias desde archivo: {$created} creada(s), {$skipped} omitida(s)"
+        );
+
+        return back()
+            ->with('import_result', [
+                'type'        => 'subjects',
+                'created'     => $created,
+                'skipped'     => $skipped,
+                'skippedRows' => $import->skippedRows,
+            ]);
+    }
+
+    // -----------------------------------------------------------------------
+    // Docentes
+    // -----------------------------------------------------------------------
+
+    /**
+     * Muestra la página de importación de docentes.
+     */
+    public function teachers()
+    {
+        return Inertia::render('Import/Teachers');
+    }
+
+    /**
+     * Recibe el archivo, ejecuta la importación de docentes.
+     */
+    public function importTeachers(Request $request)
+    {
+        $request->validate([
+            'file' => ['required', 'file', 'mimes:xlsx,xls,csv', 'max:10240'],
+        ], [
+            'file.required' => 'Debes seleccionar un archivo para importar.',
+            'file.mimes'    => 'El archivo debe ser de tipo Excel (.xlsx, .xls) o CSV (.csv).',
+            'file.max'      => 'El archivo no debe superar los 10 MB.',
+        ]);
+
+        $import = new TeachersImport();
+        Excel::import($import, $request->file('file'));
+
+        $created = $import->created;
+        $skipped = $import->skipped;
+
+        $this->auditLog('importacion', 'imported',
+            "Importó docentes desde archivo: {$created} creado(s), {$skipped} omitido(s)"
+        );
+
+        return back()
+            ->with('import_result', [
+                'type'        => 'teachers',
+                'created'     => $created,
+                'skipped'     => $skipped,
+                'skippedRows' => $import->skippedRows,
+            ]);
+    }
 }

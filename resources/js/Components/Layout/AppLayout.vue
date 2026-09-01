@@ -199,15 +199,11 @@ const navigation = computed(() => {
         {
             name: 'Importación',
             icon: 'import',
-            show: can('students.import'),
-            // Ampliar show cuando se agreguen más importaciones:
-            // show: can('students.import') || can('guardians.import') || can('subjects.import') || can('teachers.import'),
+            show: can('students.import') || can('subjects.import') || can('teachers.import'),
             children: [
                 { name: 'Estudiantes', href: '/import/students', show: can('students.import') },
-                // Futuras opciones (habilitar cuando se implementen):
-                // { name: 'Representantes', href: '/import/guardians', show: can('guardians.import') },
-                // { name: 'Materias',       href: '/import/subjects',  show: can('subjects.import') },
-                // { name: 'Docentes',       href: '/import/teachers',  show: can('teachers.import') },
+                { name: 'Materias',    href: '/import/subjects',  show: can('subjects.import') },
+                { name: 'Docentes',    href: '/import/teachers',  show: can('teachers.import') },
             ]
         },
         {

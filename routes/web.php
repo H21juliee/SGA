@@ -127,12 +127,12 @@ Route::middleware(['auth', 'password.changed'])->group(function () {
         Route::get('students',  [ImportController::class, 'students'])->name('students');
         Route::post('students', [ImportController::class, 'importStudents'])->name('students.process');
 
-        // Futuras rutas (desactivar comentario cuando se implementen):
-        // Route::get('guardians',  [ImportController::class, 'guardians'])->name('guardians');
-        // Route::post('guardians', [ImportController::class, 'importGuardians'])->name('guardians.process');
-        // Route::get('subjects',   [ImportController::class, 'subjects'])->name('subjects');
-        // Route::post('subjects',  [ImportController::class, 'importSubjects'])->name('subjects.process');
-        // Route::get('teachers',   [ImportController::class, 'teachers'])->name('teachers');
-        // Route::post('teachers',  [ImportController::class, 'importTeachers'])->name('teachers.process');
+        // Materias
+        Route::get('subjects',  [ImportController::class, 'subjects'])->name('subjects');
+        Route::post('subjects', [ImportController::class, 'importSubjects'])->name('subjects.process');
+
+        // Docentes
+        Route::get('teachers',  [ImportController::class, 'teachers'])->name('teachers');
+        Route::post('teachers', [ImportController::class, 'importTeachers'])->name('teachers.process');
     });
 });

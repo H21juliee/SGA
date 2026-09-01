@@ -22,7 +22,7 @@ class RolePermissionSeeder extends Seeder
             'council.view', 'council.manage', 'council.batch_update',
             'school_years.view', 'school_years.manage', 'school_years.toggle', 'school_years.promote', 'school_years.toggle_lapse',
             'sections.view', 'sections.manage',
-            'subjects.view', 'subjects.manage',
+            'subjects.view', 'subjects.manage', 'subjects.import',
             'academic_load.view', 'academic_load.manage', 'academic_load.assign',
             'school_years.manage', 'school_years.toggle', 'school_years.promote', 'school_years.toggle_lapse', 'academic_load.assign',
             'reports.generate',
@@ -30,6 +30,7 @@ class RolePermissionSeeder extends Seeder
             'roles.view', 'roles.manage',
             'settings.manage',
             'audit.view',
+            'teachers.import',
         ];
 
         foreach ($permissions as $permission) {

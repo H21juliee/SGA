@@ -20,7 +20,7 @@ use Maatwebsite\Excel\Validators\Failure;
  * Usa ToCollection para iterar manualmente y manejar:
  * - Filas vacías (SkipsEmptyRows)
  * - Filas de instrucciones del template (se omiten si no pasan validación)
- * - Cédulas duplicadas (omitir sin abortar)
+ * - Cédulas duplicadas (omitir y registrar como error en resumen)
  * - Fechas en formato DD/MM/YYYY o YYYY-MM-DD o serial Excel
  */
 class StudentsImport implements
@@ -35,6 +35,9 @@ class StudentsImport implements
     public int $created = 0;
     public int $skipped = 0;
 
+    /** Filas omitidas con detalle del motivo */
+    public array $skippedRows = [];
+
     /** Filas con errores de validación */
     private array $failures = [];
 
@@ -43,12 +46,17 @@ class StudentsImport implements
      */
     public function collection(Collection $rows): void
     {
-        foreach ($rows as $row) {
+        foreach ($rows as $index => $row) {
             $cedula = $this->normalizeCedula($row['cedula_escolar'] ?? null);
 
-            // Si tiene cédula y ya existe → omitir
+            // Si tiene cédula y ya existe → omitir con detalle
             if ($cedula && Student::where('cedula', $cedula)->exists()) {
                 $this->skipped++;
+                $this->skippedRows[] = [
+                    'fila'   => $index + 2, // +2 porque la fila 1 es el encabezado
+                    'valor'  => trim($row['nombres'] ?? '') . ' ' . trim($row['apellidos'] ?? ''),
+                    'motivo' => "Cédula {$cedula} ya existe en el sistema.",
+                ];
                 continue;
             }
 
@@ -66,13 +74,18 @@ class StudentsImport implements
     }
 
     /**
-     * Filas que fallaron la validación → se omiten y se acumulan.
+     * Filas que fallaron la validación → se omiten y se acumulan con detalle.
      */
     public function onFailure(Failure ...$failures): void
     {
         foreach ($failures as $failure) {
             $this->failures[] = $failure;
             $this->skipped++;
+            $this->skippedRows[] = [
+                'fila'   => $failure->row(),
+                'valor'  => implode(', ', (array) $failure->values()),
+                'motivo' => implode('. ', $failure->errors()),
+            ];
         }
     }
 
