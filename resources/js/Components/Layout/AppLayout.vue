@@ -15,9 +15,16 @@
             <div class="flex flex-col h-full p-6">
                 <!-- Logo -->
                 <div class="flex items-center gap-4 mb-10 px-2">
-                    <div class="w-12 h-12 rounded-2xl flex items-center justify-center text-white text-2xl shadow-lg" style="background: #336b87; box-shadow: 0 8px 20px rgba(51,107,135,0.35)">
-                        <i class="fas fa-graduation-cap"></i>
-                    </div>
+                    <template v-if="$page.props.school?.logo_path">
+                        <div class="w-12 h-12 flex items-center justify-center">
+                            <img :src="'/storage/' + $page.props.school.logo_path" alt="Logo Plantel" class="w-full h-full object-contain drop-shadow-md rounded-[0.4rem]" />
+                        </div>
+                    </template>
+                    <template v-else>
+                        <div class="w-12 h-12 rounded-2xl flex items-center justify-center text-white text-2xl shadow-lg" style="background: #336b87; box-shadow: 0 8px 20px rgba(51,107,135,0.35)">
+                            <i class="fas fa-graduation-cap"></i>
+                        </div>
+                    </template>
                     <div>
                         <h1 class="text-2xl font-black gradient-text tracking-tight leading-none">SGA</h1>
                         <p class="text-[10px] text-slate-400 font-bold uppercase tracking-widest mt-1">Gestión Académica</p>
@@ -100,6 +107,11 @@
                         <button @click="isSidebarOpen = true" class="lg:hidden w-10 h-10 rounded-xl bg-primary-50 text-primary-600 flex items-center justify-center hover:bg-primary-100 transition-colors">
                             <i class="fas fa-bars"></i>
                         </button>
+                        
+                        <template v-if="$page.props.school?.logo_path">
+                            <img :src="'/storage/' + $page.props.school.logo_path" alt="Logo" class="w-10 h-10 object-contain lg:hidden drop-shadow-sm rounded-[0.4rem]" />
+                        </template>
+
                         <div>
                             <h2 class="text-lg lg:text-xl font-extrabold text-slate-800 leading-none">{{ title }}</h2>
                             <p class="text-[11px] text-slate-400 font-medium mt-1 hidden sm:block">Sistema de Gestión Académica</p>

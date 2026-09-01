@@ -47,6 +47,9 @@ class HandleInertiaRequests extends Middleware
                 'error'         => fn () => $request->session()->get('error'),
                 'import_result' => fn () => $request->session()->get('import_result'),
             ],
+            'school' => [
+                'logo_path' => \App\Models\SchoolSetting::get('logo_path'),
+            ],
             'security_questions_enabled' => env('SECURITY_QUESTIONS_ENABLED', false),
         ];
     }
