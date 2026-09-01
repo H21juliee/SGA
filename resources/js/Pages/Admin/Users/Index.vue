@@ -246,7 +246,7 @@ function resetPassword(user) {
                                   class="px-2.5 py-1 rounded-lg text-[9px] font-black uppercase tracking-widest border shadow-sm whitespace-nowrap"
                                   :class="{
                                       'bg-primary-50 text-primary-600 border-primary-100': r.name === 'Docente',
-                                      'bg-indigo-50 text-indigo-600 border-indigo-100': r.name === 'Administrador',
+                                      'bg-primary-50 text-primary-600 border-primary-100': r.name === 'Administrador',
                                       'bg-emerald-50 text-emerald-600 border-emerald-100': r.name === 'Secretaria',
                                       'bg-rose-50 text-rose-600 border-rose-100': r.name === 'SuperAdmin',
                                       'bg-slate-50 text-slate-500 border-slate-200': !['Docente', 'Administrador', 'Secretaria', 'SuperAdmin'].includes(r.name)
@@ -259,7 +259,7 @@ function resetPassword(user) {
                         <!-- Botones -->
                         <div class="flex items-center gap-2 bg-slate-50 p-1.5 rounded-xl border border-slate-100 shrink-0">
                             <Link :href="'/admin/users/' + user.id" 
-                                  class="w-9 h-9 rounded-lg bg-white text-slate-500 hover:text-indigo-600 hover:bg-indigo-50 hover:border-indigo-200 hover:shadow-sm transition-all border border-slate-200 flex items-center justify-center" 
+                                  class="w-9 h-9 rounded-lg bg-white text-slate-500 hover:text-primary-600 hover:bg-primary-50 hover:border-primary-200 hover:shadow-sm transition-all border border-slate-200 flex items-center justify-center" 
                                   title="Ver Detalles">
                                 <i class="fas fa-eye text-[11px]"></i>
                             </Link>

@@ -15,7 +15,7 @@
             <div class="flex flex-col h-full p-6">
                 <!-- Logo -->
                 <div class="flex items-center gap-4 mb-10 px-2">
-                    <div class="w-12 h-12 bg-gradient-to-br from-primary-500 to-primary-700 rounded-2xl flex items-center justify-center text-white text-2xl shadow-lg shadow-primary-500/30">
+                    <div class="w-12 h-12 rounded-2xl flex items-center justify-center text-white text-2xl shadow-lg" style="background: #336b87; box-shadow: 0 8px 20px rgba(51,107,135,0.35)">
                         <i class="fas fa-graduation-cap"></i>
                     </div>
                     <div>
@@ -75,8 +75,8 @@
 
                 <!-- User Profile -->
                 <div class="mt-auto border-t border-slate-100 pt-6">
-                    <div class="bg-gradient-to-br from-primary-50/50 to-purple-50/50 border border-primary-100 rounded-2xl p-4 flex items-center gap-3 shadow-sm hover:shadow-md transition-all duration-300 group">
-                        <div class="w-11 h-11 bg-gradient-to-br from-primary-500 to-accent-500 rounded-full flex items-center justify-center text-white font-bold text-lg shadow-md group-hover:scale-105 transition-transform">
+                    <div class="rounded-2xl p-4 flex items-center gap-3 shadow-sm hover:shadow-md transition-all duration-300 group" style="background: rgba(51,107,135,0.06); border: 1px solid rgba(51,107,135,0.15)">
+                        <div class="w-11 h-11 rounded-full flex items-center justify-center text-white font-bold text-lg shadow-md group-hover:scale-105 transition-transform" style="background: #336b87">
                             {{ user?.name?.charAt(0) ?? '?' }}
                         </div>
                         <div class="flex-1 min-w-0">

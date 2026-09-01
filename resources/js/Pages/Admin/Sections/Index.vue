@@ -169,7 +169,7 @@ function destroy(section) {
                     v-for="(sectionsList, levelName) in groupedSections" 
                     :key="levelName"
                     class="glass-card rounded-3xl overflow-hidden shadow-xl border-2 transition-all animate-fade-in-up"
-                    :class="activeLevel === levelName ? 'border-indigo-100' : 'border-transparent'"
+                    :class="activeLevel === levelName ? 'border-primary-100' : 'border-transparent'"
                 >
                     <!-- Accordion Header -->
                     <button 
@@ -177,8 +177,8 @@ function destroy(section) {
                         class="w-full flex items-center justify-between p-5 sm:p-6 bg-white hover:bg-slate-50 transition-colors"
                     >
                         <div class="flex items-center gap-4">
-                            <div class="w-12 h-12 bg-indigo-50 text-indigo-600 rounded-2xl flex items-center justify-center text-xl shadow-sm transition-transform"
-                                :class="activeLevel === levelName ? 'rotate-6 bg-indigo-500 text-white shadow-indigo-500/30' : ''"
+                            <div class="w-12 h-12 bg-primary-50 text-primary-600 rounded-2xl flex items-center justify-center text-xl shadow-sm transition-transform"
+                                :class="activeLevel === levelName ? 'rotate-6 bg-primary-500 text-white shadow-primary-500/30' : ''"
                             >
                                 <i class="fas fa-layer-group"></i>
                             </div>
@@ -188,7 +188,7 @@ function destroy(section) {
                             </div>
                         </div>
                         <div class="w-10 h-10 rounded-full bg-slate-50 flex items-center justify-center text-slate-400 transition-transform"
-                            :class="activeLevel === levelName ? 'rotate-180 bg-indigo-100 text-indigo-600' : ''"
+                            :class="activeLevel === levelName ? 'rotate-180 bg-primary-100 text-primary-600' : ''"
                         >
                             <i class="fas fa-chevron-down"></i>
                         </div>
@@ -211,7 +211,7 @@ function destroy(section) {
                         <div
                             v-for="section in sectionsList"
                             :key="section.id"
-                            class="bg-white rounded-2xl p-5 relative overflow-hidden transition-all duration-300 group hover:-translate-y-1 shadow-sm border-2 border-slate-100 hover:border-indigo-200 hover:shadow-md"
+                            class="bg-white rounded-2xl p-5 relative overflow-hidden transition-all duration-300 group hover:-translate-y-1 shadow-sm border-2 border-slate-100 hover:border-primary-200 hover:shadow-md"
                         >
                             <!-- Header -->
                             <div class="flex justify-between items-start mb-4">

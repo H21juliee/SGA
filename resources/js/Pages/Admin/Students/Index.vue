@@ -286,7 +286,7 @@ function submit() {
                     <!-- Info Principal -->
                     <div class="flex items-center gap-4 flex-1">
                         <div class="w-12 h-12 rounded-full flex items-center justify-center font-black text-sm shrink-0 shadow-sm border"
-                            :class="student.gender === 'F' ? 'bg-pink-50 text-pink-500 border-pink-100' : 'bg-blue-50 text-blue-500 border-blue-100'"
+                            :class="student.gender === 'F' ? 'bg-accent-50 text-accent-500 border-accent-100' : 'bg-blue-50 text-blue-500 border-blue-100'"
                         >
                             {{ student.last_name?.charAt(0) }}
                         </div>
@@ -325,7 +325,7 @@ function submit() {
                         <div class="flex items-center gap-2 bg-slate-50 p-1.5 rounded-xl border border-slate-100">
                             <Link 
                                 :href="'/admin/students/' + student.id"
-                                class="w-9 h-9 rounded-lg bg-white text-slate-500 hover:text-indigo-600 hover:bg-indigo-50 hover:border-indigo-200 hover:shadow-sm transition-all border border-slate-200 flex items-center justify-center"
+                                class="w-9 h-9 rounded-lg bg-white text-slate-500 hover:text-primary-600 hover:bg-primary-50 hover:border-primary-200 hover:shadow-sm transition-all border border-slate-200 flex items-center justify-center"
                                 title="Ver Expediente"
                             >
                                 <i class="fas fa-folder-open text-[11px]"></i>
@@ -435,7 +435,7 @@ function submit() {
                         <div class="bg-slate-50 border border-slate-200 rounded-2xl p-6 relative shadow-sm">
                             <div v-if="selectedGuardian" class="flex items-center justify-between">
                                 <div class="flex items-center gap-4">
-                                    <div class="w-10 h-10 bg-indigo-50 text-indigo-500 rounded-full flex items-center justify-center shadow-sm">
+                                    <div class="w-10 h-10 bg-primary-50 text-primary-500 rounded-full flex items-center justify-center shadow-sm">
                                         <i class="fas fa-user-tie"></i>
                                     </div>
                                     <div>
@@ -453,9 +453,9 @@ function submit() {
                                     <label class="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1 mb-2 block">Buscar por Cédula</label>
                                     <div class="flex gap-3">
                                         <div class="relative flex-1">
-                                            <input v-model="guardianSearchCedula" @input="guardianSearchCedula = formatCedula($event.target.value)" @keyup.enter="searchGuardian" type="text" placeholder="Ej: V-12345678" class="w-full bg-white border-2 border-slate-200 rounded-xl px-4 py-2.5 text-slate-700 text-sm font-bold focus:border-indigo-400 focus:ring-0 outline-none transition-all shadow-sm" maxlength="12">
+                                            <input v-model="guardianSearchCedula" @input="guardianSearchCedula = formatCedula($event.target.value)" @keyup.enter="searchGuardian" type="text" placeholder="Ej: V-12345678" class="w-full bg-white border-2 border-slate-200 rounded-xl px-4 py-2.5 text-slate-700 text-sm font-bold focus:border-primary-400 focus:ring-0 outline-none transition-all shadow-sm" maxlength="12">
                                         </div>
-                                        <button type="button" @click="searchGuardian" :disabled="searchingGuardian || !guardianSearchCedula" class="px-5 py-2.5 bg-indigo-600 text-white text-xs font-black uppercase tracking-widest rounded-xl shadow-md shadow-indigo-600/20 hover:bg-indigo-500 hover:-translate-y-0.5 transition-all disabled:opacity-50 disabled:translate-y-0">
+                                        <button type="button" @click="searchGuardian" :disabled="searchingGuardian || !guardianSearchCedula" class="px-5 py-2.5 bg-primary-600 text-white text-xs font-black uppercase tracking-widest rounded-xl shadow-md shadow-primary-600/20 hover:bg-primary-500 hover:-translate-y-0.5 transition-all disabled:opacity-50 disabled:translate-y-0">
                                             <i v-if="searchingGuardian" class="fas fa-spinner fa-spin"></i>
                                             <i v-else class="fas fa-search"></i>
                                         </button>
@@ -496,7 +496,7 @@ function submit() {
                 <div class="flex items-center justify-between mb-8">
                     <div>
                         <h3 class="text-xl font-black text-slate-800">
-                            Nuevo <span class="text-indigo-500">Representante</span>
+                            Nuevo <span class="text-primary-500">Representante</span>
                         </h3>
                         <p class="text-xs font-medium text-slate-400 mt-1">Ingresa los datos para registrar un nuevo apoderado.</p>
                     </div>
@@ -508,27 +508,27 @@ function submit() {
                 <div class="space-y-4">
                     <div class="space-y-2">
                         <label class="text-[11px] font-black text-slate-400 uppercase tracking-widest ml-1">Cédula</label>
-                        <input v-model="guardianForm.cedula" @input="guardianForm.cedula = formatCedula($event.target.value)" type="text" class="w-full bg-slate-50 border-2 border-slate-200 rounded-xl px-4 py-2.5 text-slate-700 text-sm font-bold focus:border-indigo-400 focus:bg-white focus:ring-0 outline-none transition-all shadow-sm" maxlength="12">
+                        <input v-model="guardianForm.cedula" @input="guardianForm.cedula = formatCedula($event.target.value)" type="text" class="w-full bg-slate-50 border-2 border-slate-200 rounded-xl px-4 py-2.5 text-slate-700 text-sm font-bold focus:border-primary-400 focus:bg-white focus:ring-0 outline-none transition-all shadow-sm" maxlength="12">
                         <p v-if="guardianFormErrors && guardianFormErrors.cedula" class="text-xs text-red-500 font-bold mt-1 ml-1">{{ guardianFormErrors.cedula[0] }}</p>
                     </div>
                     <div class="space-y-2">
                         <label class="text-[11px] font-black text-slate-400 uppercase tracking-widest ml-1">Nombre Completo</label>
-                        <input v-model="guardianForm.name" type="text" class="w-full bg-slate-50 border-2 border-slate-200 rounded-xl px-4 py-2.5 text-slate-700 text-sm font-bold focus:border-indigo-400 focus:bg-white focus:ring-0 outline-none transition-all shadow-sm">
+                        <input v-model="guardianForm.name" type="text" class="w-full bg-slate-50 border-2 border-slate-200 rounded-xl px-4 py-2.5 text-slate-700 text-sm font-bold focus:border-primary-400 focus:bg-white focus:ring-0 outline-none transition-all shadow-sm">
                         <p v-if="guardianFormErrors && guardianFormErrors.name" class="text-xs text-red-500 font-bold mt-1 ml-1">{{ guardianFormErrors.name[0] }}</p>
                     </div>
                     <div class="space-y-2">
                         <label class="text-[11px] font-black text-slate-400 uppercase tracking-widest ml-1">Teléfono</label>
-                        <input v-model="guardianForm.phone" @input="guardianForm.phone = formatPhone($event.target.value)" type="tel" placeholder="0414-1234567" maxlength="12" class="w-full bg-slate-50 border-2 border-slate-200 rounded-xl px-4 py-2.5 text-slate-700 text-sm font-bold focus:border-indigo-400 focus:bg-white focus:ring-0 outline-none transition-all shadow-sm">
+                        <input v-model="guardianForm.phone" @input="guardianForm.phone = formatPhone($event.target.value)" type="tel" placeholder="0414-1234567" maxlength="12" class="w-full bg-slate-50 border-2 border-slate-200 rounded-xl px-4 py-2.5 text-slate-700 text-sm font-bold focus:border-primary-400 focus:bg-white focus:ring-0 outline-none transition-all shadow-sm">
                         <p v-if="guardianFormErrors && guardianFormErrors.phone" class="text-xs text-red-500 font-bold mt-1 ml-1">{{ guardianFormErrors.phone[0] }}</p>
                     </div>
                     <div class="space-y-2">
                         <label class="text-[11px] font-black text-slate-400 uppercase tracking-widest ml-1">Correo Electrónico</label>
-                        <input v-model="guardianForm.email" type="email" class="w-full bg-slate-50 border-2 border-slate-200 rounded-xl px-4 py-2.5 text-slate-700 text-sm font-bold focus:border-indigo-400 focus:bg-white focus:ring-0 outline-none transition-all shadow-sm">
+                        <input v-model="guardianForm.email" type="email" class="w-full bg-slate-50 border-2 border-slate-200 rounded-xl px-4 py-2.5 text-slate-700 text-sm font-bold focus:border-primary-400 focus:bg-white focus:ring-0 outline-none transition-all shadow-sm">
                         <p v-if="guardianFormErrors && guardianFormErrors.email" class="text-xs text-red-500 font-bold mt-1 ml-1">{{ guardianFormErrors.email[0] }}</p>
                     </div>
                     
                     <div class="flex justify-end pt-6">
-                        <button type="button" @click="submitGuardian" class="px-6 py-3 bg-indigo-600 text-white text-[11px] font-black uppercase tracking-widest rounded-xl shadow-lg shadow-indigo-600/20 hover:bg-indigo-500 hover:-translate-y-0.5 transition-all">
+                        <button type="button" @click="submitGuardian" class="px-6 py-3 bg-primary-600 text-white text-[11px] font-black uppercase tracking-widest rounded-xl shadow-lg shadow-primary-600/20 hover:bg-primary-500 hover:-translate-y-0.5 transition-all">
                             Guardar y Seleccionar
                         </button>
                     </div>

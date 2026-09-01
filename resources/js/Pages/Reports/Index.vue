@@ -178,7 +178,7 @@ function downloadBatch() {
                                     v-for="lapse in activeYear.lapses" 
                                     :key="lapse.id"
                                     @click="printSabana(section.id, lapse.id)"
-                                    class="flex-1 py-2 bg-indigo-50 text-indigo-600 hover:bg-indigo-600 hover:text-white rounded-xl text-[10px] font-bold uppercase transition-colors"
+                                    class="flex-1 py-2 bg-primary-50 text-primary-600 hover:bg-primary-600 hover:text-white rounded-xl text-[10px] font-bold uppercase transition-colors"
                                 >
                                     Lapso {{ lapse.number }}
                                 </button>

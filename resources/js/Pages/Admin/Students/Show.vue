@@ -96,7 +96,7 @@ const gradeColorClass = (score) => {
 const enrollmentStatusMap = {
     active: { label: 'Activa', class: 'bg-emerald-50 text-emerald-600 border-emerald-100' },
     withdrawn: { label: 'Retirada', class: 'bg-slate-50 text-slate-600 border-slate-200' },
-    completed: { label: 'Completada', class: 'bg-indigo-50 text-indigo-600 border-indigo-200' },
+    completed: { label: 'Completada', class: 'bg-primary-50 text-primary-600 border-primary-200' },
 }
 
 const studentStatusMap = {
@@ -126,9 +126,9 @@ const studentStatusMap = {
 
             <!-- Profile Card -->
             <div class="glass-card rounded-3xl p-6 sm:p-8 shadow-2xl relative overflow-hidden animate-fade-in-up" style="animation-delay: 100ms">
-                <div class="absolute top-0 left-0 w-full h-32 bg-gradient-to-r from-primary-500 to-indigo-500 opacity-10 pointer-events-none"></div>
+                <div class="absolute top-0 left-0 w-full h-32 bg-gradient-to-r from-primary-500 to-primary-500 opacity-10 pointer-events-none"></div>
                 <div class="relative z-10 flex flex-col sm:flex-row gap-6 items-start sm:items-center">
-                    <div class="w-24 h-24 sm:w-28 sm:h-28 rounded-2xl bg-gradient-to-br from-primary-500 to-indigo-600 text-white flex items-center justify-center text-4xl font-black shadow-xl shadow-primary-500/30 shrink-0 overflow-hidden">
+                    <div class="w-24 h-24 sm:w-28 sm:h-28 rounded-2xl bg-gradient-to-br from-primary-500 to-primary-600 text-white flex items-center justify-center text-4xl font-black shadow-xl shadow-primary-500/30 shrink-0 overflow-hidden">
                         <img v-if="student.photo_url" :src="student.photo_url" alt="Foto" class="w-full h-full object-cover">
                         <span v-else>{{ student.first_name.charAt(0) }}{{ student.last_name.charAt(0) }}</span>
                     </div>
@@ -167,7 +167,7 @@ const studentStatusMap = {
             <!-- Academic History -->
             <div class="space-y-6 animate-fade-in-up" style="animation-delay: 200ms">
                 <div class="flex items-center gap-3 px-1">
-                    <div class="w-10 h-10 rounded-xl bg-indigo-50 text-indigo-500 flex items-center justify-center">
+                    <div class="w-10 h-10 rounded-xl bg-primary-50 text-primary-500 flex items-center justify-center">
                         <i class="fas fa-history"></i>
                     </div>
                     <h3 class="text-xl font-black text-slate-800">Historial de Inscripciones y Notas</h3>

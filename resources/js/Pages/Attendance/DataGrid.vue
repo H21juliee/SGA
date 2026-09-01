@@ -389,7 +389,7 @@ function toggleNote(rowId) {
                                 <button 
                                     @click="toggleNote(row.enrollment_id)"
                                     class="w-10 h-10 sm:w-12 sm:h-12 rounded-2xl flex items-center justify-center text-sm transition-all"
-                                    :class="row.notes ? 'bg-indigo-100 text-indigo-600 font-black' : 'bg-transparent text-slate-300 hover:bg-slate-100 hover:text-slate-500'"
+                                    :class="row.notes ? 'bg-primary-100 text-primary-600 font-black' : 'bg-transparent text-slate-300 hover:bg-slate-100 hover:text-slate-500'"
                                     title="Observaciones"
                                 >
                                     <i class="fas fa-comment-dots" :class="{'animate-pulse': row.saving}"></i>
@@ -407,7 +407,7 @@ function toggleNote(rowId) {
                                     <textarea 
                                         v-model="row.notes"
                                         :disabled="isLocked || !$can('attendance.manage')"
-                                        class="w-full bg-slate-50 border-2 border-slate-100 rounded-xl px-3 py-2 text-xs text-slate-700 focus:border-indigo-400 focus:ring-0 outline-none resize-none disabled:bg-slate-100 disabled:text-slate-400"
+                                        class="w-full bg-slate-50 border-2 border-slate-100 rounded-xl px-3 py-2 text-xs text-slate-700 focus:border-primary-400 focus:ring-0 outline-none resize-none disabled:bg-slate-100 disabled:text-slate-400"
                                         rows="2"
                                         placeholder="Escribe el motivo..."
                                     ></textarea>
@@ -415,7 +415,7 @@ function toggleNote(rowId) {
                                         <button 
                                             v-if="!isLocked"
                                             @click="saveNote(row)" 
-                                            class="px-4 py-1.5 bg-indigo-600 text-white text-[10px] font-black uppercase tracking-widest rounded-lg hover:bg-indigo-500 transition-all shadow-sm"
+                                            class="px-4 py-1.5 bg-primary-600 text-white text-[10px] font-black uppercase tracking-widest rounded-lg hover:bg-primary-500 transition-all shadow-sm"
                                         >
                                             Guardar
                                         </button>

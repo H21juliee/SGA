@@ -50,11 +50,11 @@ const groupedLoads = computed(() => {
 
             <!-- Profile Card -->
             <div class="glass-card rounded-3xl p-8 shadow-2xl relative overflow-hidden animate-fade-in-up" style="animation-delay: 100ms">
-                <div class="absolute top-0 left-0 w-full h-32 bg-gradient-to-r from-primary-500 to-indigo-500 opacity-10"></div>
+                <div class="absolute top-0 left-0 w-full h-32 bg-gradient-to-r from-primary-500 to-primary-500 opacity-10"></div>
                 
                 <div class="relative z-10 flex flex-col md:flex-row gap-8 items-start md:items-center">
                     <!-- Avatar -->
-                    <div class="w-32 h-32 rounded-3xl bg-gradient-to-br from-primary-500 to-indigo-600 text-white flex items-center justify-center text-5xl font-black shadow-xl shadow-primary-500/30 shrink-0">
+                    <div class="w-32 h-32 rounded-3xl bg-gradient-to-br from-primary-500 to-primary-600 text-white flex items-center justify-center text-5xl font-black shadow-xl shadow-primary-500/30 shrink-0">
                         {{ user.name.charAt(0) }}
                     </div>
                     
@@ -66,7 +66,7 @@ const groupedLoads = computed(() => {
                                 <span class="px-3 py-1 rounded-lg text-[10px] font-black uppercase tracking-widest border shadow-sm"
                                       :class="{
                                           'bg-primary-50 text-primary-600 border-primary-100': role === 'Docente',
-                                          'bg-indigo-50 text-indigo-600 border-indigo-100': role === 'Administrador',
+                                          'bg-primary-50 text-primary-600 border-primary-100': role === 'Administrador',
                                           'bg-emerald-50 text-emerald-600 border-emerald-100': role === 'Secretaria',
                                           'bg-rose-50 text-rose-600 border-rose-100': role === 'SuperAdmin',
                                           'bg-slate-50 text-slate-500 border-slate-200': role === 'Sin Rol'
@@ -105,7 +105,7 @@ const groupedLoads = computed(() => {
             <!-- Academic Load Section (Only for Teachers) -->
             <div v-if="isDocente" class="space-y-6 animate-fade-in-up" style="animation-delay: 200ms">
                 <div class="flex items-center gap-3 px-2">
-                    <div class="w-10 h-10 rounded-xl bg-indigo-50 text-indigo-500 flex items-center justify-center text-lg">
+                    <div class="w-10 h-10 rounded-xl bg-primary-50 text-primary-500 flex items-center justify-center text-lg">
                         <i class="fas fa-chalkboard-teacher"></i>
                     </div>
                     <h3 class="text-xl font-black text-slate-800">Carga Académica</h3>

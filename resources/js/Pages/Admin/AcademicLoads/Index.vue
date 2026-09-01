@@ -28,7 +28,7 @@
                         class="w-full flex justify-between items-center p-5 bg-white hover:bg-slate-50 transition-colors border-b border-slate-100"
                     >
                         <div class="flex items-center gap-3">
-                            <div class="w-10 h-10 rounded-lg bg-indigo-50 text-indigo-600 flex items-center justify-center font-extrabold text-xl">
+                            <div class="w-10 h-10 rounded-lg bg-primary-50 text-primary-600 flex items-center justify-center font-extrabold text-xl">
                                 {{ grade.name.charAt(0) }}
                             </div>
                             <h3 class="font-bold text-slate-700 text-lg">{{ grade.name }}</h3>
@@ -50,7 +50,7 @@
                             <!-- Section Accordion Header -->
                             <button @click="toggleSection(section.id)" class="w-full flex justify-between items-center bg-white hover:opacity-80 transition-opacity">
                                 <h4 class="font-bold text-slate-800 text-md flex items-center gap-3">
-                                    <div class="w-8 h-8 rounded-lg bg-indigo-50 text-indigo-600 flex items-center justify-center text-sm font-bold shadow-sm">
+                                    <div class="w-8 h-8 rounded-lg bg-primary-50 text-primary-600 flex items-center justify-center text-sm font-bold shadow-sm">
                                         {{ section.name }}
                                     </div>
                                     Sección {{ section.name }}

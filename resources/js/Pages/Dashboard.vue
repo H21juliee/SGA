@@ -46,35 +46,35 @@
             <!-- Quick Actions -->
             <section class="glass-card rounded-3xl p-8 shadow-xl animate-fade-in-up" style="animation-delay: 500ms">
                 <h3 class="text-xl font-bold text-slate-800 mb-6 flex items-center gap-3">
-                    <div class="w-10 h-10 bg-gradient-to-br from-amber-400 to-orange-500 rounded-xl flex items-center justify-center text-white shadow-lg shadow-amber-500/20">
+                    <div class="w-10 h-10 bg-amber-500 rounded-xl flex items-center justify-center text-white shadow-lg shadow-amber-500/20">
                         <i class="fas fa-bolt"></i>
                     </div>
                     Acciones Rápidas
                 </h3>
                 <div class="grid grid-cols-2 lg:grid-cols-4 gap-4">
                     <Link v-if="can('students.create') || can('students.view')" href="/admin/students" class="action-btn-hover p-6 border-2 border-dashed border-slate-100 rounded-2xl bg-white/50 flex flex-col items-center gap-4 text-center group transition-all">
-                        <div class="w-16 h-16 bg-gradient-to-br from-primary-50 to-indigo-100 rounded-2xl flex items-center justify-center text-primary-600 text-3xl group-hover:scale-110 transition-transform">
+                        <div class="w-16 h-16 rounded-2xl flex items-center justify-center text-3xl group-hover:scale-110 transition-transform" style="background: rgba(51, 107, 135, 0.15); color: #336b87">
                             <i class="fas fa-user-plus"></i>
                         </div>
                         <span class="font-bold text-slate-700 text-sm">Nuevo Estudiante</span>
                     </Link>
 
                     <Link v-if="can('grades.view') || can('grades.edit')" href="/grades" class="action-btn-hover p-6 border-2 border-dashed border-slate-100 rounded-2xl bg-white/50 flex flex-col items-center gap-4 text-center group transition-all">
-                        <div class="w-16 h-16 bg-gradient-to-br from-emerald-50 to-teal-100 rounded-2xl flex items-center justify-center text-emerald-600 text-3xl group-hover:scale-110 transition-transform">
+                        <div class="w-16 h-16 rounded-2xl flex items-center justify-center text-3xl group-hover:scale-110 transition-transform" style="background: rgba(15, 118, 110, 0.15); color: #0f766e">
                             <i class="fas fa-file-signature"></i>
                         </div>
                         <span class="font-bold text-slate-700 text-sm">Registrar Notas</span>
                     </Link>
 
                     <Link v-if="can('attendance.view') || can('attendance.manage')" href="/attendance" class="action-btn-hover p-6 border-2 border-dashed border-slate-100 rounded-2xl bg-white/50 flex flex-col items-center gap-4 text-center group transition-all">
-                        <div class="w-16 h-16 bg-gradient-to-br from-amber-50 to-orange-100 rounded-2xl flex items-center justify-center text-amber-600 text-3xl group-hover:scale-110 transition-transform">
+                        <div class="w-16 h-16 rounded-2xl flex items-center justify-center text-3xl group-hover:scale-110 transition-transform" style="background: rgba(217, 119, 6, 0.15); color: #d97706">
                             <i class="fas fa-clipboard-check"></i>
                         </div>
                         <span class="font-bold text-slate-700 text-sm">Tomar Asistencia</span>
                     </Link>
 
                     <Link v-if="can('reports.generate')" href="/reports" class="action-btn-hover p-6 border-2 border-dashed border-slate-100 rounded-2xl bg-white/50 flex flex-col items-center gap-4 text-center group transition-all">
-                        <div class="w-16 h-16 bg-gradient-to-br from-pink-50 to-rose-100 rounded-2xl flex items-center justify-center text-pink-600 text-3xl group-hover:scale-110 transition-transform">
+                        <div class="w-16 h-16 rounded-2xl flex items-center justify-center text-3xl group-hover:scale-110 transition-transform" style="background: rgba(2, 132, 199, 0.15); color: #0284c7">
                             <i class="fas fa-file-pdf"></i>
                         </div>
                         <span class="font-bold text-slate-700 text-sm">Generar Reporte</span>
@@ -122,7 +122,7 @@ const cards = computed(() => [
         value: props.stats.total_students ?? 0,
         faIcon: 'fas fa-user-graduate',
         iconClass: 'stat-icon-primary',
-        barGradient: 'from-primary-500 to-indigo-500',
+        barGradient: 'from-primary-500 to-primary-500',
         badgeColor: 'text-primary-500'
     },
     {

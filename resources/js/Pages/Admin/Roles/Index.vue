@@ -107,7 +107,7 @@ const selectAll = computed({
 // ── Role color helper ────────────────────────────────
 const roleColors = {
     'SuperAdmin':    'bg-rose-50 text-rose-600 border-rose-100',
-    'Administrador': 'bg-indigo-50 text-indigo-600 border-indigo-100',
+    'Administrador': 'bg-primary-50 text-primary-600 border-primary-100',
     'Docente':       'bg-primary-50 text-primary-600 border-primary-100',
     'Secretaria':    'bg-emerald-50 text-emerald-600 border-emerald-100',
 }

@@ -6,7 +6,7 @@
             <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
                 <div>
                     <div class="flex items-center gap-3 mb-1">
-                        <div class="w-10 h-10 rounded-2xl bg-gradient-to-br from-violet-500 to-indigo-600 flex items-center justify-center shadow-lg shadow-violet-500/30">
+                        <div class="w-10 h-10 rounded-2xl bg-gradient-to-br from-violet-500 to-primary-600 flex items-center justify-center shadow-lg shadow-violet-500/30">
                             <i class="fas fa-user-graduate text-white text-sm"></i>
                         </div>
                         <h1 class="text-2xl font-extrabold text-slate-800">Importar Estudiantes</h1>
@@ -31,9 +31,9 @@
             />
 
             <!-- Instrucciones -->
-            <div class="glass-card rounded-2xl p-6 border border-indigo-100/50">
+            <div class="glass-card rounded-2xl p-6 border border-primary-100/50">
                 <h2 class="text-sm font-bold text-slate-700 uppercase tracking-wider mb-4 flex items-center gap-2">
-                    <i class="fas fa-info-circle text-indigo-400"></i>
+                    <i class="fas fa-info-circle text-primary-400"></i>
                     Formato del archivo
                 </h2>
                 <div class="overflow-x-auto rounded-xl border border-slate-100">
@@ -48,7 +48,7 @@
                         <tbody class="divide-y divide-slate-50">
                             <tr v-for="col in columns" :key="col.name" class="hover:bg-slate-50/50 transition-colors">
                                 <td class="px-4 py-3">
-                                    <code class="bg-indigo-50 text-indigo-700 text-xs font-mono px-2 py-0.5 rounded-lg">{{ col.name }}</code>
+                                    <code class="bg-primary-50 text-primary-700 text-xs font-mono px-2 py-0.5 rounded-lg">{{ col.name }}</code>
                                 </td>
                                 <td class="px-4 py-3">
                                     <span v-if="col.required" class="inline-flex items-center gap-1 text-emerald-600 font-semibold text-xs">
@@ -101,7 +101,7 @@
 
                         <!-- No file selected -->
                         <template v-if="!selectedFile">
-                            <div class="w-16 h-16 rounded-2xl bg-gradient-to-br from-violet-100 to-indigo-100 flex items-center justify-center mx-auto mb-4 transition-transform duration-300" :class="isDragging ? 'scale-110' : ''">
+                            <div class="w-16 h-16 rounded-2xl bg-gradient-to-br from-violet-100 to-primary-100 flex items-center justify-center mx-auto mb-4 transition-transform duration-300" :class="isDragging ? 'scale-110' : ''">
                                 <i class="fas fa-cloud-upload-alt text-violet-500 text-2xl"></i>
                             </div>
                             <p class="text-slate-700 font-semibold mb-1">Arrastra tu archivo aquí</p>
@@ -147,7 +147,7 @@
                         <button
                             type="submit"
                             :disabled="!selectedFile || form.processing"
-                            class="inline-flex items-center gap-2 px-6 py-3 rounded-xl font-bold text-sm text-white bg-gradient-to-r from-violet-600 to-indigo-600 shadow-lg shadow-violet-500/30 hover:shadow-xl hover:shadow-violet-500/40 hover:-translate-y-0.5 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:translate-y-0 disabled:hover:shadow-lg"
+                            class="inline-flex items-center gap-2 px-6 py-3 rounded-xl font-bold text-sm text-white bg-gradient-to-r from-violet-600 to-primary-600 shadow-lg shadow-violet-500/30 hover:shadow-xl hover:shadow-violet-500/40 hover:-translate-y-0.5 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:translate-y-0 disabled:hover:shadow-lg"
                         >
                             <i v-if="form.processing" class="fas fa-spinner fa-spin"></i>
                             <i v-else class="fas fa-file-import"></i>
