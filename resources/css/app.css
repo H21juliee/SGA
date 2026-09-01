@@ -37,17 +37,39 @@
     --animate-gradient-shift: gradientShift 3s ease infinite;
 
     @keyframes fadeInUp {
-        from { opacity: 0; transform: translateY(20px); }
-        to { opacity: 1; transform: translateY(0); }
+        from {
+            opacity: 0;
+            transform: translateY(20px);
+        }
+
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
     }
+
     @keyframes slideIn {
-        from { transform: translateX(-100%); }
-        to { transform: translateX(0); }
+        from {
+            transform: translateX(-100%);
+        }
+
+        to {
+            transform: translateX(0);
+        }
     }
+
     @keyframes gradientShift {
-        0% { background-position: 0% 50%; }
-        50% { background-position: 100% 50%; }
-        100% { background-position: 0% 50%; }
+        0% {
+            background-position: 0% 50%;
+        }
+
+        50% {
+            background-position: 100% 50%;
+        }
+
+        100% {
+            background-position: 0% 50%;
+        }
     }
 }
 
@@ -63,23 +85,18 @@
 }
 
 @utility bg-mesh {
-    background-color: #f8fafc;
-    background-image:
-        radial-gradient(at 0% 0%, rgba(99, 102, 241, 0.15) 0px, transparent 50%),
-        radial-gradient(at 100% 0%, rgba(236, 72, 153, 0.15) 0px, transparent 50%),
-        radial-gradient(at 100% 100%, rgba(99, 102, 241, 0.15) 0px, transparent 50%),
-        radial-gradient(at 0% 100%, rgba(236, 72, 153, 0.15) 0px, transparent 50%);
+    background-color: #F5F5F4;
 }
 
 @utility gradient-text {
-    background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 50%, #ec4899 100%);
-    -webkit-background-clip: text;
+    background: #336b87;
+    /* -webkit-background-clip: text; */
     -webkit-text-fill-color: transparent;
     background-clip: text;
 }
 
 @utility nav-link-active {
-    background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%);
+    background: #336b87;
     color: white;
     box-shadow: 0 10px 15px -3px rgba(99, 102, 241, 0.4);
 }
@@ -112,4 +129,3 @@
     background: linear-gradient(135deg, rgba(6, 182, 212, 0.15) 0%, rgba(56, 189, 248, 0.15) 100%);
     color: #06b6d4;
 }
-

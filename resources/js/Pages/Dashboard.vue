@@ -4,9 +4,9 @@
             <!-- Welcome -->
             <div class="animate-fade-in-up">
                 <h1 class="text-3xl lg:text-4xl font-extrabold text-slate-800">
-                    Bienvenido al <span class="gradient-text">SGE</span>
+                    Bienvenido al <span class="gradient-text">SGA</span>
                 </h1>
-                <p class="text-slate-400 font-medium mt-2">Panel de control del Sistema de Gestión Escolar</p>
+                <p class="text-slate-400 font-medium mt-2">Panel de control del Sistema de Gestión Académica</p>
             </div>
 
             <!-- Stats Grid -->
