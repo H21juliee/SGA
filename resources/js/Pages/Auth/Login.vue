@@ -49,7 +49,7 @@ function submit() {
             </div>
 
             <!-- Form Card -->
-            <div class="glass-card rounded-[2.5rem] border-white/60 p-10 shadow-2xl shadow-primary-900/5 relative overflow-hidden">
+            <div class="glass-card rounded-[2.5rem] border-white/60 p-10 shadow-xl shadow-primary-900/5 relative overflow-hidden">
                 <!-- Top accent line -->
                 <div class="absolute top-0 left-0 right-0 h-1.5 bg-gradient-to-r from-primary-500 via-primary-400 to-accent-400"></div>
 
