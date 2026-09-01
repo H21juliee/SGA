@@ -32,7 +32,7 @@ class DatabaseSeeder extends Seeder
         $administrador = User::updateOrCreate(
             ['email' => 'admin_secundario@sge.test'],
             [
-                'name' => 'Director SGE',
+                'name' => 'Director SGA',
                 'password' => bcrypt('password'),
                 'cedula' => 'V-11111111',
                 'is_active' => true,
