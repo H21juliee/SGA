@@ -24,16 +24,23 @@ const promoteForm = useForm({
     next_school_year_id: '',
 })
 
+function resetYearForm() {
+    form.name = ''
+    form.start_date = ''
+    form.end_date = ''
+    form.clearErrors()
+}
+
 function openCreateModal() {
     editingYear.value = null
-    form.reset()
-    form.clearErrors()
+    resetYearForm()
     showModal.value = true
 }
 
 function openPromoteModal(year) {
     promoteYear.value = year
     promoteForm.reset()
+    promoteForm.next_school_year_id = ''
     promoteForm.clearErrors()
     showPromoteModal.value = true
 }
@@ -50,21 +57,29 @@ function formatDate(dateStr) {
 
 function openEditModal(year) {
     editingYear.value = year
+    resetYearForm()
+    
     form.name = year.name
     form.start_date = year.start_date ? year.start_date.split('T')[0] : ''
     form.end_date = year.end_date ? year.end_date.split('T')[0] : ''
-    form.clearErrors()
+    
     showModal.value = true
 }
 
 function submit() {
     if (editingYear.value) {
         form.put(`/admin/school-years/${editingYear.value.id}`, {
-            onSuccess: () => showModal.value = false,
+            onSuccess: () => {
+                showModal.value = false
+                resetYearForm()
+            },
         })
     } else {
         form.post('/admin/school-years', {
-            onSuccess: () => showModal.value = false,
+            onSuccess: () => {
+                showModal.value = false
+                resetYearForm()
+            },
         })
     }
 }

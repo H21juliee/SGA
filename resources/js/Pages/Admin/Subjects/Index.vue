@@ -70,31 +70,49 @@ function doSearch() {
     router.get('/admin/subjects', { search: searchQuery.value }, { preserveState: true, replace: true })
 }
 
-function openCreateModal() {
-    editingSubject.value = null
-    form.reset()
+function resetSubjectForm() {
+    form.grade_level_id = ''
+    form.name = ''
+    form.code = ''
     form.weight = 10
     form.grading_type = 'numeric'
     form.clearErrors()
+}
+
+function openCreateModal() {
+    editingSubject.value = null
+    resetSubjectForm()
     showModal.value = true
 }
 
 function openEditModal(subject) {
     editingSubject.value = subject
+    resetSubjectForm()
+    
     form.grade_level_id = subject.grade_level_id
     form.name = subject.name
     form.code = subject.code
     form.weight = subject.weight || 10
     form.grading_type = subject.grading_type || 'numeric'
-    form.clearErrors()
+    
     showModal.value = true
 }
 
 function submit() {
     if (editingSubject.value) {
-        form.put(`/admin/subjects/${editingSubject.value.id}`, { onSuccess: () => { showModal.value = false } })
+        form.put(`/admin/subjects/${editingSubject.value.id}`, { 
+            onSuccess: () => { 
+                showModal.value = false
+                resetSubjectForm()
+            } 
+        })
     } else {
-        form.post('/admin/subjects', { onSuccess: () => { showModal.value = false } })
+        form.post('/admin/subjects', { 
+            onSuccess: () => { 
+                showModal.value = false
+                resetSubjectForm()
+            } 
+        })
     }
 }
 

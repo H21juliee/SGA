@@ -62,9 +62,25 @@ function searchGuardian() {
         });
 }
 
+function resetStudentForm() {
+    form.first_name = ''
+    form.last_name = ''
+    form.cedula = ''
+    form.birth_date = ''
+    form.gender = 'M'
+    form.status = 'regular'
+    form.guardian_id = ''
+    selectedGuardian.value = null
+    guardianSearchCedula.value = ''
+    guardianNotFound.value = false
+    form.clearErrors()
+}
+
 function openCreateGuardian() {
-    guardianForm.reset()
     guardianForm.cedula = guardianSearchCedula.value
+    guardianForm.name = ''
+    guardianForm.phone = ''
+    guardianForm.email = ''
     guardianFormErrors.value = {}
     showGuardianModal.value = true
 }
@@ -153,11 +169,7 @@ function formatCedula(value) {
 
 function openCreateModal() {
     editingStudent.value = null
-    form.reset()
-    form.clearErrors()
-    selectedGuardian.value = null
-    guardianSearchCedula.value = ''
-    guardianNotFound.value = false
+    resetStudentForm()
     showModal.value = true
 }
 
@@ -187,11 +199,17 @@ function openEditModal(student) {
 function submit() {
     if (editingStudent.value) {
         form.put(`/admin/students/${editingStudent.value.id}`, {
-            onSuccess: () => showModal.value = false,
+            onSuccess: () => {
+                showModal.value = false
+                resetStudentForm()
+            },
         })
     } else {
         form.post('/admin/students', {
-            onSuccess: () => showModal.value = false,
+            onSuccess: () => {
+                showModal.value = false
+                resetStudentForm()
+            },
         })
     }
 }

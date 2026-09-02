@@ -60,32 +60,46 @@ function loadSections() {
     }, { preserveState: true })
 }
 
+function resetSectionForm() {
+    form.school_year_id = schoolYearId.value
+    form.grade_level_id = ''
+    form.name = ''
+    form.capacity = 100
+    form.clearErrors()
+}
+
 function openCreateModal() {
     editingSection.value = null
-    form.reset()
-    form.school_year_id = schoolYearId.value
-    form.clearErrors()
+    resetSectionForm()
     showModal.value = true
 }
 
 function openEditModal(section) {
     editingSection.value = section
+    resetSectionForm()
+    
     form.school_year_id = section.school_year_id
     form.grade_level_id = section.grade_level_id
     form.name = section.name
     form.capacity = section.capacity
-    form.clearErrors()
+    
     showModal.value = true
 }
 
 function submit() {
     if (editingSection.value) {
         form.put(`/admin/sections/${editingSection.value.id}`, {
-            onSuccess: () => { showModal.value = false },
+            onSuccess: () => { 
+                showModal.value = false
+                resetSectionForm()
+            },
         })
     } else {
         form.post('/admin/sections', {
-            onSuccess: () => { showModal.value = false },
+            onSuccess: () => { 
+                showModal.value = false
+                resetSectionForm()
+            },
         })
     }
 }

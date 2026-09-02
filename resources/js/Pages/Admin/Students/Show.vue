@@ -121,8 +121,10 @@ function searchGuardian() {
 }
 
 function openCreateGuardian() {
-    guardianForm.reset()
     guardianForm.cedula = guardianSearchCedula.value
+    guardianForm.name = ''
+    guardianForm.phone = ''
+    guardianForm.email = ''
     guardianFormErrors.value = {}
     showGuardianModal.value = true
 }
@@ -177,10 +179,21 @@ const groupedSubjects = computed(() => {
     return groups
 })
 
-function openDebtModal(debt = null) {
+function resetDebtForm() {
+    debtForm.subject_id = ''
+    debtForm.origin_school_year_id = ''
+    debtForm.status = 'pending'
+    debtForm.score = ''
+    debtForm.moment = ''
+    debtForm.acta_number = ''
+    debtForm.notes = ''
     debtForm.clearErrors()
+}
+
+function openDebtModal(debt = null) {
     if (debt) {
         editingDebtId.value = debt.id
+        resetDebtForm()
         debtForm.subject_id = debt.subject_id
         debtForm.origin_school_year_id = debt.origin_school_year_id || ''
         debtForm.status = debt.status || 'pending'
@@ -190,8 +203,7 @@ function openDebtModal(debt = null) {
         debtForm.notes = debt.notes || ''
     } else {
         editingDebtId.value = null
-        debtForm.reset()
-        debtForm.status = 'pending'
+        resetDebtForm()
     }
     isDebtModalOpen.value = true
 }
@@ -208,7 +220,7 @@ function submitDebt() {
             preserveScroll: true,
             onSuccess: () => {
                 isDebtModalOpen.value = false
-                debtForm.reset()
+                resetDebtForm()
                 editingDebtId.value = null
             }
         })
@@ -217,7 +229,7 @@ function submitDebt() {
             preserveScroll: true,
             onSuccess: () => {
                 isDebtModalOpen.value = false
-                debtForm.reset()
+                resetDebtForm()
                 editingDebtId.value = null
             }
         })

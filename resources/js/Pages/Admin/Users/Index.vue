@@ -83,19 +83,28 @@ const form = useForm({
     is_active: true,
 })
 
+function resetUserForm() {
+    form.name = ''
+    form.email = ''
+    form.cedula = ''
+    form.phone = ''
+    form.password = ''
+    form.roles = []
+    form.is_active = true
+    form.clearErrors()
+}
+
 function openCreateModal() {
     isEditing.value = false
     targetUser.value = null
-    form.reset()
-    form.clearErrors()
+    resetUserForm()
     showModal.value = true
 }
 
 function openEditModal(user) {
     isEditing.value = true
     targetUser.value = user
-    form.reset()
-    form.clearErrors()
+    resetUserForm()
     
     form.name = user.name
     form.email = user.email
@@ -111,11 +120,17 @@ function openEditModal(user) {
 function submit() {
     if (isEditing.value) {
         form.put(`/admin/users/${targetUser.value.id}`, {
-            onSuccess: () => { showModal.value = false }
+            onSuccess: () => {
+                showModal.value = false
+                resetUserForm()
+            }
         })
     } else {
         form.post('/admin/users', {
-            onSuccess: () => { showModal.value = false }
+            onSuccess: () => {
+                showModal.value = false
+                resetUserForm()
+            }
         })
     }
 }
