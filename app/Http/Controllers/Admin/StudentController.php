@@ -120,14 +120,14 @@ class StudentController extends Controller implements \Illuminate\Routing\Contro
     public function update(Request $request, Student $student)
     {
         $validated = $request->validate([
-            'first_name' => 'required|string|max:255',
-            'last_name' => 'required|string|max:255',
-            'cedula' => ['nullable', 'string', 'max:20', 'regex:/^[VEP]-\d{6,10}$/i', 'unique:students,cedula,' . $student->id],
-            'birth_date' => 'required|date',
-            'gender' => 'required|in:M,F',
-            'address' => 'nullable|string',
+            'first_name'  => 'required|string|max:255',
+            'last_name'   => 'required|string|max:255',
+            'cedula'      => ['nullable', 'string', 'max:20', 'regex:/^([VEP]-\d{6,15}|\d{8,15})$/i', 'unique:students,cedula,' . $student->id],
+            'birth_date'  => 'nullable|date',
+            'gender'      => 'required|in:M,F',
+            'address'     => 'nullable|string',
             'guardian_id' => 'nullable|exists:guardians,id',
-            'status' => ['required', Rule::enum(StudentStatus::class)],
+            'status'      => ['required', Rule::enum(StudentStatus::class)],
         ]);
 
         $before = $student->only(array_keys($validated));
