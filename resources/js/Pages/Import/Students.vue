@@ -61,10 +61,14 @@
                         </tbody>
                     </table>
                 </div>
-                <p class="mt-3 text-xs text-slate-400 flex items-center gap-1.5">
-                    <i class="fas fa-lightbulb text-amber-400"></i>
-                    Si una cédula ya existe en el sistema, esa fila será registrada como error en el resumen.
-                    El campo <code class="bg-slate-100 px-1 rounded text-slate-600">status</code> se asigna como <em>Regular</em> en todos los casos.
+                <p class="mt-3 text-xs text-slate-500 flex flex-col gap-1.5 bg-slate-50/70 p-3 rounded-xl border border-slate-100">
+                    <span class="flex items-center gap-1.5">
+                        <i class="fas fa-lightbulb text-amber-500"></i>
+                        <span>Si una cédula ya existe en el sistema, esa fila será omitida para evitar duplicados.</span>
+                    </span>
+                    <span class="text-slate-400 text-[11px] ml-5">
+                        Los campos <code class="bg-slate-200/70 px-1 py-0.5 rounded text-slate-700 font-mono">grado</code> y <code class="bg-slate-200/70 px-1 py-0.5 rounded text-slate-700 font-mono">seccion</code> son opcionales: si se incluyen, el estudiante quedará inscrito automáticamente en su sección en el año escolar activo.
+                    </span>
                 </p>
             </div>
 
@@ -212,8 +216,10 @@ function submit() {
 const columns = [
     { name: 'nombres',          required: true,  note: 'Nombres completos del estudiante. Ej: María Alejandra' },
     { name: 'apellidos',        required: true,  note: 'Apellidos completos. Ej: González Pérez' },
-    { name: 'cedula_escolar',   required: false, note: 'Formato: V-12345678 o E-12345678. Si está vacía se omite.' },
-    { name: 'fecha_nacimiento', required: true,  note: 'Formatos aceptados: DD/MM/YYYY o YYYY-MM-DD' },
+    { name: 'cedula_escolar',   required: false, note: 'Formato: V-12345678, E-12345678 o sólo números. Si está vacía se omite.' },
+    { name: 'fecha_nacimiento', required: false, note: 'Formatos aceptados: DD/MM/YYYY o YYYY-MM-DD. (Opcional)' },
     { name: 'genero',           required: true,  note: 'M para Masculino, F para Femenino' },
+    { name: 'grado',            required: false, note: 'Nombre del año o grado escolar. Ej: 1er Año, 2do Año, etc. (Opcional)' },
+    { name: 'seccion',          required: false, note: 'Letra de la sección. Ej: A, B, C. Inscribe automáticamente en el año activo. (Opcional)' },
 ]
 </script>
