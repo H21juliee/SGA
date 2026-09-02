@@ -1,6 +1,7 @@
 <script setup>
 import { ref, computed, watch } from 'vue'
 import { router, Link } from '@inertiajs/vue3'
+import axios from 'axios'
 import AppLayout from '@/Components/Layout/AppLayout.vue'
 
 const props = defineProps({
@@ -12,20 +13,22 @@ const props = defineProps({
 
 const searchQuery = ref('')
 const sortOrder = ref('name')
-let debounceTimer = null
+const debounceTimers = {}
 
 // Initialize local state for immediate visual feedback
 const localRows = ref(
     props.enrollments.map(enrollment => {
         const revGrade = enrollment.revision_grades?.[0]
+        const scoreVal = revGrade?.score ?? null
         return {
             enrollment_id: enrollment.id,
             student_name: `${enrollment.student.last_name}, ${enrollment.student.first_name}`,
             cedula: enrollment.student.cedula,
-            score: revGrade?.score ?? null,
+            score: scoreVal,
             status: revGrade?.status ?? 'pending',
             saving: false,
-            saved: false
+            saved: false,
+            lastSavedScore: scoreVal
         }
     })
 )
@@ -35,9 +38,11 @@ watch(() => props.enrollments, (newVal) => {
     newVal.forEach(enrollment => {
         const revGrade = enrollment.revision_grades?.[0]
         const local = localRows.value.find(r => r.enrollment_id === enrollment.id)
-        if (local && !local.saving) {
-            local.score = revGrade?.score ?? null
+        if (local && !local.saving && !debounceTimers[local.enrollment_id]) {
+            const scoreVal = revGrade?.score ?? null
+            local.score = scoreVal
             local.status = revGrade?.status ?? 'pending'
+            local.lastSavedScore = scoreVal
         }
     })
 }, { deep: true })
@@ -101,7 +106,7 @@ function incrementScore(row) {
     if (isNaN(current)) current = 0
     if (current < 20) {
         row.score = current + 1
-        triggerSave(row)
+        triggerSave(row, true)
     }
 }
 
@@ -111,11 +116,16 @@ function decrementScore(row) {
     if (isNaN(current)) current = 0
     if (current > 1) {
         row.score = current - 1
-        triggerSave(row)
+        triggerSave(row, true)
     }
 }
 
-function validateAndSave(row) {
+function onInput(row) {
+    if (props.isClosed) return
+    triggerSave(row, false)
+}
+
+function onBlurOrChange(row) {
     if (props.isClosed) return
     let s = parseInt(row.score)
     if (isNaN(s) || row.score === '') {
@@ -126,10 +136,10 @@ function validateAndSave(row) {
         if (s < 1) row.score = 1
         row.status = row.score >= 10 ? 'approved' : 'failed'
     }
-    triggerSave(row)
+    triggerSave(row, true)
 }
 
-function triggerSave(row) {
+function triggerSave(row, immediate = false) {
     if (props.isClosed) return
     
     // Update local status for immediate UI feedback
@@ -139,29 +149,55 @@ function triggerSave(row) {
         row.status = 'pending'
     }
     
-    row.saving = true
-    row.saved = false
+    // Clear previous timer for this student
+    if (debounceTimers[row.enrollment_id]) {
+        clearTimeout(debounceTimers[row.enrollment_id])
+        delete debounceTimers[row.enrollment_id]
+    }
     
-    if (debounceTimer) clearTimeout(debounceTimer)
-    
-    debounceTimer = setTimeout(() => {
+    if (immediate) {
         saveToServer(row)
-    }, 500)
+    } else {
+        debounceTimers[row.enrollment_id] = setTimeout(() => {
+            delete debounceTimers[row.enrollment_id]
+            saveToServer(row)
+        }, 500)
+    }
 }
 
 function saveToServer(row) {
-    router.patch('/revisions', {
+    let s = parseInt(row.score)
+    if (isNaN(s) || row.score === '') {
+        return
+    }
+    if (s > 20) s = 20
+    if (s < 1) s = 1
+    row.score = s
+
+    if (s === row.lastSavedScore) {
+        return
+    }
+
+    row.saving = true
+    row.saved = false
+
+    axios.patch('/revisions', {
         enrollment_id: row.enrollment_id,
         subject_id: props.subject.id,
-        score: row.score,
-    }, { 
-        preserveScroll: true, 
-        preserveState: true,
-        onFinish: () => {
-            row.saving = false
-            row.saved = true
-            setTimeout(() => { row.saved = false }, 2000)
+        score: s,
+    })
+    .then((res) => {
+        row.saving = false
+        row.saved = true
+        row.lastSavedScore = s
+        if (res.data?.status) {
+            row.status = res.data.status
         }
+        setTimeout(() => { row.saved = false }, 2000)
+    })
+    .catch((err) => {
+        row.saving = false
+        console.error('Error al guardar nota de revisión:', err)
     })
 }
 </script>
@@ -340,8 +376,10 @@ function saveToServer(row) {
                             <div class="relative w-16 h-12">
                                 <input 
                                     v-model="row.score"
-                                    @change="validateAndSave(row)"
-                                    @blur="validateAndSave(row)"
+                                    @input="onInput(row)"
+                                    @change="onBlurOrChange(row)"
+                                    @blur="onBlurOrChange(row)"
+                                    @keyup.enter="onBlurOrChange(row)"
                                     :disabled="isClosed || !$can('revisions.edit')"
                                     type="number" 
                                     min="1" 

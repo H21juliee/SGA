@@ -142,6 +142,15 @@ class RevisionController extends Controller
             ['old' => ['score' => $oldScore], 'new' => ['score' => $validated['score']]]
         );
 
+        if ($request->wantsJson() || $request->ajax()) {
+            return response()->json([
+                'success' => true,
+                'message' => 'Nota de revisión guardada correctamente.',
+                'score' => $validated['score'],
+                'status' => $status,
+            ]);
+        }
+
         return back()->with('success', 'Nota de revisión guardada correctamente.');
     }
 

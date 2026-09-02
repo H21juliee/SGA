@@ -1,6 +1,7 @@
 <script setup>
 import { ref, computed, watch } from 'vue'
 import { router, Link } from '@inertiajs/vue3'
+import axios from 'axios'
 import AppLayout from '@/Components/Layout/AppLayout.vue'
 
 const props = defineProps({
@@ -12,19 +13,21 @@ const props = defineProps({
 
 const searchQuery = ref('')
 const sortOrder = ref('name')
-let debounceTimer = null
+const debounceTimers = {}
 
 // Initialize local state for immediate visual feedback
 const localRows = ref(
     props.enrollments.map(enrollment => {
         const grade = enrollment.grades?.[0]
+        const scoreVal = grade?.score ?? null
         return {
             enrollment_id: enrollment.id,
             student_name: `${enrollment.student.last_name}, ${enrollment.student.first_name}`,
             cedula: enrollment.student.cedula,
-            score: grade?.score ?? null,
+            score: scoreVal,
             saving: false,
-            saved: false
+            saved: false,
+            lastSavedScore: scoreVal
         }
     })
 )
@@ -34,8 +37,10 @@ watch(() => props.enrollments, (newVal) => {
     newVal.forEach(enrollment => {
         const grade = enrollment.grades?.[0]
         const local = localRows.value.find(r => r.enrollment_id === enrollment.id)
-        if (local && !local.saving) {
-            local.score = grade?.score ?? null
+        if (local && !local.saving && !debounceTimers[local.enrollment_id]) {
+            const scoreVal = grade?.score ?? null
+            local.score = scoreVal
+            local.lastSavedScore = scoreVal
         }
     })
 }, { deep: true })
@@ -99,7 +104,7 @@ function incrementScore(row) {
     if (isNaN(current)) current = 0
     if (current < 20) {
         row.score = current + 1
-        triggerSave(row)
+        triggerSave(row, true)
     }
 }
 
@@ -109,49 +114,92 @@ function decrementScore(row) {
     if (isNaN(current)) current = 0
     if (current > 1) {
         row.score = current - 1
-        triggerSave(row)
+        triggerSave(row, true)
     }
 }
 
-function validateAndSave(row) {
+function onInput(row) {
     if (!props.lapse.is_open) return
-    let s = parseInt(row.score)
-    if (isNaN(s) || row.score === '') {
-        row.score = null
-    } else {
-        if (s > 20) row.score = 20
-        if (s < 1) row.score = 1
-    }
-    triggerSave(row)
+    triggerSave(row, false)
 }
 
-function triggerSave(row) {
+function onBlurOrChange(row) {
+    if (!props.lapse.is_open) return
+    if (props.subject.grading_type !== 'qualitative') {
+        if (row.score !== null && row.score !== '') {
+            let s = parseInt(row.score)
+            if (!isNaN(s)) {
+                if (s > 20) s = 20
+                if (s < 1) s = 1
+                row.score = s
+            } else {
+                row.score = null
+            }
+        }
+    }
+    triggerSave(row, true)
+}
+
+function triggerSave(row, immediate = false) {
     if (!props.lapse.is_open) return
     
-    row.saving = true
-    row.saved = false
+    // Clear individual timer for this specific row if exists
+    if (debounceTimers[row.enrollment_id]) {
+        clearTimeout(debounceTimers[row.enrollment_id])
+        delete debounceTimers[row.enrollment_id]
+    }
     
-    if (debounceTimer) clearTimeout(debounceTimer)
-    
-    debounceTimer = setTimeout(() => {
+    if (immediate) {
         saveToServer(row)
-    }, 500) // 500ms debounce
+    } else {
+        debounceTimers[row.enrollment_id] = setTimeout(() => {
+            delete debounceTimers[row.enrollment_id]
+            saveToServer(row)
+        }, 500)
+    }
 }
 
 function saveToServer(row) {
-    router.patch('/grades', {
+    let scoreToSend = row.score
+
+    if (props.subject.grading_type !== 'qualitative') {
+        if (row.score !== null && row.score !== '') {
+            let s = parseInt(row.score)
+            if (isNaN(s)) return
+            if (s > 20) s = 20
+            if (s < 1) s = 1
+            row.score = s
+            scoreToSend = s
+        } else {
+            return
+        }
+    } else {
+        if (!scoreToSend) return
+    }
+
+    // Skip redundant network call if score has already been saved
+    if (scoreToSend === row.lastSavedScore) {
+        return
+    }
+
+    row.saving = true
+    row.saved = false
+
+    axios.patch('/grades', {
         enrollment_id: row.enrollment_id,
         subject_id: props.subject.id,
         lapse_id: props.lapse.id,
-        score: row.score,
-    }, { 
-        preserveScroll: true, 
-        preserveState: true,
-        onFinish: () => {
-            row.saving = false
-            row.saved = true
-            setTimeout(() => { row.saved = false }, 2000)
-        }
+        score: scoreToSend,
+    })
+    .then(() => {
+        row.saving = false
+        row.saved = true
+        row.lastSavedScore = scoreToSend
+        setTimeout(() => { row.saved = false }, 2000)
+    })
+    .catch((err) => {
+        row.saving = false
+        console.error('Error al guardar nota:', err)
     })
 }
 </script>
@@ -308,8 +356,10 @@ function saveToServer(row) {
                             <div class="relative w-16 h-12">
                                 <input 
                                     v-model="row.score"
-                                    @change="validateAndSave(row)"
-                                    @blur="validateAndSave(row)"
+                                    @input="onInput(row)"
+                                    @change="onBlurOrChange(row)"
+                                    @blur="onBlurOrChange(row)"
+                                    @keyup.enter="onBlurOrChange(row)"
                                     :disabled="!lapse.is_open || !$can('grades.edit')"
                                     type="number" 
                                     min="1" 
@@ -333,7 +383,7 @@ function saveToServer(row) {
                             <div class="relative w-24 h-12">
                                 <select 
                                     v-model="row.score"
-                                    @change="validateAndSave(row)"
+                                    @change="onBlurOrChange(row)"
                                     :disabled="!lapse.is_open || !$can('grades.edit')"
                                     class="w-full h-full bg-white border-2 border-slate-200 rounded-xl text-center text-lg font-black text-slate-800 focus:border-primary-400 focus:ring-0 outline-none transition-all shadow-sm disabled:bg-slate-50 disabled:text-slate-500 appearance-none px-2"
                                 >

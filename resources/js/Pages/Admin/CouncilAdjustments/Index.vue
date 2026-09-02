@@ -1,6 +1,7 @@
 <script setup>
 import { ref, computed, watch } from 'vue'
 import { router } from '@inertiajs/vue3'
+import axios from 'axios'
 import AppLayout from '@/Components/Layout/AppLayout.vue'
 
 const props = defineProps({
@@ -48,24 +49,28 @@ const filteredSections = computed(() => {
 const isLoading = ref(false)
 const searchQuery = ref('')
 const sortOrder = ref('name')
-let debounceTimer = null
+const debounceTimers = {}
 
 // Ajustes locales (por grade_id)
 const localRows = ref([])
 
 const initAdjustments = () => {
-    localRows.value = props.rows.map(row => ({
-        ...row,
-        council_adjustment: row.council_adjustment ?? 0,
-        saving: false,
-        saved: false
-    }))
+    localRows.value = props.rows.map(row => {
+        const adjVal = row.council_adjustment ?? 0
+        return {
+            ...row,
+            council_adjustment: adjVal,
+            saving: false,
+            saved: false,
+            lastSavedAdjustment: adjVal
+        }
+    })
     isLoading.value = false
 }
 initAdjustments()
 
 const definitiveOf = (row) => {
-    return Math.min(20, Math.max(1, row.score + row.council_adjustment))
+    return Math.min(20, Math.max(1, row.score + (row.council_adjustment || 0)))
 }
 
 const processedRows = computed(() => {
@@ -130,14 +135,14 @@ function getIconColor(adjustment) {
 function incrementAdjustment(row) {
     if (row.council_adjustment < 5) {
         row.council_adjustment += 1
-        triggerSave(row)
+        triggerSave(row, true)
     }
 }
 
 function decrementAdjustment(row) {
     if (row.council_adjustment > -5) {
         row.council_adjustment -= 1
-        triggerSave(row)
+        triggerSave(row, true)
     }
 }
 
@@ -145,11 +150,15 @@ function updateQualitativeAdjustment(row) {
     if (row.qualitative_definitive !== undefined) {
         let diff = parseInt(row.qualitative_definitive) - parseInt(row.score);
         row.council_adjustment = diff;
-        validateAndSave(row);
+        onBlurOrChange(row);
     }
 }
 
-function validateAndSave(row) {
+function onInput(row) {
+    triggerSave(row, false)
+}
+
+function onBlurOrChange(row) {
     let s = parseInt(row.council_adjustment)
     if (isNaN(s)) {
         row.council_adjustment = 0
@@ -157,32 +166,53 @@ function validateAndSave(row) {
         if (s > 5) row.council_adjustment = 5
         if (s < -5) row.council_adjustment = -5
     }
-    triggerSave(row)
+    triggerSave(row, true)
 }
 
-function triggerSave(row) {
-    row.saving = true
-    row.saved = false
+function triggerSave(row, immediate = false) {
+    // Limpiar temporizador previo del estudiante
+    if (debounceTimers[row.grade_id]) {
+        clearTimeout(debounceTimers[row.grade_id])
+        delete debounceTimers[row.grade_id]
+    }
     
-    if (debounceTimer) clearTimeout(debounceTimer)
-    
-    debounceTimer = setTimeout(() => {
+    if (immediate) {
         saveToServer(row)
-    }, 500)
+    } else {
+        debounceTimers[row.grade_id] = setTimeout(() => {
+            delete debounceTimers[row.grade_id]
+            saveToServer(row)
+        }, 500)
+    }
 }
 
 function saveToServer(row) {
-    router.patch('/admin/council-adjustments', {
+    let adj = parseInt(row.council_adjustment)
+    if (isNaN(adj)) adj = 0
+    if (adj > 5) adj = 5
+    if (adj < -5) adj = -5
+    row.council_adjustment = adj
+
+    if (adj === row.lastSavedAdjustment) {
+        return
+    }
+
+    row.saving = true
+    row.saved = false
+
+    axios.patch('/admin/council-adjustments', {
         grade_id: row.grade_id,
-        council_adjustment: row.council_adjustment,
-    }, { 
-        preserveScroll: true, 
-        preserveState: true,
-        onFinish: () => {
-            row.saving = false
-            row.saved = true
-            setTimeout(() => { row.saved = false }, 2000)
-        }
+        council_adjustment: adj,
+    })
+    .then(() => {
+        row.saving = false
+        row.saved = true
+        row.lastSavedAdjustment = adj
+        setTimeout(() => { row.saved = false }, 2000)
+    })
+    .catch((err) => {
+        row.saving = false
+        console.error('Error al guardar ajuste de consejo:', err)
     })
 }
 
@@ -370,8 +400,10 @@ const hasFilters = computed(() => sectionId.value && subjectId.value && lapseId.
                                 <div class="relative w-16 h-10">
                                     <input 
                                         v-model="row.council_adjustment"
-                                        @change="validateAndSave(row)"
-                                        @blur="validateAndSave(row)"
+                                        @input="onInput(row)"
+                                        @change="onBlurOrChange(row)"
+                                        @blur="onBlurOrChange(row)"
+                                        @keyup.enter="onBlurOrChange(row)"
                                         :disabled="!$can('council.manage')" type="number" 
                                         min="-5" max="5"
                                         class="w-full h-full bg-white border-2 border-slate-200 rounded-xl text-center text-sm font-black text-slate-800 focus:border-primary-400 focus:ring-0 outline-none transition-all shadow-sm disabled:bg-slate-50 disabled:text-slate-500"

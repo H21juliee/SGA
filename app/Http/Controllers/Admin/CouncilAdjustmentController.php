@@ -107,6 +107,14 @@ class CouncilAdjustmentController extends Controller implements \Illuminate\Rout
             ['old' => ['council_adjustment' => $oldAdj], 'new' => ['council_adjustment' => $validated['council_adjustment']]]
         );
 
+        if ($request->wantsJson() || $request->ajax()) {
+            return response()->json([
+                'success' => true,
+                'message' => 'Ajuste guardado.',
+                'council_adjustment' => $grade->council_adjustment,
+            ]);
+        }
+
         return redirect()->back()->with('success', 'Ajuste guardado.');
     }
 

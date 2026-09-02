@@ -90,11 +90,22 @@ class GradeController extends Controller
         $lapse = Lapse::findOrFail($request->input('lapse_id'));
         
         if (!$lapse->is_open) {
+            if ($request->wantsJson() || $request->ajax()) {
+                return response()->json(['message' => 'No se pueden cargar notas en un lapso cerrado.'], 422);
+            }
             return back()->withErrors(['message' => 'No se pueden cargar notas en un lapso cerrado.']);
         }
 
         $dto = GradeDTO::fromRequest($request);
         $action->execute($dto);
+
+        if ($request->wantsJson() || $request->ajax()) {
+            return response()->json([
+                'success' => true,
+                'message' => 'Nota guardada correctamente.',
+                'score' => $dto->score,
+            ]);
+        }
 
         return back()->with('success', 'Nota guardada correctamente.');
     }
