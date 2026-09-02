@@ -15,7 +15,12 @@ class ReportController extends Controller
 {
     public function index(Request $request)
     {
-        $activeYear = SchoolYear::active()->first();
+        $schoolYears = SchoolYear::orderBy('start_date', 'desc')->get();
+        $selectedYearId = $request->input('school_year_id') 
+            ?? SchoolYear::active()->value('id') 
+            ?? $schoolYears->first()?->id;
+
+        $selectedYear = $selectedYearId ? SchoolYear::with('lapses')->find($selectedYearId) : null;
         $gradeLevelId = $request->input('grade_level_id');
         $sectionId = $request->input('section_id');
 
@@ -23,11 +28,10 @@ class ReportController extends Controller
         $enrollments = [];
         $levels = [];
 
-        if ($activeYear) {
-            $activeYear->load('lapses');
+        if ($selectedYear) {
             $levels = \App\Models\GradeLevel::orderBy('order_num')->get();
 
-            $sectionsQuery = Section::where('school_year_id', $activeYear->id)
+            $sectionsQuery = Section::where('school_year_id', $selectedYear->id)
                 ->with('gradeLevel')
                 ->join('grade_levels', 'sections.grade_level_id', '=', 'grade_levels.id')
                 ->select('sections.*')
@@ -49,10 +53,13 @@ class ReportController extends Controller
 
         return Inertia::render('Reports/Index', [
             'sections' => $sections,
-            'activeYear' => $activeYear,
+            'schoolYears' => $schoolYears,
+            'selectedYear' => $selectedYear,
+            'activeYear' => $selectedYear,
             'levels' => $levels,
             'enrollments' => $enrollments,
             'filters' => [
+                'school_year_id' => $selectedYear?->id,
                 'grade_level_id' => $gradeLevelId,
                 'section_id' => $sectionId,
             ],
@@ -137,7 +144,7 @@ class ReportController extends Controller
         Gate::authorize('reports.generate');
         
         $enrollments = Enrollment::where('section_id', $section->id)
-            ->where('status', \App\Enums\EnrollmentStatus::ACTIVE)
+            ->whereNotIn('status', [\App\Enums\EnrollmentStatus::WITHDRAWN])
             ->with(['student'])
             ->get()
             ->sortBy([['student.last_name', 'asc'], ['student.first_name', 'asc']])

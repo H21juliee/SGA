@@ -6,11 +6,15 @@ import { Link, router } from '@inertiajs/vue3'
 const props = defineProps({
     sections: { type: Array, default: () => [] },
     activeYear: { type: Object, default: null },
+    selectedYear: { type: Object, default: null },
+    schoolYears: { type: Array, default: () => [] },
     levels: { type: Array, default: () => [] },
     enrollments: { type: Array, default: () => [] },
     filters: { type: Object, default: () => ({}) },
 })
 
+const currentYear = computed(() => props.selectedYear || props.activeYear)
+const schoolYearId = ref(props.filters.school_year_id || currentYear.value?.id || '')
 const gradeLevelId = ref(props.filters.grade_level_id || '')
 
 // Buscador y ordenamiento
@@ -66,6 +70,7 @@ function toggleSort(col) {
 
 function loadFiltered() {
     router.get('/reports', {
+        school_year_id: schoolYearId.value,
         grade_level_id: gradeLevelId.value,
     }, { preserveState: true })
 }
@@ -75,7 +80,8 @@ function printSabana(sectionId, lapseId) {
 }
 
 function printStudents(sectionId) {
-    const yearId = props.activeYear.id
+    const yearId = currentYear.value?.id
+    if (!yearId) return
     const url = `/reports/print-students/${yearId}/${sectionId}`
     window.open(url, '_blank')
 }
@@ -87,6 +93,7 @@ function selectSection(id) {
     sortDir.value = 'asc'
 
     router.get('/reports', { 
+        school_year_id: schoolYearId.value,
         grade_level_id: gradeLevelId.value,
         section_id: id 
     }, { preserveState: true })
@@ -105,47 +112,85 @@ function downloadBatch() {
     <AppLayout title="Reportes">
         <div class="space-y-8 max-w-12xl mx-auto">
             <!-- Header Section -->
-            <div class="flex flex-col sm:flex-row gap-6 items-center justify-between animate-fade-in-up">
+            <div class="flex flex-col md:flex-row gap-6 items-start md:items-center justify-between animate-fade-in-up">
                 <div>
                     <h1 class="text-3xl font-extrabold text-slate-800">
                         Reportes y <span class="gradient-text">Boletas</span>
                     </h1>
-                    <p class="text-slate-400 font-medium mt-2">Descarga boletas de calificaciones oficiales en PDF</p>
+                    <p class="text-slate-400 font-medium mt-2">Descarga boletas de calificaciones oficiales y reportes en PDF</p>
                 </div>
                 
-                <div v-if="activeYear && !filters.section_id" class="flex flex-col gap-2 min-w-[200px]">
-                    <label class="text-[11px] font-black text-slate-400 uppercase tracking-widest ml-1">Filtrar por Nivel</label>
-                    <div class="relative">
-                        <select 
-                            v-model="gradeLevelId" 
-                            @change="loadFiltered" 
-                            class="w-full bg-white border-2 border-slate-100 rounded-2xl px-4 py-3 text-slate-700 text-sm font-bold focus:border-primary-400 focus:ring-0 outline-none transition-all appearance-none cursor-pointer shadow-sm"
-                        >
-                            <option value="">Todos los Niveles</option>
-                            <option v-for="lvl in levels" :key="lvl.id" :value="lvl.id">{{ lvl.name }}</option>
-                        </select>
-                        <i class="fas fa-filter absolute right-4 top-1/2 -translate-y-1/2 text-slate-300 pointer-events-none"></i>
+                <div v-if="!filters.section_id" class="flex flex-col sm:flex-row gap-4 items-stretch sm:items-end w-full md:w-auto">
+                    <!-- Selector de Año Escolar -->
+                    <div class="flex flex-col gap-1.5 min-w-[210px]">
+                        <label class="text-[11px] font-black text-slate-400 uppercase tracking-widest ml-1">Año Escolar</label>
+                        <div class="relative">
+                            <select 
+                                v-model="schoolYearId" 
+                                @change="loadFiltered" 
+                                class="w-full bg-white border-2 border-slate-100 rounded-2xl px-4 py-3 text-slate-700 text-sm font-bold focus:border-primary-400 focus:ring-0 outline-none transition-all appearance-none cursor-pointer shadow-sm pr-10"
+                            >
+                                <option v-for="year in schoolYears" :key="year.id" :value="year.id">
+                                    {{ year.name }} {{ year.is_active ? '★ (Activo)' : '' }}
+                                </option>
+                            </select>
+                            <i class="fas fa-calendar-alt absolute right-4 top-1/2 -translate-y-1/2 text-slate-300 pointer-events-none"></i>
+                        </div>
+                    </div>
+
+                    <!-- Filtro por Nivel -->
+                    <div class="flex flex-col gap-1.5 min-w-[200px]">
+                        <label class="text-[11px] font-black text-slate-400 uppercase tracking-widest ml-1">Filtrar por Nivel</label>
+                        <div class="relative">
+                            <select 
+                                v-model="gradeLevelId" 
+                                @change="loadFiltered" 
+                                class="w-full bg-white border-2 border-slate-100 rounded-2xl px-4 py-3 text-slate-700 text-sm font-bold focus:border-primary-400 focus:ring-0 outline-none transition-all appearance-none cursor-pointer shadow-sm pr-10"
+                            >
+                                <option value="">Todos los Niveles</option>
+                                <option v-for="lvl in levels" :key="lvl.id" :value="lvl.id">{{ lvl.name }}</option>
+                            </select>
+                            <i class="fas fa-filter absolute right-4 top-1/2 -translate-y-1/2 text-slate-300 pointer-events-none"></i>
+                        </div>
                     </div>
                 </div>
             </div>
 
             <!-- Status Check -->
-            <div v-if="!activeYear" class="glass-card rounded-2xl bg-amber-500/5 border border-amber-500/20 p-6 animate-fade-in-up">
+            <div v-if="!currentYear" class="glass-card rounded-2xl bg-amber-500/5 border border-amber-500/20 p-6 animate-fade-in-up">
                 <div class="flex items-center gap-4 text-amber-600">
                     <i class="fas fa-exclamation-circle text-xl"></i>
-                    <p class="font-bold">No hay un año escolar activo configurado.</p>
+                    <p class="font-bold">No se encontró información para el año escolar seleccionado.</p>
                 </div>
             </div>
 
             <div v-else class="space-y-8">
                 <!-- Secciones Selection Grid -->
                 <div v-if="!filters.section_id" class="animate-fade-in-up">
-                    <div class="flex items-center gap-3 mb-6">
-                        <div class="w-1.5 h-6 bg-primary-500 rounded-full"></div>
-                        <h3 class="text-xl font-black text-slate-800">Secciones Disponibles</h3>
+                    <div class="flex items-center justify-between mb-6">
+                        <div class="flex items-center gap-3">
+                            <div class="w-1.5 h-6 bg-primary-500 rounded-full"></div>
+                            <h3 class="text-xl font-black text-slate-800">
+                                Secciones Disponibles — <span class="text-primary-600 font-extrabold">{{ currentYear.name }}</span>
+                            </h3>
+                        </div>
+                        <span v-if="currentYear.is_active" class="px-3 py-1 bg-emerald-50 text-emerald-700 border border-emerald-200 text-xs font-black uppercase tracking-wider rounded-xl">
+                            Año Activo
+                        </span>
+                        <span v-else class="px-3 py-1 bg-slate-100 text-slate-600 border border-slate-200 text-xs font-black uppercase tracking-wider rounded-xl">
+                            Histórico
+                        </span>
+                    </div>
+
+                    <div v-if="sections.length === 0" class="p-16 text-center glass-card rounded-3xl">
+                        <div class="w-16 h-16 bg-slate-50 rounded-2xl flex items-center justify-center mx-auto mb-4 text-slate-300 text-2xl">
+                            <i class="fas fa-folder-open"></i>
+                        </div>
+                        <h4 class="text-base font-bold text-slate-600">No hay secciones registradas</h4>
+                        <p class="text-xs text-slate-400 mt-1">No se encontraron secciones para este año escolar o filtro de nivel seleccionado.</p>
                     </div>
                     
-                    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                    <div v-else class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                         <div
                             v-for="(section, index) in sections"
                             :key="section.id"
@@ -175,12 +220,12 @@ function downloadBatch() {
                             <h5 class="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 text-center">Sábanas de Notas</h5>
                             <div class="flex gap-2 mb-4">
                                 <button 
-                                    v-for="lapse in activeYear.lapses" 
+                                    v-for="lapse in currentYear.lapses" 
                                     :key="lapse.id"
                                     @click="printSabana(section.id, lapse.id)"
                                     class="flex-1 py-2 bg-primary-50 text-primary-600 hover:bg-primary-600 hover:text-white rounded-xl text-[10px] font-bold uppercase transition-colors"
                                 >
-                                    Lapso {{ lapse.number }}
+                                    Lapso {{ lapse.number || lapse.order_num }}
                                 </button>
                             </div>
 
