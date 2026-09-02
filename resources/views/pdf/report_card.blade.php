@@ -7,7 +7,7 @@
         * { margin: 0; padding: 0; box-sizing: border-box; }
 
         @page {
-            margin: 5mm; /* Margen pequeño para asegurar que no se corte en impresoras, pero manteniendo espacio */
+            margin: 4mm 6mm;
         }
 
         body {
@@ -19,11 +19,11 @@
         }
 
         .bulletin-wrapper {
-            /* DomPDF ignora box-sizing a veces, sumando el padding al height */
-            height: 120mm; 
-            padding: 5mm 10mm; 
+            height: 133mm; 
+            padding: 2mm 4mm; 
             position: relative;
             overflow: hidden;
+            box-sizing: border-box;
         }
 
         .dotted-divider {
@@ -33,30 +33,30 @@
 
         /* ===== ENCABEZADO ===== */
         .header-table { width: 100%; border-collapse: collapse; border: 1px solid #000; }
-        .header-table td { border: 1px solid #000; padding: 2px 4px; vertical-align: middle; }
+        .header-table td { border: 1px solid #000; padding: 1.5px 4px; vertical-align: middle; }
 
         .title-row td {
             text-align: center;
             font-weight: bold;
-            font-size: 12px;
+            font-size: 11px;
             letter-spacing: 1px;
-            padding: 4px;
+            padding: 3px;
             background: #f0f0f0;
         }
 
-        .logo-cell { width: 60px; text-align: center; vertical-align: middle; }
-        .logo-cell img { width: 50px; height: 50px; object-fit: contain; }
-        .logo-placeholder { width: 50px; height: 50px; border: 1px solid #ccc; display: inline-block; }
+        .logo-cell { width: 50px; text-align: center; vertical-align: middle; }
+        .logo-cell img { width: 44px; height: 44px; object-fit: contain; }
+        .logo-placeholder { width: 44px; height: 44px; border: 1px solid #ccc; display: inline-block; }
 
         .label { font-size: 7px; font-weight: bold; text-transform: uppercase; color: #555; }
-        .value { font-size: 9px; font-weight: bold; }
-        .value-lg { font-size: 11px; font-weight: bold; }
+        .value { font-size: 8.5px; font-weight: bold; }
+        .value-lg { font-size: 10.5px; font-weight: bold; }
 
         /* ===== TABLA PRINCIPAL ===== */
-        .main-table { width: 100%; border-collapse: collapse; margin-top: 6px; }
+        .main-table { width: 100%; border-collapse: collapse; margin-top: 3px; }
         .main-table th, .main-table td {
             border: 1px solid #555;
-            padding: 2px 3px;
+            padding: 1.5px 3px;
             text-align: center;
             vertical-align: middle;
         }
@@ -66,6 +66,7 @@
             font-weight: bold;
             font-size: 7px;
             text-transform: uppercase;
+            padding: 2px;
         }
 
         .group-header {
@@ -73,12 +74,12 @@
             font-weight: bold;
             font-size: 7.5px;
             text-transform: uppercase;
-            padding: 3px;
+            padding: 2.5px;
         }
 
         .subject-col {
             text-align: left !important;
-            padding-left: 5px !important;
+            padding-left: 4px !important;
             font-weight: bold;
             font-size: 8px;
             min-width: 130px;
@@ -89,7 +90,7 @@
         .adj-col   { width: 22px; }
         .def-col   { width: 28px; font-weight: bold; }
         .abs-col   { width: 22px; }
-        .final-col { width: 32px; font-weight: bold; font-size: 10px; }
+        .final-col { width: 32px; font-weight: bold; font-size: 9.5px; }
         .rev-col   { width: 32px; }
         .pend-col  { width: 80px; text-align: left !important; padding-left: 3px !important; }
 
@@ -104,7 +105,7 @@
         .signatures-row {
             width: 100%;
             border-collapse: collapse;
-            margin-top: 8mm; /* Espacio para que firmen */
+            margin-top: 9mm;
         }
         .signatures-row td { 
             text-align: center; 
@@ -113,9 +114,9 @@
         }
         .sig-line { 
             border-top: 1px solid #333; 
-            padding-top: 3px; 
+            padding-top: 2px; 
             margin: 0 auto; 
-            width: 70%; 
+            width: 65%; 
             font-size: 8px; 
             font-weight: bold; 
             color: #111;
@@ -124,7 +125,7 @@
             text-align: center;
             font-size: 7px;
             color: #888;
-            margin-top: 6mm;
+            margin-top: 2mm;
         }
 
     </style>
@@ -381,7 +382,7 @@
         </table>
         
         <div class="footer-text">
-            Documento generado por el Sistema de Gestión Escolar — {{ now()->format('d/m/Y H:i') }}
+            Documento generado por el Sistema de Gestión Académica — {{ now()->format('d/m/Y H:i') }}
         </div>
 
     </div>
