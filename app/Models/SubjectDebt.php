@@ -14,11 +14,16 @@ class SubjectDebt extends Model
         'origin_enrollment_id',
         'resolution_enrollment_id',
         'status',
+        'score',
+        'moment',
+        'acta_number',
+        'notes',
         'resolved_at',
     ];
 
     protected $casts = [
         'resolved_at' => 'datetime',
+        'score'       => 'float',
     ];
 
     /* ---- Relations ---- */

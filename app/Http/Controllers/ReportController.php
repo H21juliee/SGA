@@ -242,17 +242,23 @@ class ReportController extends Controller
             $lapseAverages[$lapse->id] = $lapseScores->isNotEmpty() ? round($lapseScores->avg(), 2) : null;
         }
 
+        // Materias pendientes (arrastre) del estudiante
+        $subjectDebts = \App\Models\SubjectDebt::with(['subject.gradeLevel', 'originSchoolYear'])
+            ->where('student_id', $enrollment->student_id)
+            ->get();
+
         return [
-            'enrollment' => $enrollment,
-            'lapses' => $lapses,
-            'numericSubjects' => $numericSubjects,
+            'enrollment'          => $enrollment,
+            'lapses'              => $lapses,
+            'numericSubjects'     => $numericSubjects,
             'qualitativeSubjects' => $qualitativeSubjects,
-            'gradesMatrix' => $gradesMatrix,
-            'qualitativeGrades' => $qualitativeGrades,
-            'absencesByLapse' => $absencesByLapse,
-            'totalAbsences' => $totalAbsences,
-            'overallAverage' => $overallAverage,
-            'lapseAverages' => $lapseAverages,
+            'gradesMatrix'        => $gradesMatrix,
+            'qualitativeGrades'   => $qualitativeGrades,
+            'absencesByLapse'     => $absencesByLapse,
+            'totalAbsences'       => $totalAbsences,
+            'overallAverage'      => $overallAverage,
+            'lapseAverages'       => $lapseAverages,
+            'subjectDebts'        => $subjectDebts,
         ];
     }
 }

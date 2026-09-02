@@ -46,6 +46,11 @@ class Student extends Model
         return $this->hasMany(Enrollment::class);
     }
 
+    public function subjectDebts(): HasMany
+    {
+        return $this->hasMany(SubjectDebt::class);
+    }
+
     /* ---- Scopes ---- */
 
     public function scopeActive($query)

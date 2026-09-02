@@ -318,8 +318,49 @@
                         <td class="pend-col"></td>
                     </tr>
                 @endforeach
-            </tbody>
         </table>
+
+        {{-- ===== MATERIAS PENDIENTES / ARRASTRE DE AÑOS ANTERIORES ===== --}}
+        @php $subjectDebts = $bulletin['subjectDebts'] ?? collect(); @endphp
+        @if($subjectDebts->isNotEmpty())
+            <table class="main-table" style="margin-top: 4px; margin-bottom: 4px;">
+                <thead>
+                    <tr style="background: #f1f5f9;">
+                        <th colspan="4" style="text-align: left; padding: 3px 6px; font-size: 8px; font-weight: bold; color: #334155; border: 1px solid #94a3b8;">
+                            REGISTRO DE MATERIA PENDIENTE (ARRASTRE DE AÑOS ANTERIORES)
+                        </th>
+                    </tr>
+                    <tr style="background: #f8fafc; font-size: 7.5px;">
+                        <th style="border: 1px solid #cbd5e1; text-align: left; padding: 2px 5px; width: 40%;">ASIGNATURA ADEUDADA</th>
+                        <th style="border: 1px solid #cbd5e1; text-align: center; padding: 2px 5px; width: 20%;">AÑO DE ORIGEN</th>
+                        <th style="border: 1px solid #cbd5e1; text-align: center; padding: 2px 5px; width: 20%;">ESTADO / MOMENTO</th>
+                        <th style="border: 1px solid #cbd5e1; text-align: center; padding: 2px 5px; width: 20%;">CALIFICACIÓN FINAL</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach($subjectDebts as $debt)
+                        <tr style="font-size: 7.5px;">
+                            <td style="border: 1px solid #cbd5e1; padding: 2px 5px; text-align: left; font-weight: bold;">
+                                {{ strtoupper($debt->subject->name ?? 'MATERIA') }} ({{ $debt->subject->gradeLevel->name ?? '' }})
+                            </td>
+                            <td style="border: 1px solid #cbd5e1; text-align: center; padding: 2px 5px;">
+                                {{ $debt->originSchoolYear->name ?? 'Años Anteriores' }}
+                            </td>
+                            <td style="border: 1px solid #cbd5e1; text-align: center; padding: 2px 5px; font-weight: bold; color: {{ $debt->status === 'resolved' ? '#15803d' : '#b45309' }};">
+                                {{ $debt->status === 'resolved' ? 'SOLVENTE' : 'PENDIENTE' }} {{ $debt->moment ? '— ' . $debt->moment : '' }}
+                            </td>
+                            <td style="border: 1px solid #cbd5e1; text-align: center; padding: 2px 5px; font-weight: bold; font-size: 8.5px; color: {{ ($debt->score ?? 0) >= 10 ? '#15803d' : '#b45309' }};">
+                                @if($debt->score !== null)
+                                    {{ number_format($debt->score, 0) }} pts
+                                @else
+                                    {{ $debt->status === 'resolved' ? 'APROBADA' : 'POR EVALUAR' }}
+                                @endif
+                            </td>
+                        </tr>
+                    @endforeach
+                </tbody>
+            </table>
+        @endif
 
         {{-- ===== PIE / FIRMAS ===== --}}
         <table class="signatures-row">

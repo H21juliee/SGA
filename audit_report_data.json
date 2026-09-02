@@ -1,0 +1,1838 @@
+{
+    "missing_dates": [
+        {
+            "grado": "3er Año",
+            "seccion": "A",
+            "cedula": "V-33107537",
+            "estudiante": "VILLARROEL VERA MARIANGEL VALERIA"
+        },
+        {
+            "grado": "3er Año",
+            "seccion": "B",
+            "cedula": "V-33803680",
+            "estudiante": "ROJAS ZERPA ANA GABRIELA"
+        },
+        {
+            "grado": "3er Año",
+            "seccion": "D",
+            "cedula": "V-34149184",
+            "estudiante": "CARMONA CARRERO YERLEANYS KATHERIN"
+        },
+        {
+            "grado": "3er Año",
+            "seccion": "E",
+            "cedula": "V-33813521",
+            "estudiante": "ROJAS PINEDA CARLOS MANUEL"
+        },
+        {
+            "grado": "3er Año",
+            "seccion": "E",
+            "cedula": "V-33939177",
+            "estudiante": "IBARRA RODRIGUEZ LIBIA SARAI"
+        },
+        {
+            "grado": "3er Año",
+            "seccion": "E",
+            "cedula": "V-34588062",
+            "estudiante": "VARGAS CARMONA HERMAIONE VALENTINA"
+        },
+        {
+            "grado": "3er Año",
+            "seccion": "F",
+            "cedula": "V-34075292",
+            "estudiante": "VARELA PUENTE DARWIN EDUARDO"
+        },
+        {
+            "grado": "3er Año",
+            "seccion": "F",
+            "cedula": "V-34107247",
+            "estudiante": "RANGEL GUILLEN LUISA NATACHA"
+        },
+        {
+            "grado": "3er Año",
+            "seccion": "F",
+            "cedula": "V-34225177",
+            "estudiante": "DIAZ GUILLEN MAIRA CAROLINA"
+        },
+        {
+            "grado": "3er Año",
+            "seccion": "F",
+            "cedula": "V-34544926",
+            "estudiante": "RUJANO PEREZ BIANCA SOFIA"
+        },
+        {
+            "grado": "3er Año",
+            "seccion": "F",
+            "cedula": "V-36164939",
+            "estudiante": "GUERRERO CARMONA WILLIAM ALEJANDRO"
+        },
+        {
+            "grado": "3er Año",
+            "seccion": "G",
+            "cedula": "V-33722517",
+            "estudiante": "ARAQUE CHINCHILLA YULIMAR ARANZA"
+        },
+        {
+            "grado": "4to Año",
+            "seccion": "C",
+            "cedula": "V-33107538",
+            "estudiante": "ROJAS GUTIERREZ DIEGO SEBASTIAN"
+        },
+        {
+            "grado": "4to Año",
+            "seccion": "C",
+            "cedula": "V-34394909",
+            "estudiante": "CARRILLO RODRIGUEZ IRMARY ALEXAY"
+        },
+        {
+            "grado": "4to Año",
+            "seccion": "D",
+            "cedula": "V-33347273",
+            "estudiante": "GUILLEN ZERPA YON ALEXANDER"
+        },
+        {
+            "grado": "4to Año",
+            "seccion": "D",
+            "cedula": "V-33722802",
+            "estudiante": "QUINTERO MARQUINA YLDERSON ANDRES"
+        },
+        {
+            "grado": "4to Año",
+            "seccion": "F",
+            "cedula": "V-34148703",
+            "estudiante": "MARQUEZ PICON KIMBERLY VANESA"
+        },
+        {
+            "grado": "5to Año",
+            "seccion": "C",
+            "cedula": "V-34394316",
+            "estudiante": "HERNANDEZ MEZA EDILIANNY AMARILIS"
+        }
+    ],
+    "cedulas_escolares": [
+        {
+            "grado": "1er Año",
+            "seccion": "A",
+            "cedula": "V-11423721214",
+            "longitud": 11,
+            "estudiante": "PAREDES MONTENEGRO GREIKER JOHAN"
+        },
+        {
+            "grado": "1er Año",
+            "seccion": "D",
+            "cedula": "V-11415920165",
+            "longitud": 11,
+            "estudiante": "CUELLAR BASTO COLI ALEXANDER"
+        },
+        {
+            "grado": "1er Año",
+            "seccion": "D",
+            "cedula": "V-21415920165",
+            "longitud": 11,
+            "estudiante": "CUELLAR BASTO YUSLEIKATH VALENTINA"
+        },
+        {
+            "grado": "1er Año",
+            "seccion": "D",
+            "cedula": "V-11311220063",
+            "longitud": 11,
+            "estudiante": "IBARRA DÁVILA ROSAINY DEL CARMEN"
+        },
+        {
+            "grado": "1er Año",
+            "seccion": "G",
+            "cedula": "V-11423724118",
+            "longitud": 11,
+            "estudiante": "PUERTO CONTRERAS NAZARETH DE LOS ANGELES"
+        }
+    ],
+    "cross_year_duplicates": [],
+    "origin_typos": [
+        {
+            "grado": "2do Año",
+            "estudiante": "CRISMARY NAZARETH DEL CARMEN ALARCON RAMIREZ",
+            "cedula": "V-34801831",
+            "seccion": "C",
+            "detalle": "Nombres desfasados en la hoja de Excel: los nombres estaban divididos entre la columna D y la columna P (observaciones)."
+        },
+        {
+            "grado": "2do Año",
+            "estudiante": "ADRIAN JESUS CORREA GARCIA",
+            "cedula": "V-34988775",
+            "seccion": "D",
+            "detalle": "Fecha de nacimiento tipografiada en origen como 14\/06\/20125 (año de 5 dígitos). Se normalizó a 14\/06\/2012."
+        },
+        {
+            "grado": "2do Año",
+            "estudiante": "ANGEL SAMIR SALAZAR RAMIREZ",
+            "cedula": "V-33357597",
+            "seccion": "A",
+            "detalle": "Fecha de nacimiento escrita como 9\/19\/2010 (formato M\/D\/Y). Se normalizó a 19\/09\/2010."
+        },
+        {
+            "grado": "5to Año",
+            "estudiante": "MARIA GUADALUPE QUINTERO ARAQUE",
+            "cedula": "V-33107485",
+            "seccion": "C",
+            "detalle": "Fecha duplicada en celda original: \"22\/5\/2009\/5\/2\/2009\". Se corrigió a 22\/05\/2009."
+        }
+    ],
+    "sheet_observations": [
+        {
+            "grado": "1er Año",
+            "hoja": "TODAS ",
+            "seccion": "A",
+            "cedula": "V-11423721214",
+            "estudiante": "PAREDES MONTENEGRO GREIKER JOHAN",
+            "observacion": "SIN CEDULA"
+        },
+        {
+            "grado": "1er Año",
+            "hoja": "TODAS ",
+            "seccion": "D",
+            "cedula": "V-11415920165",
+            "estudiante": "CUELLAR BASTO COLI ALEXANDER",
+            "observacion": "SIN CEDULA"
+        },
+        {
+            "grado": "1er Año",
+            "hoja": "TODAS ",
+            "seccion": "D",
+            "cedula": "V-21415920165",
+            "estudiante": "CUELLAR BASTO YUSLEIKATH VALENTINA",
+            "observacion": "SIN CEDULA"
+        },
+        {
+            "grado": "1er Año",
+            "hoja": "TODAS ",
+            "seccion": "D",
+            "cedula": "V-11311220063",
+            "estudiante": "IBARRA DÁVILA ROSAINY DEL CARMEN",
+            "observacion": "SIN CEDULA"
+        },
+        {
+            "grado": "1er Año",
+            "hoja": "TODAS ",
+            "seccion": "E",
+            "cedula": "V-35075050",
+            "estudiante": "VILLARREAL ARAQUE SEBÁSTIAN ALEJANDRO",
+            "observacion": "Desertor"
+        },
+        {
+            "grado": "1er Año",
+            "hoja": "TODAS ",
+            "seccion": "F",
+            "cedula": "V-36594976",
+            "estudiante": "VILLANUEVA VILCHEZ OSCAR YANIEL",
+            "observacion": "DESECTOR"
+        },
+        {
+            "grado": "1er Año",
+            "hoja": "TODAS ",
+            "seccion": "G",
+            "cedula": "V-34107233",
+            "estudiante": "GUILLEN COLMENARES JHOJANA NAZARETH",
+            "observacion": "DESECTOR"
+        },
+        {
+            "grado": "1er Año",
+            "hoja": "PARA RL FORMATO",
+            "seccion": "A",
+            "cedula": "V-34587234",
+            "estudiante": "DUARTE RONDON GEIBE YORLAN",
+            "observacion": "X"
+        },
+        {
+            "grado": "1er Año",
+            "hoja": "PARA RL FORMATO",
+            "seccion": "A",
+            "cedula": "V-34587234",
+            "estudiante": "DUARTE RONDON GEIBE YORLAN",
+            "observacion": "0412-5014001"
+        },
+        {
+            "grado": "1er Año",
+            "hoja": "PARA RL FORMATO",
+            "seccion": "A",
+            "cedula": "V-34587234",
+            "estudiante": "DUARTE RONDON GEIBE YORLAN",
+            "observacion": "EL MOLINO"
+        },
+        {
+            "grado": "1er Año",
+            "hoja": "PARA RL FORMATO",
+            "seccion": "A",
+            "cedula": "V-34725561",
+            "estudiante": "CORREA ROJAS KEVIN JOSUE",
+            "observacion": "X"
+        },
+        {
+            "grado": "1er Año",
+            "hoja": "PARA RL FORMATO",
+            "seccion": "A",
+            "cedula": "V-34725561",
+            "estudiante": "CORREA ROJAS KEVIN JOSUE",
+            "observacion": "0412-0652475"
+        },
+        {
+            "grado": "1er Año",
+            "hoja": "PARA RL FORMATO",
+            "seccion": "A",
+            "cedula": "V-34725561",
+            "estudiante": "CORREA ROJAS KEVIN JOSUE",
+            "observacion": "LA HUERTA"
+        },
+        {
+            "grado": "1er Año",
+            "hoja": "PARA RL FORMATO",
+            "seccion": "A",
+            "cedula": "V-34801532",
+            "estudiante": "PEÑALVER GUILLEN JOSELYN SOFIA",
+            "observacion": "X"
+        },
+        {
+            "grado": "1er Año",
+            "hoja": "PARA RL FORMATO",
+            "seccion": "A",
+            "cedula": "V-34801532",
+            "estudiante": "PEÑALVER GUILLEN JOSELYN SOFIA",
+            "observacion": "0412-1283421"
+        },
+        {
+            "grado": "1er Año",
+            "hoja": "PARA RL FORMATO",
+            "seccion": "A",
+            "cedula": "V-34801532",
+            "estudiante": "PEÑALVER GUILLEN JOSELYN SOFIA",
+            "observacion": "EL MOLINO"
+        },
+        {
+            "grado": "1er Año",
+            "hoja": "PARA RL FORMATO",
+            "seccion": "A",
+            "cedula": "V-34801829",
+            "estudiante": "PEÑA ALARCON ROSLIANY YOSELIN",
+            "observacion": "X"
+        },
+        {
+            "grado": "1er Año",
+            "hoja": "PARA RL FORMATO",
+            "seccion": "A",
+            "cedula": "V-34801829",
+            "estudiante": "PEÑA ALARCON ROSLIANY YOSELIN",
+            "observacion": "0416-5731907"
+        },
+        {
+            "grado": "1er Año",
+            "hoja": "PARA RL FORMATO",
+            "seccion": "A",
+            "cedula": "V-34801829",
+            "estudiante": "PEÑA ALARCON ROSLIANY YOSELIN",
+            "observacion": "CASA BONITA"
+        },
+        {
+            "grado": "1er Año",
+            "hoja": "PARA RL FORMATO",
+            "seccion": "A",
+            "cedula": "V-34801926",
+            "estudiante": "ALVAREZ GARCIA NICKOL ALEXANDRA",
+            "observacion": "X"
+        },
+        {
+            "grado": "1er Año",
+            "hoja": "PARA RL FORMATO",
+            "seccion": "A",
+            "cedula": "V-34801926",
+            "estudiante": "ALVAREZ GARCIA NICKOL ALEXANDRA",
+            "observacion": "0424-7755658"
+        },
+        {
+            "grado": "1er Año",
+            "hoja": "PARA RL FORMATO",
+            "seccion": "A",
+            "cedula": "V-34801926",
+            "estudiante": "ALVAREZ GARCIA NICKOL ALEXANDRA",
+            "observacion": "CASA BONITA"
+        },
+        {
+            "grado": "1er Año",
+            "hoja": "PARA RL FORMATO",
+            "seccion": "A",
+            "cedula": "V-34856057",
+            "estudiante": "ZERPA ZERPA CRISTIAN GABRIEL",
+            "observacion": "X"
+        },
+        {
+            "grado": "1er Año",
+            "hoja": "PARA RL FORMATO",
+            "seccion": "A",
+            "cedula": "V-34856057",
+            "estudiante": "ZERPA ZERPA CRISTIAN GABRIEL",
+            "observacion": "0412-7566760"
+        },
+        {
+            "grado": "1er Año",
+            "hoja": "PARA RL FORMATO",
+            "seccion": "A",
+            "cedula": "V-34856057",
+            "estudiante": "ZERPA ZERPA CRISTIAN GABRIEL",
+            "observacion": "PUEBLO VIEJO"
+        },
+        {
+            "grado": "1er Año",
+            "hoja": "PARA RL FORMATO",
+            "seccion": "A",
+            "cedula": "V-34969090",
+            "estudiante": "RODRIGUEZ PUENTE YELYSMAR NATALY",
+            "observacion": "X"
+        },
+        {
+            "grado": "1er Año",
+            "hoja": "PARA RL FORMATO",
+            "seccion": "A",
+            "cedula": "V-34969090",
+            "estudiante": "RODRIGUEZ PUENTE YELYSMAR NATALY",
+            "observacion": "0426-7291546"
+        },
+        {
+            "grado": "1er Año",
+            "hoja": "PARA RL FORMATO",
+            "seccion": "A",
+            "cedula": "V-34969090",
+            "estudiante": "RODRIGUEZ PUENTE YELYSMAR NATALY",
+            "observacion": "EL MOLINO"
+        },
+        {
+            "grado": "1er Año",
+            "hoja": "PARA RL FORMATO",
+            "seccion": "A",
+            "cedula": "V-35074451",
+            "estudiante": "OSUNA PAREDES JOSED SAMIR",
+            "observacion": "X"
+        },
+        {
+            "grado": "1er Año",
+            "hoja": "PARA RL FORMATO",
+            "seccion": "A",
+            "cedula": "V-35074451",
+            "estudiante": "OSUNA PAREDES JOSED SAMIR",
+            "observacion": "0412-7636499"
+        },
+        {
+            "grado": "1er Año",
+            "hoja": "PARA RL FORMATO",
+            "seccion": "A",
+            "cedula": "V-35074451",
+            "estudiante": "OSUNA PAREDES JOSED SAMIR",
+            "observacion": "MUCUMBU"
+        },
+        {
+            "grado": "1er Año",
+            "hoja": "PARA RL FORMATO",
+            "seccion": "A",
+            "cedula": "V-35074903",
+            "estudiante": "SALAS GONZALEZ WILDER EDUARDO",
+            "observacion": "X"
+        },
+        {
+            "grado": "1er Año",
+            "hoja": "PARA RL FORMATO",
+            "seccion": "A",
+            "cedula": "V-35074903",
+            "estudiante": "SALAS GONZALEZ WILDER EDUARDO",
+            "observacion": "0424-7705127"
+        },
+        {
+            "grado": "1er Año",
+            "hoja": "PARA RL FORMATO",
+            "seccion": "A",
+            "cedula": "V-35074903",
+            "estudiante": "SALAS GONZALEZ WILDER EDUARDO",
+            "observacion": "MUCUMBU"
+        },
+        {
+            "grado": "1er Año",
+            "hoja": "PARA RL FORMATO",
+            "seccion": "A",
+            "cedula": "V-36030405",
+            "estudiante": "GUILLEN MARQUINA EDUARDO JOSE",
+            "observacion": "X"
+        },
+        {
+            "grado": "1er Año",
+            "hoja": "PARA RL FORMATO",
+            "seccion": "A",
+            "cedula": "V-36030405",
+            "estudiante": "GUILLEN MARQUINA EDUARDO JOSE",
+            "observacion": "0412-6536011"
+        },
+        {
+            "grado": "1er Año",
+            "hoja": "PARA RL FORMATO",
+            "seccion": "A",
+            "cedula": "V-36030405",
+            "estudiante": "GUILLEN MARQUINA EDUARDO JOSE",
+            "observacion": "SAN BENITO"
+        },
+        {
+            "grado": "1er Año",
+            "hoja": "PARA RL FORMATO",
+            "seccion": "A",
+            "cedula": "V-36163516",
+            "estudiante": "MEDINA VILLASMIL OSMARIELL NATHALY",
+            "observacion": "X"
+        },
+        {
+            "grado": "1er Año",
+            "hoja": "PARA RL FORMATO",
+            "seccion": "A",
+            "cedula": "V-36163516",
+            "estudiante": "MEDINA VILLASMIL OSMARIELL NATHALY",
+            "observacion": "0412-0424590"
+        },
+        {
+            "grado": "1er Año",
+            "hoja": "PARA RL FORMATO",
+            "seccion": "A",
+            "cedula": "V-36163516",
+            "estudiante": "MEDINA VILLASMIL OSMARIELL NATHALY",
+            "observacion": "SAN MARTIN"
+        },
+        {
+            "grado": "1er Año",
+            "hoja": "PARA RL FORMATO",
+            "seccion": "A",
+            "cedula": "V-36178823",
+            "estudiante": "GUTIERREZ SOSA GEOVANNY MOISES",
+            "observacion": "X"
+        },
+        {
+            "grado": "1er Año",
+            "hoja": "PARA RL FORMATO",
+            "seccion": "A",
+            "cedula": "V-36178823",
+            "estudiante": "GUTIERREZ SOSA GEOVANNY MOISES",
+            "observacion": "0412-0715396"
+        },
+        {
+            "grado": "1er Año",
+            "hoja": "PARA RL FORMATO",
+            "seccion": "A",
+            "cedula": "V-36178823",
+            "estudiante": "GUTIERREZ SOSA GEOVANNY MOISES",
+            "observacion": "LAS FLORES"
+        },
+        {
+            "grado": "1er Año",
+            "hoja": "PARA RL FORMATO",
+            "seccion": "A",
+            "cedula": "V-36202293",
+            "estudiante": "UZCATEGUI PAREDES DERWIS ANTONIO",
+            "observacion": "X"
+        },
+        {
+            "grado": "1er Año",
+            "hoja": "PARA RL FORMATO",
+            "seccion": "A",
+            "cedula": "V-36202293",
+            "estudiante": "UZCATEGUI PAREDES DERWIS ANTONIO",
+            "observacion": "0412-1273294"
+        },
+        {
+            "grado": "1er Año",
+            "hoja": "PARA RL FORMATO",
+            "seccion": "A",
+            "cedula": "V-36202293",
+            "estudiante": "UZCATEGUI PAREDES DERWIS ANTONIO",
+            "observacion": "LA SABILA"
+        },
+        {
+            "grado": "1er Año",
+            "hoja": "PARA RL FORMATO",
+            "seccion": "A",
+            "cedula": "V-36320015",
+            "estudiante": "VARELA DAVILA FREYMAR VALERIA",
+            "observacion": "X"
+        },
+        {
+            "grado": "1er Año",
+            "hoja": "PARA RL FORMATO",
+            "seccion": "A",
+            "cedula": "V-36320015",
+            "estudiante": "VARELA DAVILA FREYMAR VALERIA",
+            "observacion": "0416-8752168"
+        },
+        {
+            "grado": "1er Año",
+            "hoja": "PARA RL FORMATO",
+            "seccion": "A",
+            "cedula": "V-36320015",
+            "estudiante": "VARELA DAVILA FREYMAR VALERIA",
+            "observacion": "EL MOLINO"
+        },
+        {
+            "grado": "1er Año",
+            "hoja": "PARA RL FORMATO",
+            "seccion": "A",
+            "cedula": "V-36389521",
+            "estudiante": "TORO CONTRERAS YÓSHUA RAELD",
+            "observacion": "X"
+        },
+        {
+            "grado": "1er Año",
+            "hoja": "PARA RL FORMATO",
+            "seccion": "A",
+            "cedula": "V-36389521",
+            "estudiante": "TORO CONTRERAS YÓSHUA RAELD",
+            "observacion": "0414-1795238"
+        },
+        {
+            "grado": "1er Año",
+            "hoja": "PARA RL FORMATO",
+            "seccion": "A",
+            "cedula": "V-36389521",
+            "estudiante": "TORO CONTRERAS YÓSHUA RAELD",
+            "observacion": "EL MOLINO"
+        },
+        {
+            "grado": "1er Año",
+            "hoja": "PARA RL FORMATO",
+            "seccion": "A",
+            "cedula": "V-36403979",
+            "estudiante": "CARRILLO BECERRA MARIANGELY JULIETH",
+            "observacion": "X"
+        },
+        {
+            "grado": "1er Año",
+            "hoja": "PARA RL FORMATO",
+            "seccion": "A",
+            "cedula": "V-36403979",
+            "estudiante": "CARRILLO BECERRA MARIANGELY JULIETH",
+            "observacion": "0424-7013115"
+        },
+        {
+            "grado": "1er Año",
+            "hoja": "PARA RL FORMATO",
+            "seccion": "A",
+            "cedula": "V-36403979",
+            "estudiante": "CARRILLO BECERRA MARIANGELY JULIETH",
+            "observacion": "LAGUNILLAS"
+        },
+        {
+            "grado": "1er Año",
+            "hoja": "PARA RL FORMATO",
+            "seccion": "A",
+            "cedula": "V-36420956",
+            "estudiante": "DUGARTE PEÑA JOSBREILY SOIRETH",
+            "observacion": "X"
+        },
+        {
+            "grado": "1er Año",
+            "hoja": "PARA RL FORMATO",
+            "seccion": "A",
+            "cedula": "V-36420956",
+            "estudiante": "DUGARTE PEÑA JOSBREILY SOIRETH",
+            "observacion": "0414-1795238"
+        },
+        {
+            "grado": "1er Año",
+            "hoja": "PARA RL FORMATO",
+            "seccion": "A",
+            "cedula": "V-36420956",
+            "estudiante": "DUGARTE PEÑA JOSBREILY SOIRETH",
+            "observacion": "EL MOLINO"
+        },
+        {
+            "grado": "1er Año",
+            "hoja": "PARA RL FORMATO",
+            "seccion": "A",
+            "cedula": "V-36512001",
+            "estudiante": "GARRIDO ROSALES CARLOS JAVIER",
+            "observacion": "X"
+        },
+        {
+            "grado": "1er Año",
+            "hoja": "PARA RL FORMATO",
+            "seccion": "A",
+            "cedula": "V-36512001",
+            "estudiante": "GARRIDO ROSALES CARLOS JAVIER",
+            "observacion": "0412-3680403"
+        },
+        {
+            "grado": "1er Año",
+            "hoja": "PARA RL FORMATO",
+            "seccion": "A",
+            "cedula": "V-36512001",
+            "estudiante": "GARRIDO ROSALES CARLOS JAVIER",
+            "observacion": "LOS MAMONES"
+        },
+        {
+            "grado": "1er Año",
+            "hoja": "PARA RL FORMATO",
+            "seccion": "A",
+            "cedula": "V-36631714",
+            "estudiante": "BACALAO HERNANDEZ ELIANA VICTORIA",
+            "observacion": "X"
+        },
+        {
+            "grado": "1er Año",
+            "hoja": "PARA RL FORMATO",
+            "seccion": "A",
+            "cedula": "V-36631714",
+            "estudiante": "BACALAO HERNANDEZ ELIANA VICTORIA",
+            "observacion": "0412-3010970"
+        },
+        {
+            "grado": "1er Año",
+            "hoja": "PARA RL FORMATO",
+            "seccion": "A",
+            "cedula": "V-36631714",
+            "estudiante": "BACALAO HERNANDEZ ELIANA VICTORIA",
+            "observacion": "MUCUMBU"
+        },
+        {
+            "grado": "1er Año",
+            "hoja": "PARA RL FORMATO",
+            "seccion": "A",
+            "cedula": "V-36753440",
+            "estudiante": "GUTIERREZ BRICEÑO JHOAIRIS DEL CARMEN",
+            "observacion": "X"
+        },
+        {
+            "grado": "1er Año",
+            "hoja": "PARA RL FORMATO",
+            "seccion": "A",
+            "cedula": "V-36753440",
+            "estudiante": "GUTIERREZ BRICEÑO JHOAIRIS DEL CARMEN",
+            "observacion": "0424-7782730"
+        },
+        {
+            "grado": "1er Año",
+            "hoja": "PARA RL FORMATO",
+            "seccion": "A",
+            "cedula": "V-36753440",
+            "estudiante": "GUTIERREZ BRICEÑO JHOAIRIS DEL CARMEN",
+            "observacion": "EL MOLINO"
+        },
+        {
+            "grado": "1er Año",
+            "hoja": "PARA RL FORMATO",
+            "seccion": "A",
+            "cedula": "V-37054813",
+            "estudiante": "ROJAS RANGEL RUT ZOLANYELY",
+            "observacion": "X"
+        },
+        {
+            "grado": "1er Año",
+            "hoja": "PARA RL FORMATO",
+            "seccion": "A",
+            "cedula": "V-37054813",
+            "estudiante": "ROJAS RANGEL RUT ZOLANYELY",
+            "observacion": "0424-7374554"
+        },
+        {
+            "grado": "1er Año",
+            "hoja": "PARA RL FORMATO",
+            "seccion": "A",
+            "cedula": "V-37054813",
+            "estudiante": "ROJAS RANGEL RUT ZOLANYELY",
+            "observacion": "LA CALERA"
+        },
+        {
+            "grado": "1er Año",
+            "hoja": "PARA RL FORMATO",
+            "seccion": "A",
+            "cedula": "V-37055372",
+            "estudiante": "QUINTERO CARMONA YOLEYBERT GERARDO",
+            "observacion": "X"
+        },
+        {
+            "grado": "1er Año",
+            "hoja": "PARA RL FORMATO",
+            "seccion": "A",
+            "cedula": "V-37055372",
+            "estudiante": "QUINTERO CARMONA YOLEYBERT GERARDO",
+            "observacion": "0416-3455433"
+        },
+        {
+            "grado": "1er Año",
+            "hoja": "PARA RL FORMATO",
+            "seccion": "A",
+            "cedula": "V-37055372",
+            "estudiante": "QUINTERO CARMONA YOLEYBERT GERARDO",
+            "observacion": "LAGUNILLAS"
+        },
+        {
+            "grado": "1er Año",
+            "hoja": "PARA RL FORMATO",
+            "seccion": "A",
+            "cedula": "V-37100189",
+            "estudiante": "PUENTE GONZALEZ MIGUEL ANGEL",
+            "observacion": "X"
+        },
+        {
+            "grado": "1er Año",
+            "hoja": "PARA RL FORMATO",
+            "seccion": "A",
+            "cedula": "V-37100189",
+            "estudiante": "PUENTE GONZALEZ MIGUEL ANGEL",
+            "observacion": "0412-6582959"
+        },
+        {
+            "grado": "1er Año",
+            "hoja": "PARA RL FORMATO",
+            "seccion": "A",
+            "cedula": "V-37100189",
+            "estudiante": "PUENTE GONZALEZ MIGUEL ANGEL",
+            "observacion": "LA CALERA"
+        },
+        {
+            "grado": "1er Año",
+            "hoja": "PARA RL FORMATO",
+            "seccion": "A",
+            "cedula": "V-11423721214",
+            "estudiante": "PAREDES MONTENEGRO GREIKER YOHAN",
+            "observacion": "X"
+        },
+        {
+            "grado": "1er Año",
+            "hoja": "PARA RL FORMATO",
+            "seccion": "A",
+            "cedula": "V-11423721214",
+            "estudiante": "PAREDES MONTENEGRO GREIKER YOHAN",
+            "observacion": "0424-7604767"
+        },
+        {
+            "grado": "1er Año",
+            "hoja": "PARA RL FORMATO",
+            "seccion": "A",
+            "cedula": "V-11423721214",
+            "estudiante": "PAREDES MONTENEGRO GREIKER YOHAN",
+            "observacion": "EL MOLINO"
+        },
+        {
+            "grado": "1er Año",
+            "hoja": "PARA RL FORMATO",
+            "seccion": "B",
+            "cedula": "V-34725118",
+            "estudiante": "RODRIGUEZ GUILLEN ROMALDO JESUS",
+            "observacion": "X"
+        },
+        {
+            "grado": "1er Año",
+            "hoja": "PARA RL FORMATO",
+            "seccion": "B",
+            "cedula": "V-34725118",
+            "estudiante": "RODRIGUEZ GUILLEN ROMALDO JESUS",
+            "observacion": "0424-7062047"
+        },
+        {
+            "grado": "1er Año",
+            "hoja": "PARA RL FORMATO",
+            "seccion": "B",
+            "cedula": "V-34725118",
+            "estudiante": "RODRIGUEZ GUILLEN ROMALDO JESUS",
+            "observacion": "LA CALERA"
+        },
+        {
+            "grado": "1er Año",
+            "hoja": "PARA RL FORMATO",
+            "seccion": "B",
+            "cedula": "V-35074814",
+            "estudiante": "DÁVILA RODRÍGUEZ YHOSNEYBERTH ALEJANDRO",
+            "observacion": "X"
+        },
+        {
+            "grado": "1er Año",
+            "hoja": "PARA RL FORMATO",
+            "seccion": "B",
+            "cedula": "V-35074814",
+            "estudiante": "DÁVILA RODRÍGUEZ YHOSNEYBERTH ALEJANDRO",
+            "observacion": "0412-3866241"
+        },
+        {
+            "grado": "1er Año",
+            "hoja": "PARA RL FORMATO",
+            "seccion": "B",
+            "cedula": "V-35074814",
+            "estudiante": "DÁVILA RODRÍGUEZ YHOSNEYBERTH ALEJANDRO",
+            "observacion": "EL MOLINO"
+        },
+        {
+            "grado": "1er Año",
+            "hoja": "PARA RL FORMATO",
+            "seccion": "B",
+            "cedula": "V-35075184",
+            "estudiante": "VILLARREAL PRIETO JEAN PIERRE",
+            "observacion": "X"
+        },
+        {
+            "grado": "1er Año",
+            "hoja": "PARA RL FORMATO",
+            "seccion": "B",
+            "cedula": "V-35075184",
+            "estudiante": "VILLARREAL PRIETO JEAN PIERRE",
+            "observacion": "0412-7647413"
+        },
+        {
+            "grado": "1er Año",
+            "hoja": "PARA RL FORMATO",
+            "seccion": "B",
+            "cedula": "V-35075184",
+            "estudiante": "VILLARREAL PRIETO JEAN PIERRE",
+            "observacion": "LA SABILA"
+        },
+        {
+            "grado": "1er Año",
+            "hoja": "PARA RL FORMATO",
+            "seccion": "B",
+            "cedula": "V-36064145",
+            "estudiante": "GUILLEN GUTIERREZ CRISTOPHER ENRIQUE",
+            "observacion": "X"
+        },
+        {
+            "grado": "1er Año",
+            "hoja": "PARA RL FORMATO",
+            "seccion": "B",
+            "cedula": "V-36064145",
+            "estudiante": "GUILLEN GUTIERREZ CRISTOPHER ENRIQUE",
+            "observacion": "0412-6490801"
+        },
+        {
+            "grado": "1er Año",
+            "hoja": "PARA RL FORMATO",
+            "seccion": "B",
+            "cedula": "V-36064145",
+            "estudiante": "GUILLEN GUTIERREZ CRISTOPHER ENRIQUE",
+            "observacion": "EL MOLINO"
+        },
+        {
+            "grado": "1er Año",
+            "hoja": "PARA RL FORMATO",
+            "seccion": "B",
+            "cedula": "V-36176012",
+            "estudiante": "SOSA PARRA SEBASTHIAN JOSSUE",
+            "observacion": "X"
+        },
+        {
+            "grado": "1er Año",
+            "hoja": "PARA RL FORMATO",
+            "seccion": "B",
+            "cedula": "V-36176012",
+            "estudiante": "SOSA PARRA SEBASTHIAN JOSSUE",
+            "observacion": "0412-6827166"
+        },
+        {
+            "grado": "1er Año",
+            "hoja": "PARA RL FORMATO",
+            "seccion": "B",
+            "cedula": "V-36176012",
+            "estudiante": "SOSA PARRA SEBASTHIAN JOSSUE",
+            "observacion": "EL MOLINO"
+        },
+        {
+            "grado": "1er Año",
+            "hoja": "PARA RL FORMATO",
+            "seccion": "B",
+            "cedula": "V-36605266",
+            "estudiante": "CONTRERAS GUILLEN DAILETH VALENTINA",
+            "observacion": "X"
+        },
+        {
+            "grado": "1er Año",
+            "hoja": "PARA RL FORMATO",
+            "seccion": "B",
+            "cedula": "V-36605266",
+            "estudiante": "CONTRERAS GUILLEN DAILETH VALENTINA",
+            "observacion": "0414-3753308"
+        },
+        {
+            "grado": "1er Año",
+            "hoja": "PARA RL FORMATO",
+            "seccion": "B",
+            "cedula": "V-36605266",
+            "estudiante": "CONTRERAS GUILLEN DAILETH VALENTINA",
+            "observacion": "EL MOLINO"
+        },
+        {
+            "grado": "1er Año",
+            "hoja": "PARA RL FORMATO",
+            "seccion": "B",
+            "cedula": "V-36637165",
+            "estudiante": "HERNÁNDEZ ANGULO MARIELA DEL CARMEN",
+            "observacion": "X"
+        },
+        {
+            "grado": "1er Año",
+            "hoja": "PARA RL FORMATO",
+            "seccion": "B",
+            "cedula": "V-36637165",
+            "estudiante": "HERNÁNDEZ ANGULO MARIELA DEL CARMEN",
+            "observacion": "0424-7097584"
+        },
+        {
+            "grado": "1er Año",
+            "hoja": "PARA RL FORMATO",
+            "seccion": "B",
+            "cedula": "V-36637165",
+            "estudiante": "HERNÁNDEZ ANGULO MARIELA DEL CARMEN",
+            "observacion": "PUEBLO  VIEJO"
+        },
+        {
+            "grado": "2do Año",
+            "hoja": "TODAS (2)",
+            "seccion": "A",
+            "cedula": "V-34305029",
+            "estudiante": "GARCIA MALDONADO CRISMARY NAZARETH DEL",
+            "observacion": "CARMEN"
+        },
+        {
+            "grado": "2do Año",
+            "hoja": "TODAS (2)",
+            "seccion": "B",
+            "cedula": "V-34802349",
+            "estudiante": "GUILLEN GONZALEZ ANTONI ALEXANDER",
+            "observacion": "DESERTOR"
+        },
+        {
+            "grado": "2do Año",
+            "hoja": "TODAS (2)",
+            "seccion": "C",
+            "cedula": "V-36156788",
+            "estudiante": "MELENDEZ HERNANDEZ JAIDIMAR KATHERINE",
+            "observacion": "DESERTOR"
+        },
+        {
+            "grado": "2do Año",
+            "hoja": "TODAS (2)",
+            "seccion": "D",
+            "cedula": "V-34856134",
+            "estudiante": "VARGAS PUENTE LEONEL ALEXANDER",
+            "observacion": "DESERTOR"
+        },
+        {
+            "grado": "2do Año",
+            "hoja": "TODAS (2)",
+            "seccion": "F",
+            "cedula": "V-34856377",
+            "estudiante": "PEÑA ROJAS LUIS FERNANDO",
+            "observacion": "DESERTOR"
+        },
+        {
+            "grado": "2do Año",
+            "hoja": "TODAS (2)",
+            "seccion": "G",
+            "cedula": "V-33804022",
+            "estudiante": "CHACON RONDON DIEGO ADRIAN",
+            "observacion": "DESERTOR"
+        },
+        {
+            "grado": "2do Año",
+            "hoja": "TODAS (2)",
+            "seccion": "G",
+            "cedula": "V-34149179",
+            "estudiante": "TORO BRICEÑO YURIOSCA TAELIS",
+            "observacion": "R"
+        },
+        {
+            "grado": "2do Año",
+            "hoja": "TODAS (2)",
+            "seccion": "G",
+            "cedula": "V-36765184",
+            "estudiante": "RANGEL MONTILLA EUDIS IRALYS",
+            "observacion": "DESERTOR"
+        },
+        {
+            "grado": "3er Año",
+            "hoja": "TODAS ",
+            "seccion": "A",
+            "cedula": "V-33357265",
+            "estudiante": "MARQUEZ MARQUEZ GUMERLIZ ANAIS",
+            "observacion": "REP: CAST-MAT-FI-BI"
+        },
+        {
+            "grado": "3er Año",
+            "hoja": "TODAS ",
+            "seccion": "A",
+            "cedula": "V-34324292",
+            "estudiante": "GARCIA MERCADO JESUS ALEXANDER",
+            "observacion": "REP: CAST- MAT- FI-QUI"
+        },
+        {
+            "grado": "3er Año",
+            "hoja": "TODAS ",
+            "seccion": "A",
+            "cedula": "V-34394325",
+            "estudiante": "ROJAS SOTO YOHENMY ALEHIKARY",
+            "observacion": "MP: CAST-MAT"
+        },
+        {
+            "grado": "3er Año",
+            "hoja": "TODAS ",
+            "seccion": "B",
+            "cedula": "V-33723109",
+            "estudiante": "VILLASMIL VARELA LISBETH DEL VALLE",
+            "observacion": "MP: MAT"
+        },
+        {
+            "grado": "3er Año",
+            "hoja": "TODAS ",
+            "seccion": "B",
+            "cedula": "V-33803680",
+            "estudiante": "ROJAS ZERPA ANA GABRIELA",
+            "observacion": "Fuera del Pais"
+        },
+        {
+            "grado": "3er Año",
+            "hoja": "TODAS ",
+            "seccion": "B",
+            "cedula": "V-34016966",
+            "estudiante": "SALAS MALDONADO DREIBERSON SEBASTIAN",
+            "observacion": "REP: CAS-MAT-QUI-FIS"
+        },
+        {
+            "grado": "3er Año",
+            "hoja": "TODAS ",
+            "seccion": "B",
+            "cedula": "V-34107159",
+            "estudiante": "RODRIGUEZ RAMIREZ JOSE ANDRES ALEXANDER",
+            "observacion": "MP: INGLES"
+        },
+        {
+            "grado": "3er Año",
+            "hoja": "TODAS ",
+            "seccion": "B",
+            "cedula": "V-34324195",
+            "estudiante": "ZERPA GUILLEN LUIS JOSE",
+            "observacion": "DESERTOR"
+        },
+        {
+            "grado": "3er Año",
+            "hoja": "TODAS ",
+            "seccion": "B",
+            "cedula": "V-34725419",
+            "estudiante": "BRICEÑO DIAZ ELIMAR DEL CARMEN",
+            "observacion": "MP: IN-MAT"
+        },
+        {
+            "grado": "3er Año",
+            "hoja": "TODAS ",
+            "seccion": "B",
+            "cedula": "V-34725456",
+            "estudiante": "MONTENEGRO SOUSA CESAR YONEIKER",
+            "observacion": "DESERTOR"
+        },
+        {
+            "grado": "3er Año",
+            "hoja": "TODAS ",
+            "seccion": "C",
+            "cedula": "V-33107027",
+            "estudiante": "BAEZ CONTRERAS NESTOR LUCIANO",
+            "observacion": "NI"
+        },
+        {
+            "grado": "3er Año",
+            "hoja": "TODAS ",
+            "seccion": "C",
+            "cedula": "V-34545163",
+            "estudiante": "UZCATEGUI MORENO IVANESKA DE LOS ANGELES",
+            "observacion": "NI"
+        },
+        {
+            "grado": "3er Año",
+            "hoja": "TODAS ",
+            "seccion": "C",
+            "cedula": "V-34545329",
+            "estudiante": "MORALES GUILLEN ZAIR JOSUE",
+            "observacion": "NI"
+        },
+        {
+            "grado": "3er Año",
+            "hoja": "TODAS ",
+            "seccion": "C",
+            "cedula": "V-34725666",
+            "estudiante": "ARIZA QUINTERO YOLMAR ALEXANDER",
+            "observacion": "NI"
+        },
+        {
+            "grado": "3er Año",
+            "hoja": "TODAS ",
+            "seccion": "C",
+            "cedula": "V-34824375",
+            "estudiante": "ROJAS FLORIDA CESAR JOSUEE",
+            "observacion": "MP: MAT"
+        },
+        {
+            "grado": "3er Año",
+            "hoja": "TODAS ",
+            "seccion": "D",
+            "cedula": "V-34149184",
+            "estudiante": "CARMONA CARRERO YERLEANYS KATHERIN",
+            "observacion": "NI"
+        },
+        {
+            "grado": "3er Año",
+            "hoja": "TODAS ",
+            "seccion": "D",
+            "cedula": "V-34149195",
+            "estudiante": "ZERPA RANGEL FRANCISCO ARCADIO",
+            "observacion": "REPT: TODAS"
+        },
+        {
+            "grado": "3er Año",
+            "hoja": "TODAS ",
+            "seccion": "E",
+            "cedula": "V-34149192",
+            "estudiante": "BRICEÑO CONTRERAS JOSE GUSTAVO",
+            "observacion": "MP: CAST-MAT"
+        },
+        {
+            "grado": "3er Año",
+            "hoja": "TODAS ",
+            "seccion": "E",
+            "cedula": "V-34305481",
+            "estudiante": "CARMONA GARCIA CARLA VICTORIA",
+            "observacion": "MP: CAST"
+        },
+        {
+            "grado": "3er Año",
+            "hoja": "TODAS ",
+            "seccion": "E",
+            "cedula": "V-34324605",
+            "estudiante": "MARQUEZ GONGORA DAYMAR YURUARI",
+            "observacion": "MP: MAT"
+        },
+        {
+            "grado": "3er Año",
+            "hoja": "TODAS ",
+            "seccion": "F",
+            "cedula": "V-33107470",
+            "estudiante": "GOMEZ MORENO JENAIRITH DE LOS ANGELES",
+            "observacion": "REP: CAST-MAT-FI"
+        },
+        {
+            "grado": "3er Año",
+            "hoja": "TODAS ",
+            "seccion": "F",
+            "cedula": "V-33723113",
+            "estudiante": "GUILLEN JIMENEZ MIGUEL ANGEL",
+            "observacion": "MP: IN-MAT"
+        },
+        {
+            "grado": "3er Año",
+            "hoja": "TODAS ",
+            "seccion": "F",
+            "cedula": "V-34075292",
+            "estudiante": "VARELA PUENTE DARWIN EDUARDO",
+            "observacion": "REP: CAST-ING-MAT-FI-QUI"
+        },
+        {
+            "grado": "3er Año",
+            "hoja": "TODAS ",
+            "seccion": "F",
+            "cedula": "V-34643046",
+            "estudiante": "GUTIERREZ RODRIGUEZ LUCIANY FRANCHESCA",
+            "observacion": "MP:MAT-FIS"
+        },
+        {
+            "grado": "3er Año",
+            "hoja": "TODAS ",
+            "seccion": "F",
+            "cedula": "V-34801573",
+            "estudiante": "BRICEÑO URDANETA ELEANGELICA DEL CARMEN",
+            "observacion": "MAT: MAT-FI"
+        },
+        {
+            "grado": "3er Año",
+            "hoja": "TODAS ",
+            "seccion": "G",
+            "cedula": "V-33360903",
+            "estudiante": "ARAUJO RONDON LEONARDO JOSE",
+            "observacion": "NI"
+        },
+        {
+            "grado": "3er Año",
+            "hoja": "TODAS ",
+            "seccion": "G",
+            "cedula": "V-34305622",
+            "estudiante": "SUAREZ OBANDO YOIFER ALFREDO",
+            "observacion": "NI"
+        },
+        {
+            "grado": "3er Año",
+            "hoja": "TODAS ",
+            "seccion": "G",
+            "cedula": "V-34477168",
+            "estudiante": "DIAZ SALAS ANYEL LIONEL",
+            "observacion": "NI"
+        },
+        {
+            "grado": "4to Año",
+            "hoja": "TODAS ACTUALIZADA  (3)",
+            "seccion": "A",
+            "cedula": "V-33670954",
+            "estudiante": "AVENDAÑO CONTRERAS YURCARGLYS JULIACNY",
+            "observacion": "Desertor"
+        },
+        {
+            "grado": "4to Año",
+            "hoja": "TODAS ACTUALIZADA  (3)",
+            "seccion": "C",
+            "cedula": "V-33343499",
+            "estudiante": "OSUNA SOTO JHONALBERTH  ALBERTO",
+            "observacion": "REP"
+        },
+        {
+            "grado": "4to Año",
+            "hoja": "TODAS ACTUALIZADA  (3)",
+            "seccion": "D",
+            "cedula": "V-32906773",
+            "estudiante": "MENDOZA RODRIGUEZ KEVIN YOSUE",
+            "observacion": "REP"
+        },
+        {
+            "grado": "4to Año",
+            "hoja": "TODAS ACTUALIZADA  (3)",
+            "seccion": "D",
+            "cedula": "V-32912488",
+            "estudiante": "ALBARRAN GUILLEN JHONJEIVER JOSUE",
+            "observacion": "REP"
+        },
+        {
+            "grado": "4to Año",
+            "hoja": "TODAS ACTUALIZADA  (3)",
+            "seccion": "D",
+            "cedula": "V-34106980",
+            "estudiante": "ARAQUE MALDONADO LINDIMAR  DANIELA",
+            "observacion": "N. I."
+        },
+        {
+            "grado": "4to Año",
+            "hoja": "TODAS ACTUALIZADA  (3)",
+            "seccion": "G",
+            "cedula": "V-32906799",
+            "estudiante": "LEAL MENDOZA DARWIN EMMANUEL",
+            "observacion": "REP"
+        },
+        {
+            "grado": "4to Año",
+            "hoja": "TODAS ACTUALIZADA  (3)",
+            "seccion": "G",
+            "cedula": "V-33213392",
+            "estudiante": "MIRANDA GUTIERREZ EMANUEL DAVID",
+            "observacion": "F.I"
+        },
+        {
+            "grado": "4to Año",
+            "hoja": "TODAS ACTUALIZADA  (3)",
+            "seccion": "G",
+            "cedula": "V-33608191",
+            "estudiante": "LARES GARRILLO KLEIBER DANIEL",
+            "observacion": "REP"
+        },
+        {
+            "grado": "4to Año",
+            "hoja": "NO INSCRITOS ",
+            "seccion": "A",
+            "cedula": "V-33722949",
+            "estudiante": "PUENTE ZERPA YOVAIDY",
+            "observacion": "FALLECIO"
+        },
+        {
+            "grado": "4to Año",
+            "hoja": "NO INSCRITOS ",
+            "seccion": "C",
+            "cedula": "V-34394909",
+            "estudiante": "CARRILLO RODRIGUEZ IRMARY ALEXAY",
+            "observacion": "falta por inscribir"
+        },
+        {
+            "grado": "4to Año",
+            "hoja": "NO INSCRITOS ",
+            "seccion": "D",
+            "cedula": "V-33722802",
+            "estudiante": "QUINTERO MARQUINA YLDERSON ANDRES",
+            "observacion": "falta por inscribir"
+        },
+        {
+            "grado": "5to Año",
+            "hoja": "TODAS (2)",
+            "seccion": "A",
+            "cedula": "V-32906795",
+            "estudiante": "ARAQUE ZERPA ROXILENA VALENTINA",
+            "observacion": "QUI"
+        },
+        {
+            "grado": "5to Año",
+            "hoja": "TODAS (2)",
+            "seccion": "A",
+            "cedula": "V-33176366",
+            "estudiante": "CONTRERAS IZARRA CARLA NELLYMAR",
+            "observacion": "QUI"
+        },
+        {
+            "grado": "5to Año",
+            "hoja": "TODAS (2)",
+            "seccion": "A",
+            "cedula": "V-34075090",
+            "estudiante": "ROJAS MENDOZA NOEL ANTONIO",
+            "observacion": "QUI"
+        },
+        {
+            "grado": "5to Año",
+            "hoja": "TODAS (2)",
+            "seccion": "A",
+            "cedula": "V-34075185",
+            "estudiante": "TORREALBA ALTUVE ELVIMAR ELVIRA",
+            "observacion": "QUI"
+        },
+        {
+            "grado": "5to Año",
+            "hoja": "TODAS (2)",
+            "seccion": "A",
+            "cedula": "V-34107037",
+            "estudiante": "VIELMA SULBARAN CRISTOFER ALEJANDRO",
+            "observacion": "QUI"
+        },
+        {
+            "grado": "5to Año",
+            "hoja": "TODAS (2)",
+            "seccion": "B",
+            "cedula": "V-33803466",
+            "estudiante": "PUCCINI GARCIA YUSPETTER LUCIANO",
+            "observacion": "FALTA  IN"
+        },
+        {
+            "grado": "5to Año",
+            "hoja": "TODAS (2)",
+            "seccion": "B",
+            "cedula": "V-34075172",
+            "estudiante": "NAVAS SALEH JORGE SEBASTIAN",
+            "observacion": "CAST Y QU"
+        },
+        {
+            "grado": "5to Año",
+            "hoja": "TODAS (2)",
+            "seccion": "C",
+            "cedula": "V-32906749",
+            "estudiante": "BRICEÑO HERNANDEZ YONATAN JOSUE",
+            "observacion": "FALTA I."
+        },
+        {
+            "grado": "5to Año",
+            "hoja": "TODAS (2)",
+            "seccion": "C",
+            "cedula": "V-33101996",
+            "estudiante": "VIVAS SOLORZANO ANGEL EUGENIO",
+            "observacion": "FALTA I"
+        },
+        {
+            "grado": "5to Año",
+            "hoja": "TODAS (2)",
+            "seccion": "C",
+            "cedula": "V-33107570",
+            "estudiante": "PEÑA BALLESTEROS REYNER STEVEN",
+            "observacion": "CA-QU"
+        },
+        {
+            "grado": "5to Año",
+            "hoja": "TODAS (2)",
+            "seccion": "C",
+            "cedula": "V-33153925",
+            "estudiante": "PRIETO MALDONADO HENRI JESUS",
+            "observacion": "FALTA I"
+        },
+        {
+            "grado": "5to Año",
+            "hoja": "TODAS (2)",
+            "seccion": "C",
+            "cedula": "V-34324084",
+            "estudiante": "IURILLI ARAQUE JAVIER ALEXANDER",
+            "observacion": "BIO-QU"
+        },
+        {
+            "grado": "5to Año",
+            "hoja": "TODAS (2)",
+            "seccion": "D",
+            "cedula": "V-31895981",
+            "estudiante": "PINTO ECHEVERRIA SONIANGELY ESTEFANIA",
+            "observacion": "PEND  MA-QU"
+        },
+        {
+            "grado": "5to Año",
+            "hoja": "TODAS (2)",
+            "seccion": "D",
+            "cedula": "V-32597788",
+            "estudiante": "BECERRA MALDONADO DIEGO ANDRES",
+            "observacion": "FALTA IN"
+        },
+        {
+            "grado": "5to Año",
+            "hoja": "TODAS (2)",
+            "seccion": "D",
+            "cedula": "V-33748232",
+            "estudiante": "SOTO ECHEVERRIA RICBETH SARAI",
+            "observacion": "FALTA IN"
+        },
+        {
+            "grado": "5to Año",
+            "hoja": "TODAS (2)",
+            "seccion": "E",
+            "cedula": "V-33194501",
+            "estudiante": "MENDOZA CORTES MARIANGEL ANDREA",
+            "observacion": "QU"
+        },
+        {
+            "grado": "5to Año",
+            "hoja": "TODAS (2)",
+            "seccion": "E",
+            "cedula": "V-33360865",
+            "estudiante": "MOYEJA CAMACHO NICOLAS ANDRÉS",
+            "observacion": "N. I."
+        },
+        {
+            "grado": "5to Año",
+            "hoja": "TODAS (2)",
+            "seccion": "E",
+            "cedula": "V-33918183",
+            "estudiante": "VIELMA BUITRAGO MARIA DE LOS ANGELES",
+            "observacion": "QU"
+        },
+        {
+            "grado": "5to Año",
+            "hoja": "TODAS (2)",
+            "seccion": "E",
+            "cedula": "V-34149182",
+            "estudiante": "PICON ALARCON ROXIMAR DEL VALLE",
+            "observacion": "FALTA IN MAT-QU"
+        },
+        {
+            "grado": "5to Año",
+            "hoja": "TODAS (2)",
+            "seccion": "F",
+            "cedula": "V-33380226",
+            "estudiante": "ARAQUE MONSALVE LEINER ALFONZO",
+            "observacion": "BIO-QU"
+        },
+        {
+            "grado": "5to Año",
+            "hoja": "TODAS (2)",
+            "seccion": "F",
+            "cedula": "V-33526390",
+            "estudiante": "ALARCON GUILLEN GIANFRAN DE JESUS",
+            "observacion": "QUI"
+        },
+        {
+            "grado": "5to Año",
+            "hoja": "TODAS (2)",
+            "seccion": "G",
+            "cedula": "V-32798726",
+            "estudiante": "QUINTERO MALDONADO NAZARETH DEL VALLE",
+            "observacion": "FALTA IN"
+        },
+        {
+            "grado": "5to Año",
+            "hoja": "TODAS (2)",
+            "seccion": "G",
+            "cedula": "V-32906822",
+            "estudiante": "QUIJIJE SOTO GABRIEL ALEJANDRO",
+            "observacion": "N.I."
+        },
+        {
+            "grado": "5to Año",
+            "hoja": "TODAS (2)",
+            "seccion": "G",
+            "cedula": "V-33107530",
+            "estudiante": "BRICEÑO MERCADO INGRY FABIANA",
+            "observacion": "N.I."
+        },
+        {
+            "grado": "5to Año",
+            "hoja": "TODAS (2)",
+            "seccion": "G",
+            "cedula": "V-33449465",
+            "estudiante": "DIAZ VARELA LEONEL ENRIQUE",
+            "observacion": "FALTA IN"
+        },
+        {
+            "grado": "5to Año",
+            "hoja": "TODAS (2)",
+            "seccion": "G",
+            "cedula": "V-33526420",
+            "estudiante": "UZCATEGUI CONTRERAS ESTEFANNY DAIRANA",
+            "observacion": "N.I."
+        },
+        {
+            "grado": "5to Año",
+            "hoja": "TODAS (2)",
+            "seccion": "G",
+            "cedula": "V-33918377",
+            "estudiante": "FAJARDO VERA MIYELVIS TAHINA",
+            "observacion": "N.I"
+        },
+        {
+            "grado": "5to Año",
+            "hoja": "No inscritos",
+            "seccion": "A",
+            "cedula": "V-31999182",
+            "estudiante": "GARCIA ROJAS CARLOS ADRIAN",
+            "observacion": "desertor"
+        },
+        {
+            "grado": "5to Año",
+            "hoja": "No inscritos",
+            "seccion": "A",
+            "cedula": "V-32452078",
+            "estudiante": "VILLASMIL GONZALEZ ROSBELY FABIANA",
+            "observacion": "retirada"
+        },
+        {
+            "grado": "5to Año",
+            "hoja": "No inscritos",
+            "seccion": "A",
+            "cedula": "V-32906795",
+            "estudiante": "ARAQUE ZERPA ROXILENA VALENTINA",
+            "observacion": "FI"
+        },
+        {
+            "grado": "5to Año",
+            "hoja": "No inscritos",
+            "seccion": "A",
+            "cedula": "V-32906811",
+            "estudiante": "PRIETO GARCIA WILLSIBETH DEL CARMEN",
+            "observacion": "FI"
+        },
+        {
+            "grado": "5to Año",
+            "hoja": "No inscritos",
+            "seccion": "A",
+            "cedula": "V-33343499",
+            "estudiante": "OSUNA SOTO JHONALBERTH ALBERTO",
+            "observacion": "repitiente"
+        },
+        {
+            "grado": "5to Año",
+            "hoja": "No inscritos",
+            "seccion": "A",
+            "cedula": "V-34075090",
+            "estudiante": "ROJAS MENDOZA NOEL ANTONIO",
+            "observacion": "FI"
+        },
+        {
+            "grado": "5to Año",
+            "hoja": "No inscritos",
+            "seccion": "B",
+            "cedula": "V-32906767",
+            "estudiante": "GONZALEZ RODRIGUEZ CRISTOFER JESUS",
+            "observacion": "REPITIENTE"
+        },
+        {
+            "grado": "5to Año",
+            "hoja": "No inscritos",
+            "seccion": "C",
+            "cedula": "V-32591673",
+            "estudiante": "RANGEL VARELA CRISTINA DAVIDHANA",
+            "observacion": "REP: MAT,QU,BI"
+        },
+        {
+            "grado": "5to Año",
+            "hoja": "No inscritos",
+            "seccion": "C",
+            "cedula": "V-32591673",
+            "estudiante": "RANGEL VARELA CRISTINA DAVIDHANA",
+            "observacion": "REPITIENTE"
+        },
+        {
+            "grado": "5to Año",
+            "hoja": "No inscritos",
+            "seccion": "C",
+            "cedula": "V-32906749",
+            "estudiante": "BRICEÑO HERNANDEZ YONATAN JOSUE",
+            "observacion": "FI"
+        },
+        {
+            "grado": "5to Año",
+            "hoja": "No inscritos",
+            "seccion": "C",
+            "cedula": "V-32906786",
+            "estudiante": "GUILLEN BRICEÑO JESUS ALFREDO",
+            "observacion": "FI-QU"
+        },
+        {
+            "grado": "5to Año",
+            "hoja": "No inscritos",
+            "seccion": "C",
+            "cedula": "V-33107570",
+            "estudiante": "PEÑA BALLESTEROS REYNER STEVEN",
+            "observacion": "QU"
+        },
+        {
+            "grado": "5to Año",
+            "hoja": "No inscritos",
+            "seccion": "C",
+            "cedula": "V-33197013",
+            "estudiante": "IZARRA VARELA CARLOS ERNESTO",
+            "observacion": "REPITIENTE"
+        },
+        {
+            "grado": "5to Año",
+            "hoja": "No inscritos",
+            "seccion": "C",
+            "cedula": "V-33309310",
+            "estudiante": "BRICEÑO ROJAS JESUS MANUEL",
+            "observacion": "FI"
+        },
+        {
+            "grado": "5to Año",
+            "hoja": "No inscritos",
+            "seccion": "D",
+            "cedula": "V-31895981",
+            "estudiante": "PINTO ECHEVERRIA SONIANGELY ESTEFANIA",
+            "observacion": "REPITIENTE"
+        },
+        {
+            "grado": "5to Año",
+            "hoja": "No inscritos",
+            "seccion": "D",
+            "cedula": "V-32906763",
+            "estudiante": "PEÑA GONZALEZ JAVIER ALEJANDRO",
+            "observacion": "REPITIENTE"
+        },
+        {
+            "grado": "5to Año",
+            "hoja": "No inscritos",
+            "seccion": "E",
+            "cedula": "V-32451592",
+            "estudiante": "ARAUJO MENDEZ YOHINER JOSE",
+            "observacion": "Rep: Cat, Qu, Bi"
+        },
+        {
+            "grado": "5to Año",
+            "hoja": "No inscritos",
+            "seccion": "E",
+            "cedula": "V-32451592",
+            "estudiante": "ARAUJO MENDEZ YOHINER JOSE",
+            "observacion": "REPITIENTE"
+        },
+        {
+            "grado": "5to Año",
+            "hoja": "No inscritos",
+            "seccion": "E",
+            "cedula": "V-32814062",
+            "estudiante": "MALDONADO GARCIA YORDAN JOSE",
+            "observacion": "FI"
+        },
+        {
+            "grado": "5to Año",
+            "hoja": "No inscritos",
+            "seccion": "E",
+            "cedula": "V-33194501",
+            "estudiante": "MENDOZA CORTES MARIANGEL ANDREA",
+            "observacion": "REP: CAT,MAT,FI.QU.BI.GHC"
+        },
+        {
+            "grado": "5to Año",
+            "hoja": "No inscritos",
+            "seccion": "E",
+            "cedula": "V-33194501",
+            "estudiante": "MENDOZA CORTES MARIANGEL ANDREA",
+            "observacion": "REPITIENTE"
+        },
+        {
+            "grado": "5to Año",
+            "hoja": "No inscritos",
+            "seccion": "E",
+            "cedula": "V-33608191",
+            "estudiante": "LARES GARRIDO KLEIBER DANIEL",
+            "observacion": "FI-QU"
+        },
+        {
+            "grado": "5to Año",
+            "hoja": "No inscritos",
+            "seccion": "E",
+            "cedula": "V-33918183",
+            "estudiante": "VIELMA BUITRAGO MARIA DE LOS ANGELES",
+            "observacion": "FI"
+        },
+        {
+            "grado": "5to Año",
+            "hoja": "No inscritos",
+            "seccion": "F",
+            "cedula": "V-32708853",
+            "estudiante": "RANGEL GUILLEN CESAR ENRRIQUE",
+            "observacion": "REPITIENTE"
+        },
+        {
+            "grado": "5to Año",
+            "hoja": "No inscritos",
+            "seccion": "F",
+            "cedula": "V-32709719",
+            "estudiante": "VARELA GUILLEN MAYER ALONDRA",
+            "observacion": "FI"
+        },
+        {
+            "grado": "5to Año",
+            "hoja": "No inscritos",
+            "seccion": "F",
+            "cedula": "V-32912470",
+            "estudiante": "NAVARRO RODRIGUEZ HEINER JOSE",
+            "observacion": "GHC"
+        },
+        {
+            "grado": "5to Año",
+            "hoja": "No inscritos",
+            "seccion": "F",
+            "cedula": "V-33456988",
+            "estudiante": "TORO CONTRERAS YUSMELY RAIFEL",
+            "observacion": "REPITIENTE"
+        },
+        {
+            "grado": "5to Año",
+            "hoja": "No inscritos",
+            "seccion": "G",
+            "cedula": "V-32517645",
+            "estudiante": "GUILLEN GARCIA YONATHAN ALEXANDER",
+            "observacion": "REP. TODAS"
+        },
+        {
+            "grado": "5to Año",
+            "hoja": "No inscritos",
+            "seccion": "G",
+            "cedula": "V-32517645",
+            "estudiante": "GUILLEN GARCIA YONATHAN ALEXANDER",
+            "observacion": "REPITIENTE"
+        },
+        {
+            "grado": "5to Año",
+            "hoja": "No inscritos",
+            "seccion": "G",
+            "cedula": "V-32598155",
+            "estudiante": "GUTIERREZ GUILLEN DANIEL ALEJANDRO",
+            "observacion": "REP. Cast- Ing, Mat, FI,QUI.BI.GHC"
+        },
+        {
+            "grado": "5to Año",
+            "hoja": "No inscritos",
+            "seccion": "G",
+            "cedula": "V-32598155",
+            "estudiante": "GUTIERREZ GUILLEN DANIEL ALEJANDRO",
+            "observacion": "REPITIENTE"
+        },
+        {
+            "grado": "5to Año",
+            "hoja": "No inscritos",
+            "seccion": "G",
+            "cedula": "V-33284783",
+            "estudiante": "GARCIA ROJAS CRISTOFER JESUAR",
+            "observacion": "FI-QU"
+        },
+        {
+            "grado": "5to Año",
+            "hoja": "No inscritos",
+            "seccion": "G",
+            "cedula": "V-33284783",
+            "estudiante": "GARCIA ROJAS CRISTOFER JESUAR",
+            "observacion": "REPITIENTE"
+        }
+    ]
+}

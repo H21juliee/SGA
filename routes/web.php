@@ -102,6 +102,10 @@ Route::middleware(['auth', 'password.changed'])->group(function () {
         Route::resource('enrollments', \App\Http\Controllers\Admin\EnrollmentController::class)->except(['create', 'show', 'edit']);
         Route::patch('enrollments/{enrollment}/status', [\App\Http\Controllers\Admin\EnrollmentController::class, 'updateStatus'])->name('enrollments.status');
         Route::patch('enrollments/{enrollment}/transfer', [\App\Http\Controllers\Admin\EnrollmentController::class, 'transfer'])->name('enrollments.transfer');
+        // Materias Pendientes
+        Route::post('students/{student}/subject-debts', [\App\Http\Controllers\Admin\SubjectDebtController::class, 'store'])->name('subject-debts.store');
+        Route::patch('subject-debts/{subjectDebt}', [\App\Http\Controllers\Admin\SubjectDebtController::class, 'update'])->name('subject-debts.update');
+        Route::delete('subject-debts/{subjectDebt}', [\App\Http\Controllers\Admin\SubjectDebtController::class, 'destroy'])->name('subject-debts.destroy');
         // Configuración institucional
         Route::get('settings', [SchoolSettingController::class, 'index'])->name('settings.index');
         Route::put('settings', [SchoolSettingController::class, 'update'])->name('settings.update');

@@ -64,7 +64,12 @@ class StudentController extends Controller implements \Illuminate\Routing\Contro
 
     public function show(Student $student)
     {
-        $student->load('guardian');
+        $student->load([
+            'guardian',
+            'subjectDebts.subject.gradeLevel',
+            'subjectDebts.originSchoolYear',
+        ]);
+
         $enrollments = $student->enrollments()
             ->with([
                 'schoolYear',
@@ -77,9 +82,19 @@ class StudentController extends Controller implements \Illuminate\Routing\Contro
             ->orderByDesc('school_year_id')
             ->get();
 
+        $allSubjects = \App\Models\Subject::with('gradeLevel')
+            ->orderBy('grade_level_id')
+            ->orderBy('name')
+            ->get();
+
+        $schoolYears = \App\Models\SchoolYear::orderByDesc('start_date')->get();
+
         return Inertia::render('Admin/Students/Show', [
-            'student' => $student,
-            'enrollments' => $enrollments,
+            'student'      => $student,
+            'enrollments'  => $enrollments,
+            'subjectDebts' => $student->subjectDebts,
+            'allSubjects'  => $allSubjects,
+            'schoolYears'  => $schoolYears,
         ]);
     }
 

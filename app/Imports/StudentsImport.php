@@ -2,7 +2,12 @@
 
 namespace App\Imports;
 
+use App\Enums\EnrollmentStatus;
 use App\Enums\StudentStatus;
+use App\Models\Enrollment;
+use App\Models\GradeLevel;
+use App\Models\SchoolYear;
+use App\Models\Section;
 use App\Models\Student;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Collection;
@@ -16,12 +21,6 @@ use Maatwebsite\Excel\Validators\Failure;
 
 /**
  * StudentsImport — Importación masiva de estudiantes desde Excel / CSV.
- *
- * Usa ToCollection para iterar manualmente y manejar:
- * - Filas vacías (SkipsEmptyRows)
- * - Filas de instrucciones del template (se omiten si no pasan validación)
- * - Cédulas duplicadas (omitir y registrar como error en resumen)
- * - Fechas en formato DD/MM/YYYY o YYYY-MM-DD o serial Excel
  */
 class StudentsImport implements
     ToCollection,
@@ -46,6 +45,8 @@ class StudentsImport implements
      */
     public function collection(Collection $rows): void
     {
+        $activeYear = SchoolYear::active()->first();
+
         foreach ($rows as $index => $row) {
             $cedula = $this->normalizeCedula($row['cedula_escolar'] ?? null);
 
@@ -53,29 +54,57 @@ class StudentsImport implements
             if ($cedula && Student::where('cedula', $cedula)->exists()) {
                 $this->skipped++;
                 $this->skippedRows[] = [
-                    'fila'   => $index + 2, // +2 porque la fila 1 es el encabezado
+                    'fila'   => $index + 2,
                     'valor'  => trim($row['nombres'] ?? '') . ' ' . trim($row['apellidos'] ?? ''),
                     'motivo' => "Cédula {$cedula} ya existe en el sistema.",
                 ];
                 continue;
             }
 
-            Student::create([
+            $birthDate = $this->parseBirthDate($row['fecha_nacimiento'] ?? null);
+
+            $student = Student::create([
                 'first_name' => trim($row['nombres']),
                 'last_name'  => trim($row['apellidos']),
                 'cedula'     => $cedula,
-                'birth_date' => $this->parseBirthDate($row['fecha_nacimiento']),
+                'birth_date' => $birthDate,
                 'gender'     => strtoupper(trim($row['genero'])),
                 'status'     => StudentStatus::REGULAR,
             ]);
+
+            // Asignación e inscripción opcional a Grado y Sección
+            $gradoNombre = trim((string) ($row['grado'] ?? $row['ano'] ?? ''));
+            $seccionNombre = strtoupper(trim((string) ($row['seccion'] ?? '')));
+
+            if (!empty($gradoNombre) && !empty($seccionNombre) && $activeYear) {
+                $gradeLevel = GradeLevel::where('name', $gradoNombre)
+                    ->orWhere('name', 'like', "%{$gradoNombre}%")
+                    ->first();
+
+                if ($gradeLevel) {
+                    $section = Section::firstOrCreate([
+                        'school_year_id' => $activeYear->id,
+                        'grade_level_id' => $gradeLevel->id,
+                        'name'           => $seccionNombre,
+                    ], [
+                        'capacity'       => 40,
+                    ]);
+
+                    Enrollment::firstOrCreate([
+                        'student_id'     => $student->id,
+                        'school_year_id' => $activeYear->id,
+                    ], [
+                        'section_id'     => $section->id,
+                        'status'         => EnrollmentStatus::ACTIVE,
+                        'enrolled_at'    => $activeYear->start_date ?? now(),
+                    ]);
+                }
+            }
 
             $this->created++;
         }
     }
 
-    /**
-     * Filas que fallaron la validación → se omiten y se acumulan con detalle.
-     */
     public function onFailure(Failure ...$failures): void
     {
         foreach ($failures as $failure) {
@@ -89,25 +118,22 @@ class StudentsImport implements
         }
     }
 
-    /**
-     * Devuelve el array de Failure acumulados (para mostrar en la respuesta).
-     */
     public function getFailures(): array
     {
         return $this->failures;
     }
 
-    /**
-     * Reglas de validación por columna.
-     */
     public function rules(): array
     {
         return [
             'nombres'          => ['required', 'string', 'max:255'],
             'apellidos'        => ['required', 'string', 'max:255'],
-            'cedula_escolar'   => ['nullable', 'string', 'max:20', 'regex:/^[VEPvep]-\d{6,10}$/'],
-            'fecha_nacimiento' => ['required'],
+            'cedula_escolar'   => ['nullable', 'string', 'max:20', 'regex:/^([VEPvep]-\d{6,15}|\d{6,15}|CE-\d{6,15})$/i'],
+            'fecha_nacimiento' => ['nullable'],
             'genero'           => ['required', 'string', 'in:M,F,m,f'],
+            'grado'            => ['nullable', 'string', 'max:50'],
+            'ano'              => ['nullable', 'string', 'max:50'],
+            'seccion'          => ['nullable', 'string', 'max:10'],
         ];
     }
 
@@ -116,8 +142,7 @@ class StudentsImport implements
         return [
             'nombres.required'          => 'El campo nombres es obligatorio.',
             'apellidos.required'        => 'El campo apellidos es obligatorio.',
-            'cedula_escolar.regex'      => 'La cédula debe tener el formato V-12345678 o E-12345678.',
-            'fecha_nacimiento.required' => 'El campo fecha de nacimiento es obligatorio.',
+            'cedula_escolar.regex'      => 'La cédula debe tener el formato V-12345678, E-12345678 o solo números.',
             'genero.required'           => 'El campo género es obligatorio.',
             'genero.in'                 => 'El género debe ser M (Masculino) o F (Femenino).',
         ];
@@ -131,23 +156,22 @@ class StudentsImport implements
             'cedula_escolar'   => 'Cédula Escolar',
             'fecha_nacimiento' => 'Fecha de Nacimiento',
             'genero'           => 'Género',
+            'grado'            => 'Grado / Año',
+            'ano'              => 'Grado / Año',
+            'seccion'          => 'Sección',
         ];
     }
-
-    // ── Helpers ──────────────────────────────────────────────────────────────
 
     private function normalizeCedula(mixed $raw): ?string
     {
         if (empty($raw)) return null;
-        return strtoupper(trim((string) $raw));
+        $raw = strtoupper(trim((string) $raw));
+        if (preg_match('/^\d{6,15}$/', $raw)) {
+            return 'V-' . $raw;
+        }
+        return $raw;
     }
 
-    /**
-     * Parsea fecha aceptando:
-     *   - Número serial de Excel  (ej. 40401)
-     *   - DD/MM/YYYY              (formato venezolano)
-     *   - YYYY-MM-DD              (ISO)
-     */
     private function parseBirthDate(mixed $raw): ?string
     {
         if (empty($raw)) return null;

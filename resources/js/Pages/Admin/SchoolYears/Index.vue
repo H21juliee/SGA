@@ -38,6 +38,16 @@ function openPromoteModal(year) {
     showPromoteModal.value = true
 }
 
+function formatDate(dateStr) {
+    if (!dateStr) return '—'
+    const dateOnly = dateStr.split('T')[0]
+    const parts = dateOnly.split('-')
+    if (parts.length === 3) {
+        return `${parts[2]}/${parts[1]}/${parts[0]}`
+    }
+    return dateStr
+}
+
 function openEditModal(year) {
     editingYear.value = year
     form.name = year.name
@@ -154,7 +164,7 @@ function toggleLapse(lapse) {
                             <div class="flex items-center gap-2 mt-2">
                                 <i class="far fa-calendar-alt text-slate-300 text-xs"></i>
                                 <span class="text-[11px] font-bold text-slate-400 uppercase tracking-wider">
-                                    {{ new Date(year.start_date).toLocaleDateString() }} — {{ new Date(year.end_date).toLocaleDateString() }}
+                                    {{ formatDate(year.start_date) }} — {{ formatDate(year.end_date) }}
                                 </span>
                             </div>
                         </div>

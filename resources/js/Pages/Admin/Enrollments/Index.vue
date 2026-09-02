@@ -50,6 +50,16 @@ function openTransferModal(enrollment) {
     showTransferModal.value = true
 }
 
+function formatDate(dateStr) {
+    if (!dateStr) return '—'
+    const dateOnly = dateStr.split('T')[0]
+    const parts = dateOnly.split('-')
+    if (parts.length === 3) {
+        return `${parts[2]}/${parts[1]}/${parts[0]}`
+    }
+    return dateStr
+}
+
 function updateStatus() {
     statusForm.patch(`/admin/enrollments/${targetEnrollment.value.id}/status`, {
         preserveScroll: true,
@@ -339,7 +349,7 @@ function destroy(id) {
                                     <h3 class="text-sm font-black text-slate-800 truncate">{{ enrollment.student?.last_name }}, {{ enrollment.student?.first_name }}</h3>
                                     <p class="text-xs font-bold text-slate-500 mt-0.5 flex items-center gap-3">
                                         <span class="flex items-center gap-1.5"><i class="fas fa-id-card opacity-50"></i> {{ enrollment.student?.cedula || 'Sin cédula' }}</span>
-                                        <span class="hidden sm:flex items-center gap-1.5"><i class="far fa-calendar-alt opacity-50"></i> {{ new Date(enrollment.enrolled_at).toLocaleDateString() }}</span>
+                                        <span class="hidden sm:flex items-center gap-1.5"><i class="far fa-calendar-alt opacity-50"></i> {{ formatDate(enrollment.enrolled_at) }}</span>
                                     </p>
                                 </div>
                             </div>
