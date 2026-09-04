@@ -8,7 +8,9 @@ use App\Models\Attendance;
 use App\Models\Enrollment;
 use App\Models\Grade;
 use App\Models\SchoolYear;
+use App\Models\Section;
 use App\Models\Student;
+use App\Models\Subject;
 use App\Models\SubjectDebt;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
@@ -52,10 +54,14 @@ class DashboardController extends Controller
             $stats['total_enrollments'] = $activeYear ? Enrollment::forSchoolYear($activeYear->id)->active()->count() : 0;
 
             if ($activeYear) {
-                $totalExpectedGradesPerLapse = AcademicLoad::whereHas('section', fn($q) => $q->where('school_year_id', $activeYear->id))
-                    ->join('enrollments', 'enrollments.section_id', '=', 'academic_loads.section_id')
-                    ->where('enrollments.status', 'activo')
-                    ->count();
+                // Cálculo de notas esperadas por lapso: suma de (alumnos inscritos activos en cada sección * materias de ese grado)
+                $totalExpectedGradesPerLapse = 0;
+                $sections = Section::where('school_year_id', $activeYear->id)->get();
+                foreach ($sections as $section) {
+                    $enrolledCount = Enrollment::where('section_id', $section->id)->active()->count();
+                    $subjectsCount = Subject::where('grade_level_id', $section->grade_level_id)->count();
+                    $totalExpectedGradesPerLapse += ($enrolledCount * $subjectsCount);
+                }
 
                 $lapses = $activeYear->lapses()->orderBy('id')->get();
                 foreach ($lapses as $lapse) {
@@ -117,7 +123,7 @@ class DashboardController extends Controller
 
                 foreach ($loads as $load) {
                     $enrollmentIds = Enrollment::where('section_id', $load->section_id)
-                        ->where('status', 'activo')
+                        ->active()
                         ->pluck('id');
                     $studentsCount = $enrollmentIds->count();
 
