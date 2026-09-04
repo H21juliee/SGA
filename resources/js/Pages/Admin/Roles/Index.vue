@@ -4,6 +4,7 @@ import { router } from '@inertiajs/vue3'
 import AppLayout from '@/Components/Layout/AppLayout.vue'
 import Modal from '@/Components/UI/Modal.vue'
 import axios from 'axios'
+import Swal from 'sweetalert2'
 
 const props = defineProps({
     roles: Array,
@@ -61,8 +62,26 @@ function submit() {
 
 function deleteRole(role) {
     if (role.is_system) return
-    if (!confirm(`¿Eliminar el rol "${role.name}"? Esta acción no puede deshacerse.`)) return
-    router.delete(`/admin/roles/${role.id}`)
+    Swal.fire({
+        title: '¿Confirmar Eliminación?',
+        text: `¿Seguro que desea eliminar el rol "${role.name}"? Esta acción no puede deshacerse.`,
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonText: 'Sí, eliminar',
+        cancelButtonText: 'Cancelar',
+        buttonsStyling: false,
+        customClass: {
+            popup: 'rounded-3xl border-2 border-slate-100 shadow-2xl',
+            title: 'text-2xl font-black text-slate-800',
+            htmlContainer: 'text-slate-500 font-medium',
+            confirmButton: 'px-6 py-3 bg-red-500 text-white text-[11px] font-black uppercase tracking-widest rounded-2xl shadow-lg shadow-red-500/20 hover:bg-red-400 transition-all mx-2',
+            cancelButton: 'px-6 py-3 bg-slate-500 text-white text-[11px] font-black uppercase tracking-widest rounded-2xl shadow-lg shadow-slate-500/20 hover:bg-slate-400 transition-all mx-2'
+        }
+    }).then((result) => {
+        if (result.isConfirmed) {
+            router.delete(`/admin/roles/${role.id}`)
+        }
+    })
 }
 
 // ── Permission toggles ───────────────────────────────

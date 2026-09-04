@@ -314,7 +314,7 @@ function toggleNote(rowId) {
             </div>
 
             <!-- Attendance List -->
-            <div class="bg-white rounded-3xl shadow-xl border-2 border-slate-100 overflow-hidden animate-fade-in-up" style="animation-delay: 200ms">
+            <div class="bg-white rounded-3xl shadow-xl border-2 border-slate-100 animate-fade-in-up" style="animation-delay: 200ms">
                 <div v-if="filteredRows.length === 0" class="p-10 text-center text-slate-400 font-bold">
                     <i class="fas fa-search text-3xl mb-3 opacity-20"></i>
                     <p>No se encontraron estudiantes.</p>
@@ -325,8 +325,12 @@ function toggleNote(rowId) {
                         v-for="(row, idx) in filteredRows" 
                         :key="row.enrollment_id"
                         class="p-4 sm:p-5 hover:bg-slate-50/50 transition-colors flex flex-col sm:flex-row sm:items-center justify-between gap-4"
-                        :class="{'opacity-75 grayscale': isLocked}"
-                        :style="activeNoteId === row.enrollment_id ? 'position: relative; z-index: 50;' : 'position: relative; z-index: 0;'"
+                        :class="[
+                            {'opacity-75 grayscale': isLocked},
+                            idx === 0 ? 'rounded-t-3xl' : '',
+                            idx === filteredRows.length - 1 ? 'rounded-b-3xl' : ''
+                        ]"
+                        :style="activeNoteId === row.enrollment_id ? 'position: relative; z-index: 50;' : 'position: relative; z-index: 1;'"
                     >
                         <!-- Info Estudiante -->
                         <div class="flex items-center gap-4">
@@ -387,7 +391,7 @@ function toggleNote(rowId) {
                             <!-- Botón Observaciones -->
                             <div class="relative">
                                 <button 
-                                    @click="toggleNote(row.enrollment_id)"
+                                    @click.stop="toggleNote(row.enrollment_id)"
                                     class="w-10 h-10 sm:w-12 sm:h-12 rounded-2xl flex items-center justify-center text-sm transition-all"
                                     :class="row.notes ? 'bg-primary-100 text-primary-600 font-black' : 'bg-transparent text-slate-300 hover:bg-slate-100 hover:text-slate-500'"
                                     title="Observaciones"
@@ -395,27 +399,47 @@ function toggleNote(rowId) {
                                     <i class="fas fa-comment-dots" :class="{'animate-pulse': row.saving}"></i>
                                 </button>
                                 
+                                <!-- Backdrop invisible para cerrar al hacer clic afuera -->
+                                <div 
+                                    v-if="activeNoteId === row.enrollment_id" 
+                                    @click.stop="activeNoteId = null" 
+                                    class="fixed inset-0 z-40 cursor-default"
+                                ></div>
+
                                 <!-- Caja de Texto Flotante para Notas -->
                                 <div 
                                     v-if="activeNoteId === row.enrollment_id"
-                                    class="absolute right-0 top-full mt-2 w-64 bg-white border-2 border-slate-100 p-3 rounded-2xl shadow-xl z-50"
+                                    @click.stop
+                                    class="absolute right-0 w-72 bg-white border-2 border-slate-100 p-3.5 rounded-2xl shadow-2xl z-50 animate-fade-in-up"
+                                    :class="idx >= Math.max(1, filteredRows.length - 2) ? 'bottom-full mb-3' : 'top-full mt-3'"
                                 >
                                     <div class="flex items-center justify-between mb-2">
-                                        <span class="text-[10px] font-black uppercase text-slate-400 tracking-widest">Observación</span>
-                                        <button @click="activeNoteId = null" class="text-slate-300 hover:text-slate-500"><i class="fas fa-times text-xs"></i></button>
+                                        <span class="text-[10px] font-black uppercase text-slate-400 tracking-widest flex items-center gap-1.5">
+                                            <i class="fas fa-comment-alt text-primary-500"></i> Observación
+                                        </span>
+                                        <button @click="activeNoteId = null" class="text-slate-300 hover:text-slate-500 transition-colors p-1">
+                                            <i class="fas fa-times text-xs"></i>
+                                        </button>
                                     </div>
                                     <textarea 
                                         v-model="row.notes"
                                         :disabled="isLocked || !$can('attendance.manage')"
-                                        class="w-full bg-slate-50 border-2 border-slate-100 rounded-xl px-3 py-2 text-xs text-slate-700 focus:border-primary-400 focus:ring-0 outline-none resize-none disabled:bg-slate-100 disabled:text-slate-400"
-                                        rows="2"
+                                        class="w-full bg-slate-50 border-2 border-slate-100 rounded-xl px-3 py-2 text-xs text-slate-700 focus:border-primary-400 focus:bg-white focus:ring-0 outline-none resize-none disabled:bg-slate-100 disabled:text-slate-400 font-medium transition-all"
+                                        rows="3"
                                         placeholder="Escribe el motivo..."
                                     ></textarea>
-                                    <div class="mt-2 flex justify-end">
+                                    <div class="mt-2.5 flex items-center justify-between">
+                                        <button 
+                                            @click="activeNoteId = null"
+                                            type="button"
+                                            class="px-3 py-1.5 text-slate-400 hover:text-slate-600 text-[10px] font-bold uppercase tracking-wider transition-colors"
+                                        >
+                                            Cerrar
+                                        </button>
                                         <button 
                                             v-if="!isLocked"
                                             @click="saveNote(row)" 
-                                            class="px-4 py-1.5 bg-primary-600 text-white text-[10px] font-black uppercase tracking-widest rounded-lg hover:bg-primary-500 transition-all shadow-sm"
+                                            class="px-4 py-1.5 bg-primary-600 text-white text-[10px] font-black uppercase tracking-widest rounded-xl hover:bg-primary-500 transition-all shadow-md shadow-primary-600/20 active:scale-95"
                                         >
                                             Guardar
                                         </button>

@@ -2,6 +2,7 @@
 import { ref, computed } from 'vue'
 import { Link, useForm, router } from '@inertiajs/vue3'
 import axios from 'axios'
+import Swal from 'sweetalert2'
 import AppLayout from '@/Components/Layout/AppLayout.vue'
 import Modal from '@/Components/UI/Modal.vue'
 
@@ -246,9 +247,27 @@ function toggleDebtStatus(debt) {
 }
 
 function deleteDebt(debt) {
-    if (!confirm(`¿Estás seguro de eliminar el registro de materia pendiente '${debt.subject?.name}'?`)) return
-    router.delete(`/admin/subject-debts/${debt.id}`, {
-        preserveScroll: true,
+    Swal.fire({
+        title: '¿Confirmar Eliminación?',
+        text: `¿Estás seguro de eliminar el registro de materia pendiente '${debt.subject?.name}'?`,
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonText: 'Sí, eliminar',
+        cancelButtonText: 'Cancelar',
+        buttonsStyling: false,
+        customClass: {
+            popup: 'rounded-3xl border-2 border-slate-100 shadow-2xl',
+            title: 'text-2xl font-black text-slate-800',
+            htmlContainer: 'text-slate-500 font-medium',
+            confirmButton: 'px-6 py-3 bg-red-500 text-white text-[11px] font-black uppercase tracking-widest rounded-2xl shadow-lg shadow-red-500/20 hover:bg-red-400 transition-all mx-2',
+            cancelButton: 'px-6 py-3 bg-slate-500 text-white text-[11px] font-black uppercase tracking-widest rounded-2xl shadow-lg shadow-slate-500/20 hover:bg-slate-400 transition-all mx-2'
+        }
+    }).then((result) => {
+        if (result.isConfirmed) {
+            router.delete(`/admin/subject-debts/${debt.id}`, {
+                preserveScroll: true,
+            })
+        }
     })
 }
 
