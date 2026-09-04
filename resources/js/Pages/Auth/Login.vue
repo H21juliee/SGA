@@ -144,19 +144,10 @@ function submit() {
             </div>
 
             <!-- Footer -->
-            <div class="text-center mt-10 space-y-4">
+            <div class="text-center mt-10">
                 <p class="text-slate-400 font-bold text-[10px] uppercase tracking-[0.2em]">
                     SGA © 2026 — Plataforma Educativa de Alto Rendimiento
                 </p>
-                <div class="flex items-center justify-center gap-6">
-                    <span class="w-8 h-[1px] bg-slate-200"></span>
-                    <div class="flex gap-4">
-                        <i class="fab fa-facebook text-slate-300 hover:text-primary-500 cursor-pointer transition-colors"></i>
-                        <i class="fab fa-twitter text-slate-300 hover:text-primary-500 cursor-pointer transition-colors"></i>
-                        <i class="fab fa-instagram text-slate-300 hover:text-primary-500 cursor-pointer transition-colors"></i>
-                    </div>
-                    <span class="w-8 h-[1px] bg-slate-200"></span>
-                </div>
             </div>
         </div>
     </div>

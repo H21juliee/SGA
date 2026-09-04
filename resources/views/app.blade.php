@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="description" content="Sistema de Gestión Escolar - Gestión académica integral">
 
-    <title inertia>{{ config('app.name', 'SGE') }}</title>
+    <title inertia>{{ config('app.name', 'SGA') }}</title>
 
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>

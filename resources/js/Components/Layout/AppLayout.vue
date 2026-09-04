@@ -59,7 +59,7 @@
                                     <i :class="getIcon(item.icon)" class="w-6 text-center"></i>
                                     <span>{{ item.name }}</span>
                                 </div>
-                                <i class="fas fa-chevron-down text-xs transition-transform duration-300" :class="openMenu === name ? 'rotate-180' : ''"></i>
+                                <i class="fas fa-chevron-down text-xs transition-transform duration-300" :class="openMenu === item.name ? 'rotate-180' : ''"></i>
                             </button>
                             
                             <div v-show="openMenu === item.name" class="ml-9 space-y-1 border-l-2 border-primary-100 pl-4 py-1 animate-slide-in">
@@ -119,9 +119,11 @@
                     </div>
                     
                     <div class="flex items-center gap-3">
+                        <!-- Botón de notificaciones (deshabilitado temporalmente)
                         <button class="w-10 h-10 rounded-xl bg-white text-slate-400 flex items-center justify-center shadow-sm border border-slate-100 hover:border-primary-300 hover:text-primary-500 transition-all">
                             <i class="fas fa-bell"></i>
                         </button>
+                        -->
                         <div class="h-8 w-[1px] bg-slate-200 mx-1 hidden sm:block"></div>
                         <div class="hidden sm:flex items-center gap-2 px-3 py-1.5 rounded-xl bg-slate-50 border border-slate-100">
                             <div class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></div>
