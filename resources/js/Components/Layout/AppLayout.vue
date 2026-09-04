@@ -166,6 +166,7 @@
 <script setup>
 import { computed, ref } from 'vue'
 import { usePage, router, Link } from '@inertiajs/vue3'
+import Swal from 'sweetalert2'
 
 const page = usePage()
 const user = computed(() => page.props.auth?.user)
@@ -262,7 +263,26 @@ function getIcon(name) {
 }
 
 function logout() {
-    router.post('/logout')
+    Swal.fire({
+        title: '¿Cerrar Sesión?',
+        text: '¿Está seguro de que desea salir del sistema?',
+        icon: 'question',
+        showCancelButton: true,
+        confirmButtonText: 'Sí, salir',
+        cancelButtonText: 'Cancelar',
+        buttonsStyling: false,
+        customClass: {
+            popup: 'rounded-3xl border-2 border-slate-100 shadow-2xl p-6',
+            title: 'text-2xl font-black text-slate-800',
+            htmlContainer: 'text-slate-500 font-medium text-sm mt-2',
+            confirmButton: 'px-6 py-3 bg-red-500 text-white text-[11px] font-black uppercase tracking-widest rounded-2xl shadow-lg shadow-red-500/20 hover:bg-red-400 transition-all mx-2 cursor-pointer',
+            cancelButton: 'px-6 py-3 bg-slate-100 text-slate-600 text-[11px] font-black uppercase tracking-widest rounded-2xl hover:bg-slate-200 transition-all mx-2 cursor-pointer'
+        }
+    }).then((result) => {
+        if (result.isConfirmed) {
+            router.post('/logout')
+        }
+    })
 }
 
 const flash = computed(() => page.props.flash ?? {})
