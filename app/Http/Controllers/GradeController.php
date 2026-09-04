@@ -73,40 +73,37 @@ class GradeController extends Controller
             $gradesMap[$g->subject_id . '_' . $g->section_id . '_' . $g->lapse_id] = $g->total;
         }
 
-        $openLapse = $selectedYear->lapses->firstWhere('is_open', true) ?? $selectedYear->lapses->first();
+        $openLapse = $selectedYear->lapses->firstWhere('is_open', true);
 
-        $enrichedLoads = $loads->map(function ($load) use ($enrollmentCounts, $gradesMap, $selectedYear, $openLapse) {
+        $enrichedLoads = $loads->map(function ($load) use ($enrollmentCounts, $gradesMap, $selectedYear) {
             $studentsCount = $enrollmentCounts[$load->section_id] ?? 0;
+            $lapsesCount = $selectedYear->lapses->count();
             
             $lapsesProgress = [];
+            $totalAnnualLoaded = 0;
             foreach ($selectedYear->lapses as $lapse) {
                 $loaded = $gradesMap[$load->subject_id . '_' . $load->section_id . '_' . $lapse->id] ?? 0;
                 $pct = $studentsCount > 0 ? round(($loaded / $studentsCount) * 100, 1) : 0;
                 $lapsesProgress[$lapse->id] = [
+                    'id'         => $lapse->id,
+                    'name'       => $lapse->name,
+                    'is_open'    => (bool) $lapse->is_open,
                     'loaded'     => $loaded,
                     'expected'   => $studentsCount,
                     'percentage' => $pct,
                 ];
+                $totalAnnualLoaded += $loaded;
             }
             
-            $activeLoaded = $openLapse ? ($lapsesProgress[$openLapse->id]['loaded'] ?? 0) : 0;
-            $activePct = $openLapse ? ($lapsesProgress[$openLapse->id]['percentage'] ?? 0) : 0;
-            
-            $status = 'empty';
-            if ($studentsCount === 0) {
-                $status = 'empty';
-            } elseif ($activeLoaded >= $studentsCount && $studentsCount > 0) {
-                $status = 'complete';
-            } elseif ($activeLoaded > 0) {
-                $status = 'partial';
-            }
+            $totalAnnualExpected = $studentsCount * max(1, $lapsesCount);
+            $totalAnnualPct = $totalAnnualExpected > 0 ? round(($totalAnnualLoaded / $totalAnnualExpected) * 100, 1) : 0;
 
             $arr = $load->toArray();
-            $arr['students_count'] = $studentsCount;
-            $arr['lapses_progress'] = $lapsesProgress;
-            $arr['active_lapse_loaded'] = $activeLoaded;
-            $arr['active_lapse_percentage'] = $activePct;
-            $arr['status'] = $status;
+            $arr['students_count']          = $studentsCount;
+            $arr['lapses_progress']         = $lapsesProgress;
+            $arr['total_annual_loaded']     = $totalAnnualLoaded;
+            $arr['total_annual_expected']   = $totalAnnualExpected;
+            $arr['total_annual_percentage'] = $totalAnnualPct;
             return $arr;
         });
 

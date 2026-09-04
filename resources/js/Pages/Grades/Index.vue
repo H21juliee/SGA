@@ -1,5 +1,5 @@
 <script setup>
-import { ref, computed } from 'vue'
+import { ref, computed, watch } from 'vue'
 import AppLayout from '@/Components/Layout/AppLayout.vue'
 import { Link, router, usePage } from '@inertiajs/vue3'
 
@@ -18,7 +18,16 @@ const props = defineProps({
 const selectedYearId = ref(props.activeYear?.id)
 const gradeLevelId = ref('')
 const sectionName = ref('')
-const statusFilter = ref('') // '', 'pending', 'complete', 'empty'
+const statusFilter = ref('') // '', 'pending', 'complete', 'partial', 'empty'
+
+// Default to active lapse if exists, otherwise to 'annual'
+const lapseView = ref(props.openLapseId ? `lapse_${props.openLapseId}` : 'annual')
+
+watch(() => props.openLapseId, (newOpenId) => {
+    if (newOpenId && lapseView.value === 'annual') {
+        lapseView.value = `lapse_${newOpenId}`
+    }
+})
 
 const gradeLevels = computed(() => {
     const uniqueLevels = []
@@ -48,15 +57,67 @@ const sections = computed(() => {
     return Array.from(uniqueNames).sort()
 })
 
+function getLoadMetrics(load) {
+    if (lapseView.value === 'annual') {
+        const loaded = load.total_annual_loaded ?? 0
+        const expected = load.total_annual_expected ?? 0
+        const percentage = load.total_annual_percentage ?? 0
+        let status = 'empty'
+        if (expected === 0) status = 'empty'
+        else if (loaded >= expected) status = 'complete'
+        else if (loaded > 0) status = 'partial'
+        
+        return {
+            label: 'Avance Anual Consolidado',
+            badge: props.openLapseId ? null : 'Período Cerrado',
+            isOpen: false,
+            isAnnual: true,
+            loaded,
+            expected,
+            percentage,
+            status,
+        }
+    } else {
+        const lapseId = parseInt(lapseView.value.replace('lapse_', ''))
+        const lapseData = load.lapses_progress?.[lapseId]
+        const lapseMeta = props.lapses.find(l => l.id === lapseId)
+        const loaded = lapseData?.loaded ?? 0
+        const expected = lapseData?.expected ?? 0
+        const percentage = lapseData?.percentage ?? 0
+        let status = 'empty'
+        if (expected === 0) status = 'empty'
+        else if (loaded >= expected) status = 'complete'
+        else if (loaded > 0) status = 'partial'
+
+        return {
+            label: `Avance ${lapseMeta?.name ?? 'Lapso'}`,
+            badge: lapseMeta?.is_open ? 'Abierto' : 'Cerrado',
+            isOpen: lapseMeta?.is_open ?? false,
+            isAnnual: false,
+            loaded,
+            expected,
+            percentage,
+            status,
+        }
+    }
+}
+
+const enrichedProcessedLoads = computed(() => {
+    return props.loads.map(load => ({
+        ...load,
+        metrics: getLoadMetrics(load),
+    }))
+})
+
 const statsSummary = computed(() => {
-    const total = props.loads.length
+    const total = enrichedProcessedLoads.value.length
     let complete = 0
     let partial = 0
     let empty = 0
 
-    props.loads.forEach(l => {
-        if (l.status === 'complete') complete++
-        else if (l.status === 'partial') partial++
+    enrichedProcessedLoads.value.forEach(l => {
+        if (l.metrics.status === 'complete') complete++
+        else if (l.metrics.status === 'partial') partial++
         else empty++
     })
 
@@ -64,7 +125,7 @@ const statsSummary = computed(() => {
 })
 
 const filteredLoads = computed(() => {
-    let result = props.loads
+    let result = enrichedProcessedLoads.value
     
     if (gradeLevelId.value) {
         result = result.filter(load => load.section?.grade_level?.id == gradeLevelId.value)
@@ -75,13 +136,13 @@ const filteredLoads = computed(() => {
     }
 
     if (statusFilter.value === 'pending') {
-        result = result.filter(load => load.status !== 'complete')
+        result = result.filter(load => load.metrics.status !== 'complete')
     } else if (statusFilter.value === 'complete') {
-        result = result.filter(load => load.status === 'complete')
+        result = result.filter(load => load.metrics.status === 'complete')
     } else if (statusFilter.value === 'empty') {
-        result = result.filter(load => load.status === 'empty')
+        result = result.filter(load => load.metrics.status === 'empty')
     } else if (statusFilter.value === 'partial') {
-        result = result.filter(load => load.status === 'partial')
+        result = result.filter(load => load.metrics.status === 'partial')
     }
     
     return result
@@ -94,41 +155,70 @@ function changeYear() {
 
 <template>
     <AppLayout title="Gestión de Notas">
-        <div class="space-y-8 max-w-7xl mx-auto pb-10">
+        <div class="space-y-6 max-w-7xl mx-auto pb-10">
             <!-- Header Section -->
-            <div class="flex flex-col lg:flex-row lg:items-end justify-between gap-6 animate-fade-in-up">
+            <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 animate-fade-in-up">
                 <div>
                     <h1 class="text-3xl font-extrabold text-slate-800 tracking-tight">
                         Gestión de <span class="gradient-text">Notas</span>
                     </h1>
-                    <p class="text-slate-400 font-medium mt-2">Supervisión y registro de calificaciones por asignatura</p>
+                    <p class="text-slate-400 font-medium mt-1">Supervisión y registro de calificaciones por asignatura</p>
                 </div>
 
-                <div class="flex flex-wrap items-end gap-3">
-                    <!-- Año Escolar Selector -->
-                    <div class="flex flex-col gap-1.5 min-w-[180px]">
+                <div v-if="activeYear" class="flex items-center gap-2 self-start sm:self-auto px-3.5 py-1.5 rounded-xl bg-white shadow-sm border border-slate-100">
+                    <span class="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-pulse"></span>
+                    <span class="text-xs font-bold text-slate-600">{{ activeYear.name }}</span>
+                </div>
+            </div>
+
+            <!-- Filters Bar (Compact Dedicated Card) -->
+            <div class="glass-card rounded-2xl p-4 sm:p-5 shadow-lg border border-white/60 animate-fade-in-up" style="animation-delay: 50ms">
+                <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3.5">
+                    <!-- 1. Año Escolar Selector -->
+                    <div class="flex flex-col gap-1">
                         <label class="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Año Escolar</label>
                         <div class="relative">
                             <select 
                                 v-model="selectedYearId" 
                                 @change="changeYear"
-                                class="w-full bg-white border-2 border-slate-100 rounded-2xl px-4 py-2.5 text-slate-700 text-xs font-bold focus:border-primary-400 focus:ring-0 outline-none transition-all appearance-none cursor-pointer shadow-sm"
+                                class="w-full bg-white border border-slate-200 rounded-xl px-3.5 py-2.5 text-slate-700 text-xs font-bold focus:border-primary-400 focus:ring-0 outline-none transition-all appearance-none cursor-pointer shadow-sm"
                             >
                                 <option v-for="year in schoolYears" :key="year.id" :value="year.id">
-                                    {{ year.name }} {{ year.is_active ? '— (Año Actual)' : '' }}
+                                    {{ year.name }} {{ year.is_active ? '— (Actual)' : '' }}
                                 </option>
                             </select>
                             <i class="fas fa-chevron-down absolute right-3.5 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none text-xs"></i>
                         </div>
                     </div>
 
-                    <!-- Año (Nivel) Selector -->
-                    <div v-if="activeYear && loads.length > 0" class="flex flex-col gap-1.5 min-w-[150px]">
+                    <!-- 2. Auditar Lapso -->
+                    <div class="flex flex-col gap-1">
+                        <label class="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Auditar Lapso</label>
+                        <div class="relative">
+                            <select 
+                                v-model="lapseView" 
+                                class="w-full bg-white border border-slate-200 rounded-xl px-3.5 py-2.5 text-slate-700 text-xs font-bold focus:border-primary-400 focus:ring-0 outline-none transition-all appearance-none cursor-pointer shadow-sm"
+                            >
+                                <option value="annual">📊 Consolidado Anual</option>
+                                <option 
+                                    v-for="lapse in lapses" 
+                                    :key="lapse.id" 
+                                    :value="`lapse_${lapse.id}`"
+                                >
+                                    {{ lapse.is_open ? '🟢' : '⚪' }} {{ lapse.name }} {{ lapse.is_open ? '(Abierto)' : '(Cerrado)' }}
+                                </option>
+                            </select>
+                            <i class="fas fa-calendar-check absolute right-3.5 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none text-xs"></i>
+                        </div>
+                    </div>
+
+                    <!-- 3. Año / Grado -->
+                    <div class="flex flex-col gap-1">
                         <label class="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Año / Grado</label>
                         <div class="relative">
                             <select 
                                 v-model="gradeLevelId" 
-                                class="w-full bg-white border-2 border-slate-100 rounded-2xl px-4 py-2.5 text-slate-700 text-xs font-bold focus:border-primary-400 focus:ring-0 outline-none transition-all appearance-none cursor-pointer shadow-sm"
+                                class="w-full bg-white border border-slate-200 rounded-xl px-3.5 py-2.5 text-slate-700 text-xs font-bold focus:border-primary-400 focus:ring-0 outline-none transition-all appearance-none cursor-pointer shadow-sm"
                             >
                                 <option value="">Todos los Años</option>
                                 <option v-for="lvl in gradeLevels" :key="lvl.id" :value="lvl.id">{{ lvl.name }}</option>
@@ -137,28 +227,28 @@ function changeYear() {
                         </div>
                     </div>
 
-                    <!-- Sección Selector -->
-                    <div v-if="activeYear && loads.length > 0" class="flex flex-col gap-1.5 min-w-[120px]">
+                    <!-- 4. Sección -->
+                    <div class="flex flex-col gap-1">
                         <label class="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Sección</label>
                         <div class="relative">
                             <select 
                                 v-model="sectionName" 
-                                class="w-full bg-white border-2 border-slate-100 rounded-2xl px-4 py-2.5 text-slate-700 text-xs font-bold focus:border-primary-400 focus:ring-0 outline-none transition-all appearance-none cursor-pointer shadow-sm"
+                                class="w-full bg-white border border-slate-200 rounded-xl px-3.5 py-2.5 text-slate-700 text-xs font-bold focus:border-primary-400 focus:ring-0 outline-none transition-all appearance-none cursor-pointer shadow-sm"
                             >
-                                <option value="">Todas</option>
+                                <option value="">Todas las Secciones</option>
                                 <option v-for="sec in sections" :key="sec" :value="sec">Sección {{ sec }}</option>
                             </select>
                             <i class="fas fa-chevron-down absolute right-3.5 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none text-xs"></i>
                         </div>
                     </div>
 
-                    <!-- Filtro por Estado de Carga -->
-                    <div v-if="activeYear && loads.length > 0" class="flex flex-col gap-1.5 min-w-[170px]">
+                    <!-- 5. Estado de Carga -->
+                    <div class="flex flex-col gap-1">
                         <label class="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Estado de Carga</label>
                         <div class="relative">
                             <select 
                                 v-model="statusFilter" 
-                                class="w-full bg-white border-2 border-slate-100 rounded-2xl px-4 py-2.5 text-slate-700 text-xs font-bold focus:border-primary-400 focus:ring-0 outline-none transition-all appearance-none cursor-pointer shadow-sm"
+                                class="w-full bg-white border border-slate-200 rounded-xl px-3.5 py-2.5 text-slate-700 text-xs font-bold focus:border-primary-400 focus:ring-0 outline-none transition-all appearance-none cursor-pointer shadow-sm"
                             >
                                 <option value="">Todos los Estados</option>
                                 <option value="pending">⚠️ Incompletas / Pendientes</option>
@@ -256,9 +346,9 @@ function changeYear() {
                     <!-- Top accent line -->
                     <div 
                         class="absolute top-0 left-0 right-0 h-1.5 bg-gradient-to-r"
-                        :class="load.status === 'complete' 
+                        :class="load.metrics.status === 'complete' 
                             ? 'from-emerald-500 to-teal-400' 
-                            : (load.status === 'partial' ? 'from-amber-400 to-orange-400' : 'from-slate-200 to-slate-300')"
+                            : (load.metrics.status === 'partial' ? 'from-amber-400 to-orange-400' : 'from-slate-200 to-slate-300')"
                     ></div>
 
                     <div>
@@ -289,26 +379,37 @@ function changeYear() {
                             <span class="truncate">{{ load.teacher.name }}</span>
                         </div>
 
-                        <!-- Active Lapse Progress Bar -->
+                        <!-- Active/Selected Lapse Progress Bar -->
                         <div class="my-4 p-3.5 rounded-2xl bg-slate-50/80 border border-slate-100">
                             <div class="flex items-center justify-between text-xs font-bold mb-1.5">
-                                <span class="text-slate-500 text-[11px]">Avance Lapso Activo:</span>
+                                <div class="flex items-center gap-1.5">
+                                    <span class="text-slate-600 text-[11px]">{{ load.metrics.label }}:</span>
+                                    <span 
+                                        v-if="load.metrics.badge" 
+                                        class="text-[9px] font-black uppercase px-1.5 py-0.5 rounded tracking-tighter"
+                                        :class="load.metrics.isOpen 
+                                            ? 'bg-emerald-100 text-emerald-700' 
+                                            : 'bg-slate-200 text-slate-600'"
+                                    >
+                                        {{ load.metrics.badge }}
+                                    </span>
+                                </div>
                                 <span 
                                     class="font-black text-[11px]"
-                                    :class="load.status === 'complete' 
+                                    :class="load.metrics.status === 'complete' 
                                         ? 'text-emerald-600' 
-                                        : (load.status === 'partial' ? 'text-amber-600' : 'text-slate-400')"
+                                        : (load.metrics.status === 'partial' ? 'text-amber-600' : 'text-slate-400')"
                                 >
-                                    {{ load.active_lapse_loaded }} / {{ load.students_count }} ({{ load.active_lapse_percentage }}%)
+                                    {{ load.metrics.loaded }} / {{ load.metrics.expected }} ({{ load.metrics.percentage }}%)
                                 </span>
                             </div>
                             <div class="w-full bg-slate-200 rounded-full h-2.5 overflow-hidden">
                                 <div
                                     class="h-full rounded-full transition-all duration-500"
-                                    :class="load.status === 'complete' 
+                                    :class="load.metrics.status === 'complete' 
                                         ? 'bg-emerald-500' 
-                                        : (load.status === 'partial' ? 'bg-amber-500' : 'bg-slate-300')"
-                                    :style="{ width: `${Math.min(load.active_lapse_percentage, 100)}%` }"
+                                        : (load.metrics.status === 'partial' ? 'bg-amber-500' : 'bg-slate-300')"
+                                    :style="{ width: `${Math.min(load.metrics.percentage, 100)}%` }"
                                 ></div>
                             </div>
                         </div>
@@ -316,7 +417,7 @@ function changeYear() {
 
                     <!-- Lapses Selection Buttons -->
                     <div class="space-y-2 mt-2 pt-3 border-t border-slate-100">
-                        <p class="text-[9px] font-black text-slate-400 uppercase tracking-[0.2em]">Seleccionar Lapso</p>
+                        <p class="text-[9px] font-black text-slate-400 uppercase tracking-[0.2em]">Seleccionar Lapso para Calificar</p>
                         <div class="grid grid-cols-3 gap-2">
                             <Link
                                 v-for="lapse in lapses"
@@ -330,7 +431,12 @@ function changeYear() {
                                 <span class="text-[11px] font-black uppercase tracking-tight truncate w-full text-center">{{ lapse.name }}</span>
                                 
                                 <div class="mt-1 flex items-center gap-1">
-                                    <span class="text-[9px] font-bold text-slate-500">
+                                    <span 
+                                        class="text-[9px] font-bold"
+                                        :class="(load.lapses_progress?.[lapse.id]?.loaded ?? 0) >= load.students_count && load.students_count > 0 
+                                            ? 'text-emerald-600 font-black' 
+                                            : 'text-slate-500'"
+                                    >
                                         {{ load.lapses_progress?.[lapse.id]?.loaded ?? 0 }}/{{ load.students_count }}
                                     </span>
                                 </div>
