@@ -19,9 +19,11 @@ final class CalculateAverageAction
             return null;
         }
 
-        $grades = Grade::where('enrollment_id', $enrollment->id)
-            ->where('subject_id', $subject->id)
-            ->get();
+        $grades = $enrollment->relationLoaded('grades')
+            ? $enrollment->grades->where('subject_id', $subject->id)
+            : Grade::where('enrollment_id', $enrollment->id)
+                ->where('subject_id', $subject->id)
+                ->get();
 
         if ($grades->isEmpty()) {
             return null;

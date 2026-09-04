@@ -20,7 +20,7 @@ class RevisionController extends Controller
     /**
      * Muestra la pantalla principal de Revisiones con las cargas académicas.
      */
-    public function index(Request $request)
+    public function index(Request $request, CalculateAverageAction $calcAverage)
     {
         $user = $request->user();
         $schoolYears = SchoolYear::orderBy('start_date', 'desc')->get();
@@ -38,26 +38,54 @@ class RevisionController extends Controller
                 'loads' => [],
                 'activeYear' => null,
                 'schoolYears' => $schoolYears,
+                'allLapsesClosed' => false,
             ]);
         }
 
         // Verificar que TODOS los lapsos estén cerrados para habilitar revisiones
-        $allLapsesClosed = $selectedYear->lapses->every(fn($l) => !$l->is_open);
+        $allLapsesClosed = $selectedYear->lapses->isNotEmpty() && $selectedYear->lapses->every(fn($l) => !$l->is_open);
 
-        // Si es docente, solo mostrar su carga académica
+        // Si es docente, solo consultar su carga académica; si es directivo/admin, todas
+        $loadsQuery = AcademicLoad::where('school_year_id', $selectedYear->id)
+            ->with(['subject', 'section.gradeLevel', 'teacher']);
+
         if ($user->hasRole('Docente')) {
-            $loads = AcademicLoad::where('teacher_id', $user->id)
-                ->where('school_year_id', $selectedYear->id)
-                ->with(['subject', 'section.gradeLevel'])
-                ->get();
-        } else {
-            $loads = AcademicLoad::where('school_year_id', $selectedYear->id)
-                ->with(['subject', 'section.gradeLevel', 'teacher'])
-                ->get();
+            $loadsQuery->where('teacher_id', $user->id);
         }
 
+        $allLoads = $loadsQuery->get();
+
+        // Obtener inscripciones no retiradas con sus calificaciones para este año escolar
+        $enrollmentsBySection = Enrollment::where('school_year_id', $selectedYear->id)
+            ->whereNotIn('status', [\App\Enums\EnrollmentStatus::WITHDRAWN])
+            ->with(['grades'])
+            ->get()
+            ->groupBy('section_id');
+
+        // Filtrar solo las materias que tienen estudiantes aplazados (promedio < 9.5)
+        $filteredLoads = $allLoads->filter(function ($load) use ($enrollmentsBySection, $calcAverage) {
+            if (!$load->subject || $load->subject->isQualitative()) {
+                return false;
+            }
+
+            $sectionEnrollments = $enrollmentsBySection->get($load->section_id, collect());
+            
+            $failedCount = 0;
+            foreach ($sectionEnrollments as $enrollment) {
+                $finalGrade = $calcAverage->forSubject($enrollment, $load->subject);
+                if ($finalGrade !== null && $finalGrade < 9.5) {
+                    $failedCount++;
+                }
+            }
+
+            $load->failed_students_count = $failedCount;
+            $load->total_students_count = $sectionEnrollments->count();
+
+            return $failedCount > 0;
+        })->values();
+
         return Inertia::render('Revisions/Index', [
-            'loads' => $loads,
+            'loads' => $filteredLoads,
             'activeYear' => $selectedYear,
             'schoolYears' => $schoolYears,
             'allLapsesClosed' => $allLapsesClosed,
@@ -74,7 +102,7 @@ class RevisionController extends Controller
 
         $enrollments = Enrollment::where('section_id', $section->id)
             ->where('school_year_id', $section->school_year_id)
-            ->active()
+            ->whereNotIn('status', [\App\Enums\EnrollmentStatus::WITHDRAWN])
             ->with([
                 'student',
                 'grades' => fn($q) => $q->where('subject_id', $subject->id),
@@ -89,9 +117,9 @@ class RevisionController extends Controller
             return $finalGrade === null || $finalGrade < 9.5;
         });
 
-        // Verificar si el año está cerrado (revisiones bloqueadas)
+        // Verificar si el año está cerrado o no activo (revisiones bloqueadas en solo lectura)
         $schoolYear = SchoolYear::find($section->school_year_id);
-        $isClosed = $schoolYear->is_closed ?? false;
+        $isClosed = !$schoolYear || $schoolYear->is_closed || !$schoolYear->is_active;
 
         return Inertia::render('Revisions/DataGrid', [
             'section' => $section->load('gradeLevel'),
@@ -117,8 +145,11 @@ class RevisionController extends Controller
 
         $schoolYear = SchoolYear::findOrFail($enrollment->school_year_id);
 
-        if ($schoolYear->is_closed) {
-            return back()->withErrors(['message' => 'El año escolar ya fue cerrado. No se pueden cargar revisiones.']);
+        if ($schoolYear->is_closed || !$schoolYear->is_active) {
+            if ($request->wantsJson() || $request->ajax()) {
+                return response()->json(['message' => 'El año escolar ya fue cerrado o es un periodo histórico. No se pueden modificar revisiones.'], 422);
+            }
+            return back()->withErrors(['message' => 'El año escolar ya fue cerrado o es un periodo histórico. No se pueden modificar revisiones.']);
         }
 
         $status = $validated['score'] >= 9.5 ? 'approved' : 'failed';
@@ -166,7 +197,7 @@ class RevisionController extends Controller
             'changes.*.score' => ['required', 'numeric', 'min:1', 'max:20'],
         ]);
 
-        // Validar que el año no esté cerrado
+        // Validar que el año no esté cerrado ni sea inactivo
         $first = $request->input('changes')[0];
         $enrollment = Enrollment::findOrFail($first['enrollment_id']);
         
@@ -174,8 +205,11 @@ class RevisionController extends Controller
 
         $schoolYear = SchoolYear::findOrFail($enrollment->school_year_id);
 
-        if ($schoolYear->is_closed) {
-            return back()->withErrors(['message' => 'El año escolar ya fue cerrado. No se pueden cargar revisiones.']);
+        if ($schoolYear->is_closed || !$schoolYear->is_active) {
+            if ($request->wantsJson() || $request->ajax()) {
+                return response()->json(['message' => 'El año escolar ya fue cerrado o es un periodo histórico. No se pueden modificar revisiones.'], 422);
+            }
+            return back()->withErrors(['message' => 'El año escolar ya fue cerrado o es un periodo histórico. No se pueden modificar revisiones.']);
         }
 
         foreach ($request->input('changes') as $change) {

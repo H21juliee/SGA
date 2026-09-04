@@ -85,13 +85,21 @@ class CouncilAdjustmentController extends Controller implements \Illuminate\Rout
 
     public function update(Request $request)
     {
-
         $validated = $request->validate([
             'grade_id'           => 'required|exists:grades,id',
             'council_adjustment' => 'required|integer|min:-5|max:5',
         ]);
 
-        $grade = Grade::findOrFail($validated['grade_id']);
+        $grade = Grade::with('enrollment.schoolYear', 'lapse')->findOrFail($validated['grade_id']);
+        $schoolYear = $grade->enrollment?->schoolYear;
+
+        if ($schoolYear && ($schoolYear->is_closed || !$schoolYear->is_active)) {
+            if ($request->wantsJson() || $request->ajax()) {
+                return response()->json(['message' => 'No se pueden realizar ajustes de consejo en un año escolar cerrado o inactivo.'], 422);
+            }
+            return redirect()->back()->withErrors(['message' => 'No se pueden realizar ajustes de consejo en un año escolar cerrado o inactivo.']);
+        }
+
         $oldAdj = $grade->council_adjustment;
         $grade->update(['council_adjustment' => $validated['council_adjustment']]);
 
@@ -120,7 +128,6 @@ class CouncilAdjustmentController extends Controller implements \Illuminate\Rout
 
     public function batchUpdate(Request $request)
     {
-
         $validated = $request->validate([
             'changes'                    => 'required|array',
             'changes.*.grade_id'         => 'required|exists:grades,id',
@@ -128,8 +135,13 @@ class CouncilAdjustmentController extends Controller implements \Illuminate\Rout
         ]);
 
         foreach ($validated['changes'] as $change) {
-            $grade = Grade::where('id', $change['grade_id'])->first();
+            $grade = Grade::with('enrollment.schoolYear', 'lapse')->where('id', $change['grade_id'])->first();
             if (!$grade) continue;
+
+            $schoolYear = $grade->enrollment?->schoolYear;
+            if ($schoolYear && ($schoolYear->is_closed || !$schoolYear->is_active)) {
+                continue;
+            }
 
             $oldAdj = $grade->council_adjustment;
             $grade->update(['council_adjustment' => $change['council_adjustment']]);

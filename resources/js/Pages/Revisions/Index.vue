@@ -139,11 +139,11 @@ function changeYear() {
             </div>
 
             <div v-else-if="loads.length === 0" class="glass-card rounded-3xl p-16 text-center animate-fade-in-up">
-                <div class="w-20 h-20 bg-slate-50 rounded-full flex items-center justify-center mx-auto mb-6 text-slate-200">
-                    <i class="fas fa-clipboard-list text-4xl"></i>
+                <div class="w-20 h-20 bg-emerald-50 rounded-full flex items-center justify-center mx-auto mb-6 text-emerald-500 shadow-sm border border-emerald-100">
+                    <i class="fas fa-check-circle text-4xl"></i>
                 </div>
-                <h3 class="text-xl font-bold text-slate-600">Sin carga académica</h3>
-                <p class="text-slate-400 mt-2 max-w-sm mx-auto">No tienes materias asignadas para gestionar revisiones en el año escolar seleccionado.</p>
+                <h3 class="text-xl font-bold text-slate-700">Sin materias pendientes de revisión</h3>
+                <p class="text-slate-400 mt-2 max-w-md mx-auto">No hay estudiantes aplazados que requieran evaluación de revisión en el año escolar seleccionado.</p>
             </div>
 
             <!-- Empty Filter Results -->
@@ -169,14 +169,24 @@ function changeYear() {
 
                     <div class="flex items-start justify-between">
                         <div class="flex-1">
+                            <div class="flex items-center gap-2 mb-2" v-if="load.failed_students_count">
+                                <span class="px-2.5 py-0.5 text-[10px] font-black uppercase tracking-wider rounded-lg bg-red-50 text-red-600 border border-red-100 shadow-sm flex items-center gap-1.5">
+                                    <i class="fas fa-user-clock text-[9px]"></i>
+                                    {{ load.failed_students_count }} {{ load.failed_students_count === 1 ? 'estudiante a revisión' : 'estudiantes a revisión' }}
+                                </span>
+                            </div>
                             <h3 class="text-lg font-black text-slate-800 group-hover:text-red-600 transition-colors leading-tight">
                                 {{ load.subject?.name }}
                             </h3>
                             <p class="text-xs font-bold text-slate-400 mt-1 uppercase tracking-wider">
                                 {{ load.section?.grade_level?.name }} · Sección {{ load.section?.name }}
                             </p>
+                            <p v-if="load.teacher" class="text-[11px] font-medium text-slate-400 mt-2 flex items-center gap-1.5">
+                                <i class="fas fa-chalkboard-teacher text-slate-300"></i>
+                                <span>{{ load.teacher.name }}</span>
+                            </p>
                         </div>
-                        <div class="w-10 h-10 bg-red-50 text-red-600 rounded-xl flex items-center justify-center text-xs font-bold shadow-sm">
+                        <div class="w-10 h-10 bg-red-50 text-red-600 rounded-xl flex items-center justify-center text-xs font-bold shadow-sm group-hover:bg-red-600 group-hover:text-white transition-all">
                             <i class="fas fa-chevron-right"></i>
                         </div>
                     </div>

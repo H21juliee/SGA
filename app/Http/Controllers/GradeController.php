@@ -54,7 +54,7 @@ class GradeController extends Controller
         }
 
         $enrollmentCounts = Enrollment::where('school_year_id', $selectedYear->id)
-            ->active()
+            ->whereNotIn('status', [\App\Enums\EnrollmentStatus::WITHDRAWN])
             ->selectRaw('section_id, count(*) as total')
             ->groupBy('section_id')
             ->pluck('total', 'section_id')
@@ -62,7 +62,7 @@ class GradeController extends Controller
 
         $gradesCounts = Grade::join('enrollments', 'enrollments.id', '=', 'grades.enrollment_id')
             ->where('enrollments.school_year_id', $selectedYear->id)
-            ->where('enrollments.status', 'active')
+            ->whereNotIn('enrollments.status', [\App\Enums\EnrollmentStatus::WITHDRAWN])
             ->whereNotNull('grades.score')
             ->selectRaw('grades.subject_id, enrollments.section_id, grades.lapse_id, count(*) as total')
             ->groupBy('grades.subject_id', 'enrollments.section_id', 'grades.lapse_id')
@@ -122,7 +122,7 @@ class GradeController extends Controller
 
         $enrollments = Enrollment::where('section_id', $section->id)
             ->where('school_year_id', $section->school_year_id)
-            ->active()
+            ->whereNotIn('status', [\App\Enums\EnrollmentStatus::WITHDRAWN])
             ->with([
                 'student',
                 'grades' => fn($q) => $q->where('subject_id', $subject->id)
@@ -144,13 +144,14 @@ class GradeController extends Controller
         $enrollment = Enrollment::findOrFail($request->input('enrollment_id'));
         $this->authorizeLoad($enrollment->section_id, $request->input('subject_id'));
 
-        $lapse = Lapse::findOrFail($request->input('lapse_id'));
+        $lapse = Lapse::with('schoolYear')->findOrFail($request->input('lapse_id'));
+        $schoolYear = $lapse->schoolYear;
         
-        if (!$lapse->is_open) {
+        if (!$lapse->is_open || ($schoolYear && ($schoolYear->is_closed || !$schoolYear->is_active))) {
             if ($request->wantsJson() || $request->ajax()) {
-                return response()->json(['message' => 'No se pueden cargar notas en un lapso cerrado.'], 422);
+                return response()->json(['message' => 'No se pueden modificar notas en un lapso o año escolar cerrado.'], 422);
             }
-            return back()->withErrors(['message' => 'No se pueden cargar notas en un lapso cerrado.']);
+            return back()->withErrors(['message' => 'No se pueden modificar notas en un lapso o año escolar cerrado.']);
         }
 
         $dto = GradeDTO::fromRequest($request);
@@ -182,11 +183,15 @@ class GradeController extends Controller
         $enrollment = Enrollment::findOrFail($first['enrollment_id']);
         $this->authorizeLoad($enrollment->section_id, $first['subject_id']);
 
-        // Validar que el lapso del primer cambio esté abierto
-        $lapse = Lapse::findOrFail($first['lapse_id']);
+        // Validar que el lapso del primer cambio esté abierto y que el año no esté cerrado
+        $lapse = Lapse::with('schoolYear')->findOrFail($first['lapse_id']);
+        $schoolYear = $lapse->schoolYear;
 
-        if (!$lapse->is_open) {
-            return back()->withErrors(['message' => 'No se pueden cargar notas en un lapso cerrado.']);
+        if (!$lapse->is_open || ($schoolYear && ($schoolYear->is_closed || !$schoolYear->is_active))) {
+            if ($request->wantsJson() || $request->ajax()) {
+                return response()->json(['message' => 'No se pueden modificar notas en un lapso o año escolar cerrado.'], 422);
+            }
+            return back()->withErrors(['message' => 'No se pueden modificar notas en un lapso o año escolar cerrado.']);
         }
 
         foreach ($request->input('changes') as $change) {

@@ -134,7 +134,24 @@ function toggleActive(year) {
     })
 }
 
-function toggleLapse(lapse) {
+function toggleLapse(lapse, year) {
+    if (year && (!year.is_active || year.is_closed)) {
+        Swal.fire({
+            title: 'Periodo Cerrado',
+            text: 'No se puede modificar ni abrir un lapso de un periodo escolar inactivo o cerrado.',
+            icon: 'warning',
+            confirmButtonText: 'Entendido',
+            buttonsStyling: false,
+            customClass: {
+                popup: 'rounded-3xl border-2 border-slate-100 shadow-2xl',
+                title: 'text-2xl font-black text-slate-800',
+                htmlContainer: 'text-slate-500 font-medium',
+                confirmButton: 'px-6 py-3 bg-primary-600 text-white text-[11px] font-black uppercase tracking-widest rounded-2xl shadow-lg shadow-primary-600/20 hover:bg-primary-500 transition-all mx-2'
+            }
+        });
+        return;
+    }
+
     const action = lapse.is_open ? 'cerrar' : 'abrir';
     Swal.fire({
         title: `¿${action === 'abrir' ? 'Abrir' : 'Cerrar'} Lapso?`,
@@ -223,7 +240,9 @@ function toggleLapse(lapse) {
                                 </div>
                                 <span class="text-xs font-black text-slate-600 uppercase tracking-wider">{{ lapse.name }}</span>
                             </div>
-                            <button v-if="$can('school_years.toggle_lapse')" @click="toggleLapse(lapse)"
+                            <button 
+                                v-if="$can('school_years.toggle_lapse') && year.is_active && !year.is_closed" 
+                                @click="toggleLapse(lapse, year)"
                                 class="px-4 py-2 text-[9px] font-black uppercase tracking-widest rounded-xl transition-all border shadow-sm"
                                 :class="lapse.is_open 
                                     ? 'bg-emerald-500 text-white border-emerald-400 hover:bg-emerald-600' 
@@ -231,6 +250,16 @@ function toggleLapse(lapse) {
                             >
                                 {{ lapse.is_open ? 'Abierto' : 'Cerrado' }}
                             </button>
+                            <span 
+                                v-else
+                                class="px-4 py-2 text-[9px] font-black uppercase tracking-widest rounded-xl border select-none opacity-60 cursor-not-allowed"
+                                :class="lapse.is_open 
+                                    ? 'bg-emerald-50 text-emerald-600 border-emerald-200' 
+                                    : 'bg-slate-100 text-slate-400 border-slate-200'"
+                                title="No se puede modificar un lapso de un periodo escolar cerrado o inactivo"
+                            >
+                                {{ lapse.is_open ? 'Abierto' : 'Cerrado' }}
+                            </span>
                         </div>
                     </div>
 

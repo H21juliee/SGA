@@ -88,6 +88,11 @@ class SchoolYearController extends Controller implements \Illuminate\Routing\Con
 
     public function toggleLapse(\App\Models\Lapse $lapse)
     {
+        $schoolYear = $lapse->schoolYear;
+        if (!$schoolYear || !$schoolYear->is_active || $schoolYear->is_closed) {
+            return back()->with('error', 'No se pueden abrir ni modificar lapsos de un año escolar cerrado o inactivo.');
+        }
+
         $willBeOpen = !$lapse->is_open;
         
         if ($willBeOpen) {
