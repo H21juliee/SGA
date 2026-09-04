@@ -199,6 +199,8 @@ function saveToServer(row) {
 
     row.saving = true
     row.saved = false
+    row.hasError = false
+    row.errorMessage = ''
 
     axios.patch('/admin/council-adjustments', {
         grade_id: row.grade_id,
@@ -207,11 +209,15 @@ function saveToServer(row) {
     .then(() => {
         row.saving = false
         row.saved = true
+        row.hasError = false
         row.lastSavedAdjustment = adj
         setTimeout(() => { row.saved = false }, 2000)
     })
     .catch((err) => {
         row.saving = false
+        row.saved = false
+        row.hasError = true
+        row.errorMessage = err.response?.data?.message || 'Error al guardar ajuste de consejo'
         console.error('Error al guardar ajuste de consejo:', err)
     })
 }
@@ -383,10 +389,11 @@ const hasFilters = computed(() => sectionId.value && subjectId.value && lapseId.
 
                             <!-- Controles de Ajuste -->
                             <div class="flex items-center gap-2 relative">
-                                <!-- Status Indicator (Spinner/Check) -->
+                                <!-- Status Indicator (Spinner/Check/Error) -->
                                 <div class="absolute -left-6 w-6 flex justify-center">
                                     <i v-if="row.saving" class="fas fa-spinner fa-spin text-slate-400 text-xs"></i>
                                     <i v-else-if="row.saved" class="fas fa-check-circle text-emerald-500 text-xs animate-bounce"></i>
+                                    <i v-else-if="row.hasError" class="fas fa-exclamation-circle text-red-500 text-xs animate-pulse" :title="row.errorMessage || 'Error al guardar'"></i>
                                 </div>
 
                                 <button 
@@ -406,7 +413,10 @@ const hasFilters = computed(() => sectionId.value && subjectId.value && lapseId.
                                         @keyup.enter="onBlurOrChange(row)"
                                         :disabled="!$can('council.manage')" type="number" 
                                         min="-5" max="5"
-                                        class="w-full h-full bg-white border-2 border-slate-200 rounded-xl text-center text-sm font-black text-slate-800 focus:border-primary-400 focus:ring-0 outline-none transition-all shadow-sm disabled:bg-slate-50 disabled:text-slate-500"
+                                        class="w-full h-full border-2 rounded-xl text-center text-sm font-black focus:ring-0 outline-none transition-all shadow-sm disabled:bg-slate-50 disabled:text-slate-500"
+                                        :class="row.hasError 
+                                            ? 'border-red-400 bg-red-50 text-red-700 ring-2 ring-red-200' 
+                                            : 'bg-white border-slate-200 text-slate-800 focus:border-primary-400'"
                                         placeholder="0"
                                     >
                                 </div>

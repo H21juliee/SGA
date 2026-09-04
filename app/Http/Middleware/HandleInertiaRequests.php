@@ -50,7 +50,7 @@ class HandleInertiaRequests extends Middleware
             'school' => [
                 'logo_path' => \App\Models\SchoolSetting::get('logo_path'),
             ],
-            'security_questions_enabled' => env('SECURITY_QUESTIONS_ENABLED', false),
+            'security_questions_enabled' => config('app.security_questions_enabled', false),
         ];
     }
 }

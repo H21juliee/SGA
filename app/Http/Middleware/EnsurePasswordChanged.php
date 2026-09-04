@@ -10,7 +10,7 @@ class EnsurePasswordChanged
 {
     public function handle(Request $request, Closure $next): Response
     {
-        if (!env('SECURITY_QUESTIONS_ENABLED', false)) {
+        if (!config('app.security_questions_enabled', false)) {
             return $next($request);
         }
         $user = $request->user();

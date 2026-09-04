@@ -93,7 +93,7 @@ class UserController extends Controller implements \Illuminate\Routing\Controlle
             'roles.*' => 'string|exists:roles,name',
         ];
 
-        $securityEnabled = env('SECURITY_QUESTIONS_ENABLED', false);
+        $securityEnabled = config('app.security_questions_enabled', false);
 
         if (!$securityEnabled) {
             $rules['password'] = ['required', 'string', \Illuminate\Validation\Rules\Password::min(8)->mixedCase()->numbers()->symbols()];
@@ -136,7 +136,7 @@ class UserController extends Controller implements \Illuminate\Routing\Controlle
             'is_active' => 'required|boolean',
         ];
 
-        $securityEnabled = env('SECURITY_QUESTIONS_ENABLED', false);
+        $securityEnabled = config('app.security_questions_enabled', false);
 
         if (!$securityEnabled) {
             $rules['password'] = ['nullable', 'string', \Illuminate\Validation\Rules\Password::min(8)->mixedCase()->numbers()->symbols()];
@@ -196,7 +196,7 @@ class UserController extends Controller implements \Illuminate\Routing\Controlle
 
         $user->update([
             'password' => Hash::make($user->cedula),
-            'must_change_password' => env('SECURITY_QUESTIONS_ENABLED', false),
+            'must_change_password' => config('app.security_questions_enabled', false),
         ]);
 
         // Delete old security questions so user must set new ones

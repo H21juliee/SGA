@@ -180,6 +180,8 @@ function saveToServer(row) {
 
     row.saving = true
     row.saved = false
+    row.hasError = false
+    row.errorMessage = ''
 
     axios.patch('/revisions', {
         enrollment_id: row.enrollment_id,
@@ -189,6 +191,7 @@ function saveToServer(row) {
     .then((res) => {
         row.saving = false
         row.saved = true
+        row.hasError = false
         row.lastSavedScore = s
         if (res.data?.status) {
             row.status = res.data.status
@@ -197,6 +200,9 @@ function saveToServer(row) {
     })
     .catch((err) => {
         row.saving = false
+        row.saved = false
+        row.hasError = true
+        row.errorMessage = err.response?.data?.message || 'Error al guardar nota de revisión'
         console.error('Error al guardar nota de revisión:', err)
     })
 }
@@ -356,10 +362,11 @@ function saveToServer(row) {
                                 <span v-else class="text-[10px] font-black uppercase tracking-widest text-slate-400 bg-slate-100 px-2 py-1 rounded-md">Pendiente</span>
                             </div>
 
-                            <!-- Status Indicator (Spinner/Check) -->
+                            <!-- Status Indicator (Spinner/Check/Error) -->
                             <div class="w-6 flex justify-center shrink-0">
                                 <i v-if="row.saving" class="fas fa-spinner fa-spin text-slate-400 text-sm"></i>
                                 <i v-else-if="row.saved" class="fas fa-check-circle text-emerald-500 text-sm animate-bounce"></i>
+                                <i v-else-if="row.hasError" class="fas fa-exclamation-circle text-red-500 text-sm animate-pulse" :title="row.errorMessage || 'Error al guardar'"></i>
                             </div>
 
                             <!-- Decrement -->
@@ -384,7 +391,10 @@ function saveToServer(row) {
                                     type="number" 
                                     min="1" 
                                     max="20"
-                                    class="w-full h-full bg-white border-2 border-slate-200 rounded-xl text-center text-lg font-black text-slate-800 focus:border-red-400 focus:ring-0 outline-none transition-all shadow-sm disabled:bg-slate-50 disabled:text-slate-500"
+                                    class="w-full h-full border-2 rounded-xl text-center text-lg font-black focus:ring-0 outline-none transition-all shadow-sm disabled:bg-slate-50 disabled:text-slate-500"
+                                    :class="row.hasError 
+                                        ? 'border-red-400 bg-red-50 text-red-700 ring-2 ring-red-200' 
+                                        : 'bg-white border-slate-200 text-slate-800 focus:border-red-400'"
                                     placeholder="--"
                                 >
                             </div>

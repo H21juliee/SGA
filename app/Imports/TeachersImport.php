@@ -45,7 +45,7 @@ class TeachersImport implements
     public function collection(Collection $rows): void
     {
         $this->docenteRole = Role::findByName('Docente', 'web');
-        $securityEnabled   = env('SECURITY_QUESTIONS_ENABLED', false);
+        $securityEnabled   = config('app.security_questions_enabled', false);
 
         foreach ($rows as $index => $row) {
             $email  = strtolower(trim($row['email'] ?? ''));
