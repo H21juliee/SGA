@@ -7,6 +7,7 @@ use App\DTOs\GradeDTO;
 use App\Http\Requests\StoreGradeRequest;
 use App\Models\AcademicLoad;
 use App\Models\Enrollment;
+use App\Models\Grade;
 use App\Models\Lapse;
 use App\Models\SchoolYear;
 use App\Models\Section;
@@ -33,9 +34,10 @@ class GradeController extends Controller
 
         if (!$selectedYear) {
             return Inertia::render('Grades/Index', [
-                'loads' => [], 
-                'activeYear' => null,
-                'schoolYears' => $schoolYears
+                'loads'       => [], 
+                'activeYear'  => null,
+                'schoolYears' => $schoolYears,
+                'openLapseId' => null,
             ]);
         }
 
@@ -51,11 +53,69 @@ class GradeController extends Controller
                 ->get();
         }
 
+        $enrollmentCounts = Enrollment::where('school_year_id', $selectedYear->id)
+            ->active()
+            ->selectRaw('section_id, count(*) as total')
+            ->groupBy('section_id')
+            ->pluck('total', 'section_id')
+            ->toArray();
+
+        $gradesCounts = Grade::join('enrollments', 'enrollments.id', '=', 'grades.enrollment_id')
+            ->where('enrollments.school_year_id', $selectedYear->id)
+            ->where('enrollments.status', 'active')
+            ->whereNotNull('grades.score')
+            ->selectRaw('grades.subject_id, enrollments.section_id, grades.lapse_id, count(*) as total')
+            ->groupBy('grades.subject_id', 'enrollments.section_id', 'grades.lapse_id')
+            ->get();
+
+        $gradesMap = [];
+        foreach ($gradesCounts as $g) {
+            $gradesMap[$g->subject_id . '_' . $g->section_id . '_' . $g->lapse_id] = $g->total;
+        }
+
+        $openLapse = $selectedYear->lapses->firstWhere('is_open', true) ?? $selectedYear->lapses->first();
+
+        $enrichedLoads = $loads->map(function ($load) use ($enrollmentCounts, $gradesMap, $selectedYear, $openLapse) {
+            $studentsCount = $enrollmentCounts[$load->section_id] ?? 0;
+            
+            $lapsesProgress = [];
+            foreach ($selectedYear->lapses as $lapse) {
+                $loaded = $gradesMap[$load->subject_id . '_' . $load->section_id . '_' . $lapse->id] ?? 0;
+                $pct = $studentsCount > 0 ? round(($loaded / $studentsCount) * 100, 1) : 0;
+                $lapsesProgress[$lapse->id] = [
+                    'loaded'     => $loaded,
+                    'expected'   => $studentsCount,
+                    'percentage' => $pct,
+                ];
+            }
+            
+            $activeLoaded = $openLapse ? ($lapsesProgress[$openLapse->id]['loaded'] ?? 0) : 0;
+            $activePct = $openLapse ? ($lapsesProgress[$openLapse->id]['percentage'] ?? 0) : 0;
+            
+            $status = 'empty';
+            if ($studentsCount === 0) {
+                $status = 'empty';
+            } elseif ($activeLoaded >= $studentsCount && $studentsCount > 0) {
+                $status = 'complete';
+            } elseif ($activeLoaded > 0) {
+                $status = 'partial';
+            }
+
+            $arr = $load->toArray();
+            $arr['students_count'] = $studentsCount;
+            $arr['lapses_progress'] = $lapsesProgress;
+            $arr['active_lapse_loaded'] = $activeLoaded;
+            $arr['active_lapse_percentage'] = $activePct;
+            $arr['status'] = $status;
+            return $arr;
+        });
+
         return Inertia::render('Grades/Index', [
-            'loads' => $loads,
-            'activeYear' => $selectedYear,
-            'lapses' => $selectedYear->lapses,
+            'loads'       => $enrichedLoads,
+            'activeYear'  => $selectedYear,
+            'lapses'      => $selectedYear->lapses,
             'schoolYears' => $schoolYears,
+            'openLapseId' => $openLapse?->id,
         ]);
     }
 
