@@ -84,6 +84,13 @@ Route::middleware(['auth', 'password.changed'])->group(function () {
         Route::get('/print-sabana/{section}/{lapse}', [\App\Http\Controllers\ReportController::class, 'printSabana'])->name('sabana.print');
     });
 
+    // Estadísticas y Dashboard Analítico (Configurable vía STATISTICS_MODULE_ENABLED)
+    Route::prefix('analytics')->name('analytics.')->middleware(['statistics.enabled', 'permission:reports.generate'])->group(function () {
+        Route::get('/', [\App\Http\Controllers\AnalyticsController::class, 'index'])->name('index');
+        Route::get('/export/excel', [\App\Http\Controllers\AnalyticsController::class, 'exportExcel'])->name('export.excel');
+        Route::get('/export/pdf', [\App\Http\Controllers\AnalyticsController::class, 'exportPdf'])->name('export.pdf');
+    });
+
     // Módulo de Administración (Solo roles autorizados)
     Route::prefix('admin')->name('admin.')->group(function () {
         Route::resource('users', \App\Http\Controllers\Admin\UserController::class)->except(['create', 'edit']);

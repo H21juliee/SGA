@@ -124,5 +124,6 @@ return [
     ],
 
     'security_questions_enabled' => (bool) env('SECURITY_QUESTIONS_ENABLED', false),
+    'statistics_module_enabled' => (bool) env('STATISTICS_MODULE_ENABLED', true),
 
 ];

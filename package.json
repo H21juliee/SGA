@@ -18,7 +18,9 @@
         "@inertiajs/vue3": "^3.0.3",
         "@vitejs/plugin-vue": "^6.0.6",
         "axios": "^1.19.0",
+        "chart.js": "^4.5.1",
         "sweetalert2": "^11.26.25",
-        "vue": "^3.5.33"
+        "vue": "^3.5.33",
+        "vue-chartjs": "^5.3.4"
     }
 }

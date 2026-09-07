@@ -27,6 +27,8 @@
 | Roles y Permisos | ✅ Completado |
 | Cierre de Año y Promoción Masiva | ✅ Completado |
 | Consulta Histórica de Años Anteriores (solo lectura) | ✅ Completado |
+| Progressive Web App (PWA) / Instalación Móvil | ✅ Completado |
+| Reportes Estadísticos y Dashboard Analítico | ✅ Completado |
 
 ---
 

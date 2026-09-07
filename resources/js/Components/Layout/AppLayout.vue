@@ -213,6 +213,12 @@ const navigation = computed(() => {
             ]
         },
         { name: 'Reportes', href: '/reports', icon: 'reports', show: can('reports.generate') },
+        { 
+            name: 'Estadísticas', 
+            href: '/analytics', 
+            icon: 'analytics', 
+            show: Boolean(page.props.statistics_module_enabled) && can('reports.generate') 
+        },
         {
             name: 'Importación',
             icon: 'import',
@@ -256,6 +262,7 @@ function getIcon(name) {
         'revisions': 'fas fa-clipboard-list',
         'attendance': 'fas fa-check-circle',
         'reports': 'fas fa-chart-bar',
+        'analytics': 'fas fa-chart-line',
         'admin': 'fas fa-cog',
         'students': 'fas fa-user-graduate',
         'calendar': 'fas fa-calendar-alt',
