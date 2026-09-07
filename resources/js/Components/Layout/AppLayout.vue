@@ -21,9 +21,7 @@
                         </div>
                     </template>
                     <template v-else>
-                        <div class="w-12 h-12 rounded-2xl flex items-center justify-center text-white text-2xl shadow-lg" style="background: #336b87; box-shadow: 0 8px 20px rgba(51,107,135,0.35)">
-                            <i class="fas fa-graduation-cap"></i>
-                        </div>
+                        <img src="/pwa-192x192.png" alt="SGA" class="w-12 h-12 rounded-2xl object-cover shadow-lg border border-primary-100" style="box-shadow: 0 8px 20px rgba(51,107,135,0.25)" />
                     </template>
                     <div>
                         <h1 class="text-2xl font-black gradient-text tracking-tight leading-none">SGA</h1>
@@ -160,6 +158,9 @@
                 </div>
             </main>
         </div>
+
+        <!-- PWA Install Banner -->
+        <PwaInstallBanner />
     </div>
 </template>
 
@@ -167,6 +168,7 @@
 import { computed, ref } from 'vue'
 import { usePage, router, Link } from '@inertiajs/vue3'
 import Swal from 'sweetalert2'
+import PwaInstallBanner from '@/Components/UI/PwaInstallBanner.vue'
 
 const page = usePage()
 const user = computed(() => page.props.auth?.user)

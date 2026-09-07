@@ -51,9 +51,7 @@ function submit() {
                     <!-- Fallback Icon (if no logo) -->
                     <div v-else class="text-center animate-fade-in-up">
                         <div class="inline-flex items-center justify-center w-24 h-24 rounded-[2.5rem] bg-white shadow-2xl shadow-primary-500/10 mb-6 group hover:-translate-y-1 transition-all duration-500">
-                            <div class="w-20 h-20 rounded-[2rem] bg-gradient-to-br from-primary-500 to-primary-700 flex items-center justify-center shadow-lg group-hover:rotate-12 transition-all duration-500">
-                                <i class="fas fa-graduation-cap text-4xl text-white"></i>
-                            </div>
+                            <img src="/pwa-192x192.png" alt="SGA Logo" class="w-20 h-20 rounded-[2rem] object-cover shadow-lg group-hover:scale-105 transition-all duration-500" />
                         </div>
                     </div>
                     
