@@ -44,20 +44,25 @@ function submit() {
                 <!-- Left Side: Branding -->
                 <div class="md:w-1/2 p-10 lg:p-14 flex flex-col items-center justify-center bg-gradient-to-br from-primary-50/80 to-white/50 border-r border-slate-100/50 relative overflow-hidden">
                     <!-- School Logo (if uploaded) -->
-                    <div v-if="$page.props.school?.logo_path" class="relative z-10 animate-fade-in-up">
-                        <img :src="'/storage/' + $page.props.school.logo_path" alt="Logo del Plantel" class="w-auto h-48 md:h-64 object-contain drop-shadow-xl rounded-[2rem]" />
-                    </div>
-                    
-                    <!-- Fallback Icon (if no logo) -->
-                    <div v-else class="text-center animate-fade-in-up">
-                        <div class="inline-flex items-center justify-center w-24 h-24 rounded-[2.5rem] bg-white shadow-2xl shadow-primary-500/10 mb-6 group hover:-translate-y-1 transition-all duration-500">
-                            <img src="/pwa-192x192.png" alt="SGA Logo" class="w-20 h-20 rounded-[2rem] object-cover shadow-lg group-hover:scale-105 transition-all duration-500" />
+                    <template v-if="$page.props.school?.logo_path">
+                        <div class="relative z-10 animate-fade-in-up text-center">
+                            <img :src="'/storage/' + $page.props.school.logo_path" alt="Logo del Plantel" class="w-auto h-48 md:h-64 object-contain drop-shadow-xl rounded-[2rem] mx-auto" />
+                            <h1 class="text-2xl font-black text-slate-800 tracking-tight leading-tight text-center mt-6">
+                                Sistema de <br/><span class="gradient-text">Gestión Académica</span>
+                            </h1>
                         </div>
-                    </div>
+                    </template>
                     
-                    <h1 class="text-3xl font-black text-slate-800 tracking-tight leading-tight text-center mt-8 animate-fade-in-up" style="animation-delay: 100ms">
-                        Sistema de <br/><span class="gradient-text">Gestión Académica</span>
-                    </h1>
+                    <!-- SGA Official Logo (High Res, Large & Clean) -->
+                    <template v-else>
+                        <div class="text-center animate-fade-in-up flex flex-col items-center justify-center p-2">
+                            <img 
+                                src="/pwa-512x512.png" 
+                                alt="SGA - Sistema de Gestión Académica" 
+                                class="w-56 h-56 sm:w-64 sm:h-64 md:w-72 md:h-72 object-contain drop-shadow-2xl hover:scale-105 transition-transform duration-500" 
+                            />
+                        </div>
+                    </template>
                 </div>
 
                 <!-- Right Side: Login Form -->
