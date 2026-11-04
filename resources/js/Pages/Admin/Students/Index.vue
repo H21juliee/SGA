@@ -1,5 +1,5 @@
 <script setup>
-import { ref, watch } from 'vue'
+import { ref, watch, computed } from 'vue'
 import { router, useForm, Link } from '@inertiajs/vue3'
 import axios from 'axios'
 import AppLayout from '@/Components/Layout/AppLayout.vue'
@@ -8,12 +8,26 @@ import Modal from '@/Components/UI/Modal.vue'
 const props = defineProps({
     students: Object,
     filters: Object,
+    activeYear: Object,
+    gradeLevels: Array,
+    isCoordinator: Boolean,
 })
 
 const search = ref(props.filters.search || '')
 const statusFilter = ref(props.filters.status_filter || 'regular')
+const enrollmentFilter = ref(props.filters.enrollment_filter || 'all')
+const gradeLevelFilter = ref(props.filters.grade_level_id || 'all')
 const sortCol = ref(props.filters.sort || 'last_name')
 const sortDir = ref(props.filters.direction || 'asc')
+const showFilters = ref(false)
+
+const activeFiltersCount = computed(() => {
+    let count = 0
+    if (statusFilter.value && statusFilter.value !== 'regular') count++
+    if (gradeLevelFilter.value && gradeLevelFilter.value !== 'all') count++
+    if (sortCol.value !== 'last_name' || sortDir.value !== 'asc') count++
+    return count
+})
 const showModal = ref(false)
 const editingStudent = ref(null)
 
@@ -36,7 +50,8 @@ const showGuardianModal = ref(false)
 const guardianFormErrors = ref({})
 const guardianForm = useForm({
     cedula: '',
-    name: '',
+    first_name: '',
+    last_name: '',
     phone: '',
     email: '',
 })
@@ -78,7 +93,8 @@ function resetStudentForm() {
 
 function openCreateGuardian() {
     guardianForm.cedula = guardianSearchCedula.value
-    guardianForm.name = ''
+    guardianForm.first_name = ''
+    guardianForm.last_name = ''
     guardianForm.phone = ''
     guardianForm.email = ''
     guardianFormErrors.value = {}
@@ -112,12 +128,44 @@ function formatDate(dateStr) {
 }
 
 function doSearch() {
-    router.get('/admin/students', { search: search.value, sort: sortCol.value, direction: sortDir.value, status_filter: statusFilter.value }, { preserveState: true, replace: true })
+    router.get('/admin/students', { 
+        search: search.value, 
+        sort: sortCol.value, 
+        direction: sortDir.value, 
+        status_filter: statusFilter.value,
+        enrollment_filter: enrollmentFilter.value,
+        grade_level_id: gradeLevelFilter.value,
+    }, { preserveState: true, replace: true })
+}
+
+function setGradeLevelFilter(gradeId) {
+    gradeLevelFilter.value = gradeId
+    doSearch()
 }
 
 function setStatusFilter(status) {
-    statusFilter.value = status;
-    doSearch();
+    statusFilter.value = status
+    doSearch()
+}
+
+function setEnrollmentFilter(filter) {
+    enrollmentFilter.value = filter
+    doSearch()
+}
+
+function toggleSortDirection() {
+    sortDir.value = sortDir.value === 'asc' ? 'desc' : 'asc'
+    doSearch()
+}
+
+function resetFilters() {
+    search.value = ''
+    statusFilter.value = 'regular'
+    enrollmentFilter.value = 'all'
+    gradeLevelFilter.value = 'all'
+    sortCol.value = 'last_name'
+    sortDir.value = 'asc'
+    doSearch()
 }
 
 let searchTimeout = null;
@@ -167,9 +215,107 @@ function formatCedula(value) {
     return val;
 }
 
+// Documento de identidad / Cédula Escolar
+const docType = ref('V')
+const docNumber = ref('')
+
+const docPlaceholder = computed(() => {
+    switch (docType.value) {
+        case 'V': return 'Ej: 30123456 (6-9 dígitos)'
+        case 'E': return 'Ej: 84550210 (6-9 dígitos)'
+        case 'CE': return 'Ej: V11214200350 (12 carac.)'
+        case 'P': return 'Ej: ABC123456'
+        default: return 'Sin documento registrado'
+    }
+})
+
+const docMaxLength = computed(() => {
+    switch (docType.value) {
+        case 'V':
+        case 'E': return 9
+        case 'CE': return 12
+        case 'P': return 15
+        default: return 0
+    }
+})
+
+function parseCedulaToDoc(cedula) {
+    if (!cedula) return { type: 'NONE', number: '' }
+    if (cedula.startsWith('V-')) return { type: 'V', number: cedula.replace('V-', '') }
+    if (cedula.startsWith('E-')) return { type: 'E', number: cedula.replace('E-', '') }
+    if (cedula.startsWith('P-')) return { type: 'P', number: cedula.replace('P-', '') }
+    if (/^[VE][1-9]\d{10}$/i.test(cedula)) return { type: 'CE', number: cedula.toUpperCase() }
+    if (cedula.startsWith('CE-')) return { type: 'CE', number: cedula.replace('CE-', '').toUpperCase() }
+    return { type: 'V', number: cedula }
+}
+
+function onDocTypeChange() {
+    form.clearErrors('cedula')
+    if (docType.value === 'NONE') {
+        docNumber.value = ''
+    } else if (docType.value === 'V' || docType.value === 'E') {
+        docNumber.value = docNumber.value.replace(/[^0-9]/g, '').slice(0, 9)
+    } else if (docType.value === 'CE') {
+        docNumber.value = docNumber.value.toUpperCase().replace(/[^VE0-9]/g, '').slice(0, 12)
+    }
+}
+
+function onDocNumberInput(e) {
+    let val = (e.target.value || '').toUpperCase()
+    if (docType.value === 'V' || docType.value === 'E') {
+        val = val.replace(/[^0-9]/g, '').slice(0, 9)
+    } else if (docType.value === 'CE') {
+        val = val.replace(/[^VE0-9]/g, '').slice(0, 12)
+    } else if (docType.value === 'P') {
+        val = val.replace(/[^A-Z0-9]/g, '').slice(0, 15)
+    }
+    docNumber.value = val
+    validateDocNumber()
+}
+
+function validateDocNumber() {
+    if (docType.value === 'NONE' || !docNumber.value.trim()) {
+        form.clearErrors('cedula')
+        return true
+    }
+    const num = docNumber.value.trim()
+    if (docType.value === 'V' || docType.value === 'E') {
+        if (!/^\d{6,9}$/.test(num)) {
+            form.setError('cedula', 'La cédula debe contener entre 6 y 9 dígitos numéricos.')
+            return false
+        }
+    } else if (docType.value === 'CE') {
+        if (!/^[VE][1-9]\d{10}$/.test(num)) {
+            form.setError('cedula', 'La cédula escolar debe tener 12 caracteres oficiales (ej: V11214200350).')
+            return false
+        }
+    } else if (docType.value === 'P') {
+        if (!/^[A-Z0-9]{6,15}$/.test(num)) {
+            form.setError('cedula', 'El pasaporte debe tener entre 6 y 15 caracteres alfanuméricos.')
+            return false
+        }
+    }
+    form.clearErrors('cedula')
+    return true
+}
+
+function buildCedulaValue() {
+    if (docType.value === 'NONE' || !docNumber.value.trim()) {
+        return null
+    }
+    const clean = docNumber.value.trim().toUpperCase()
+    if (docType.value === 'V') return `V-${clean}`
+    if (docType.value === 'E') return `E-${clean}`
+    if (docType.value === 'P') return `P-${clean}`
+    if (docType.value === 'CE') return clean
+    return clean
+}
+
 function openCreateModal() {
     editingStudent.value = null
     resetStudentForm()
+    docType.value = 'V'
+    docNumber.value = ''
     showModal.value = true
 }
 
@@ -177,6 +323,10 @@ function openEditModal(student) {
     editingStudent.value = student
     form.first_name = student.first_name
     form.last_name = student.last_name
+
+    const parsed = parseCedulaToDoc(student.cedula)
+    docType.value = parsed.type
+    docNumber.value = parsed.number
     form.cedula = student.cedula
     form.birth_date = student.birth_date ? student.birth_date.split('T')[0] : ''
     form.gender = student.gender
@@ -196,7 +346,41 @@ function openEditModal(student) {
     showModal.value = true
 }
 
+// Rango de edad permitido: 10 a 20 años
+const minBirthDate = computed(() => {
+    const d = new Date()
+    d.setFullYear(d.getFullYear() - 20)
+    return d.toISOString().split('T')[0]
+})
+
+const maxBirthDate = computed(() => {
+    const d = new Date()
+    d.setFullYear(d.getFullYear() - 10)
+    return d.toISOString().split('T')[0]
+})
+
+function validateBirthDate() {
+    if (!form.birth_date) {
+        form.clearErrors('birth_date')
+        return true
+    }
+    if (form.birth_date > maxBirthDate.value) {
+        form.setError('birth_date', 'El estudiante debe tener al menos 10 años de edad.')
+        return false
+    }
+    if (form.birth_date < minBirthDate.value) {
+        form.setError('birth_date', 'El estudiante no puede tener más de 20 años de edad.')
+        return false
+    }
+    form.clearErrors('birth_date')
+    return true
+}
+
 function submit() {
+    if (!validateBirthDate() || !validateDocNumber()) {
+        return
+    }
+    form.cedula = buildCedulaValue()
     if (editingStudent.value) {
         form.put(`/admin/students/${editingStudent.value.id}`, {
             onSuccess: () => {
@@ -228,58 +412,165 @@ function submit() {
                 </div>
 
                 <div class="flex flex-col sm:flex-row gap-4 w-full lg:w-auto">
-                    <button v-if="$can('students.create')" @click="openCreateModal"
+                    <Link v-if="$can('students.create')" :href="'/admin/students/create'"
                         class="flex items-center justify-center gap-2 px-6 py-3.5 bg-primary-600 text-white text-[11px] font-black uppercase tracking-widest rounded-2xl shadow-lg shadow-primary-600/20 hover:bg-primary-500 hover:-translate-y-0.5 transition-all"
                     >
                         <i class="fas fa-plus"></i>
                         Nuevo Estudiante
-                    </button>
+                    </Link>
                 </div>
             </div>
 
-            <!-- Toolbar (Search, Filter, Sort) -->
-            <div class="glass-card rounded-3xl p-5 shadow-xl animate-fade-in-up flex flex-col gap-5" style="animation-delay: 50ms">
+            <!-- Toolbar Mobile-First (Search, Quick Grade Filter & Collapsible Filters) -->
+            <div class="glass-card rounded-3xl p-4 sm:p-5 shadow-xl animate-fade-in-up flex flex-col gap-4" style="animation-delay: 50ms">
                 
-                <!-- Buscador y Filtros -->
-                <div class="flex flex-col md:flex-row gap-4 items-center justify-between w-full">
-                    <!-- Status Tabs -->
-                    <div class="flex flex-wrap gap-2 w-full md:w-auto overflow-x-auto custom-scrollbar pb-2 md:pb-0">
-                        <button @click="setStatusFilter('all')" :class="statusFilter === 'all' ? 'bg-slate-800 text-white' : 'bg-slate-100 text-slate-500 hover:bg-slate-200'" class="px-4 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all whitespace-nowrap">Todos</button>
-                        <button @click="setStatusFilter('regular')" :class="statusFilter === 'regular' ? 'bg-emerald-500 text-white shadow-md shadow-emerald-500/20' : 'bg-slate-100 text-slate-500 hover:bg-slate-200'" class="px-4 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all whitespace-nowrap">Regulares</button>
-                        <button @click="setStatusFilter('graduated')" :class="statusFilter === 'graduated' ? 'bg-sky-500 text-white shadow-md shadow-sky-500/20' : 'bg-slate-100 text-slate-500 hover:bg-slate-200'" class="px-4 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all whitespace-nowrap">Graduados</button>
-                        <button @click="setStatusFilter('withdrawn')" :class="statusFilter === 'withdrawn' ? 'bg-gray-600 text-white shadow-md shadow-gray-500/20' : 'bg-slate-100 text-slate-500 hover:bg-slate-200'" class="px-4 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all whitespace-nowrap">Retirados</button>
-                        <button @click="setStatusFilter('suspended')" :class="statusFilter === 'suspended' ? 'bg-red-500 text-white shadow-md shadow-red-500/20' : 'bg-slate-100 text-slate-500 hover:bg-slate-200'" class="px-4 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all whitespace-nowrap">Suspendidos</button>
-                    </div>
-
+                <!-- Fila 1: Buscador y Botón de Filtros -->
+                <div class="flex items-center gap-2.5 sm:gap-3 w-full">
                     <!-- Buscador -->
-                    <div class="relative w-full md:w-96 shrink-0">
+                    <div class="relative flex-1">
                         <input
                             v-model="search"
                             type="text"
                             placeholder="Buscar por nombre, apellido o cédula..."
-                            class="w-full pl-11 pr-4 py-2.5 bg-white border-2 border-slate-100 rounded-2xl text-slate-700 text-sm font-bold focus:border-primary-400 focus:ring-0 outline-none transition-all shadow-sm"
+                            class="w-full pl-10 pr-9 sm:pl-11 sm:pr-10 py-3 bg-white border-2 border-slate-100 rounded-2xl text-slate-700 text-sm font-bold focus:border-primary-400 focus:ring-0 outline-none transition-all shadow-sm"
                         >
-                        <i class="fas fa-search absolute left-4 top-1/2 -translate-y-1/2 text-slate-400"></i>
+                        <i class="fas fa-search absolute left-3.5 sm:left-4 top-1/2 -translate-y-1/2 text-slate-400"></i>
+                        <button 
+                            v-if="search" 
+                            @click="search = ''; doSearch()" 
+                            class="absolute right-3 top-1/2 -translate-y-1/2 w-6 h-6 rounded-full bg-slate-100 hover:bg-slate-200 text-slate-400 hover:text-slate-600 flex items-center justify-center text-xs transition-colors"
+                            title="Limpiar búsqueda"
+                        >
+                            <i class="fas fa-times"></i>
+                        </button>
+                    </div>
+
+                    <!-- Botón Desplegable de Filtros -->
+                    <button 
+                        @click="showFilters = !showFilters"
+                        :class="showFilters || activeFiltersCount > 0 
+                            ? 'bg-primary-50 text-primary-600 border-primary-200 shadow-sm ring-2 ring-primary-100' 
+                            : 'bg-white text-slate-600 border-slate-100 hover:bg-slate-50'"
+                        class="px-3.5 sm:px-4 py-3 rounded-2xl border-2 font-bold text-xs flex items-center gap-2 transition-all shrink-0 cursor-pointer shadow-sm active:scale-95"
+                    >
+                        <i class="fas fa-sliders-h text-sm"></i>
+                        <span class="hidden sm:inline">Filtros</span>
+                        <span 
+                            v-if="activeFiltersCount > 0" 
+                            class="w-5 h-5 rounded-full bg-primary-600 text-white text-[10px] font-black flex items-center justify-center ml-0.5"
+                        >
+                            {{ activeFiltersCount }}
+                        </span>
+                        <i class="fas fa-chevron-down text-[10px] transition-transform duration-200" :class="showFilters ? 'rotate-180' : ''"></i>
+                    </button>
+                </div>
+
+                <!-- Fila 2: Selector Rápido de Años (Touch-friendly Horizontal Swipe) -->
+                <div class="flex items-center gap-2 overflow-x-auto custom-scrollbar pb-1 -mx-1 px-1 touch-pan-x">
+                    <button 
+                        v-if="!props.isCoordinator || (props.gradeLevels && props.gradeLevels.length > 1)"
+                        @click="setGradeLevelFilter('all')"
+                        :class="gradeLevelFilter === 'all' 
+                            ? 'bg-primary-600 text-white shadow-md shadow-primary-600/25' 
+                            : 'bg-slate-100 text-slate-600 hover:bg-slate-200'"
+                        class="px-3.5 py-2 rounded-xl text-xs font-black uppercase tracking-wider whitespace-nowrap transition-all shrink-0 active:scale-95"
+                    >
+                        {{ props.isCoordinator ? 'Mis Años' : 'Todos' }}
+                    </button>
+                    <button 
+                        v-for="grade in (props.gradeLevels || [])"
+                        :key="grade.id"
+                        @click="setGradeLevelFilter(grade.id)"
+                        :class="gradeLevelFilter == grade.id 
+                            ? 'bg-primary-600 text-white shadow-md shadow-primary-600/25' 
+                            : 'bg-slate-100 text-slate-600 hover:bg-slate-200'"
+                        class="px-3.5 py-2 rounded-xl text-xs font-black uppercase tracking-wider whitespace-nowrap transition-all shrink-0 active:scale-95"
+                    >
+                        {{ grade.name }}
+                    </button>
+                    <button 
+                        v-if="!props.isCoordinator"
+                        @click="setGradeLevelFilter('unassigned')"
+                        :class="gradeLevelFilter === 'unassigned' 
+                            ? 'bg-amber-500 text-white shadow-md shadow-amber-500/25' 
+                            : 'bg-slate-100 text-slate-600 hover:bg-slate-200'"
+                        class="px-3.5 py-2 rounded-xl text-xs font-black uppercase tracking-wider whitespace-nowrap transition-all shrink-0 active:scale-95 flex items-center gap-1.5"
+                    >
+                        <i class="fas fa-clock text-[10px]"></i> Sin Sección
+                    </button>
+                </div>
+
+                <!-- Panel Desplegable de Filtros Adicionales (Drawer / Accordion) -->
+                <div 
+                    v-show="showFilters" 
+                    class="p-4 bg-slate-50/90 rounded-2xl border border-slate-200/80 space-y-4 animate-fade-in-up"
+                >
+                    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4">
+                        <!-- Estatus del Estudiante -->
+                        <div>
+                            <label class="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1.5">
+                                Estatus del Alumno
+                            </label>
+                            <select 
+                                v-model="statusFilter" 
+                                @change="doSearch"
+                                class="w-full bg-white border-2 border-slate-200/80 rounded-xl px-3 py-2 text-xs font-bold text-slate-700 focus:border-primary-400 outline-none shadow-sm cursor-pointer"
+                            >
+                                <option value="regular">Regulares (Activos)</option>
+                                <option value="all">Todos los estatus</option>
+                                <option value="graduated">Graduados</option>
+                                <option value="withdrawn">Retirados</option>
+                                <option value="suspended">Suspendidos</option>
+                            </select>
+                        </div>
+
+                        <!-- Criterio de Ordenamiento -->
+                        <div>
+                            <label class="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1.5">
+                                Ordenar por
+                            </label>
+                            <div class="flex items-center gap-2">
+                                <select 
+                                    v-model="sortCol" 
+                                    @change="doSearch"
+                                    class="flex-1 bg-white border-2 border-slate-200/80 rounded-xl px-3 py-2 text-xs font-bold text-slate-700 focus:border-primary-400 outline-none shadow-sm cursor-pointer"
+                                >
+                                    <option value="last_name">Apellido</option>
+                                    <option value="first_name">Nombre</option>
+                                    <option value="cedula">Cédula</option>
+                                    <option value="birth_date">Edad / Fecha Nac.</option>
+                                    <option value="status">Estatus</option>
+                                </select>
+                                <button 
+                                    @click="toggleSortDirection" 
+                                    class="px-3 py-2 bg-white border-2 border-slate-200/80 rounded-xl text-slate-600 hover:text-primary-600 hover:border-primary-300 text-xs font-bold transition-all shadow-sm active:scale-95"
+                                    :title="sortDir === 'asc' ? 'Orden Ascendente (A-Z)' : 'Orden Descendente (Z-A)'"
+                                >
+                                    <i :class="sortDir === 'asc' ? 'fas fa-sort-amount-down-alt' : 'fas fa-sort-amount-up-alt'"></i>
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- Botón Limpiar Filtros -->
+                        <div class="flex items-end justify-start sm:justify-end">
+                            <button 
+                                v-if="activeFiltersCount > 0 || search"
+                                @click="resetFilters"
+                                class="w-full sm:w-auto px-4 py-2 bg-slate-200/80 hover:bg-slate-300 text-slate-600 text-xs font-black uppercase tracking-wider rounded-xl transition-all flex items-center justify-center gap-1.5 active:scale-95"
+                            >
+                                <i class="fas fa-undo-alt text-[10px]"></i>
+                                Limpiar Filtros
+                            </button>
+                        </div>
                     </div>
                 </div>
 
-                <hr class="border-slate-100">
-
-                <!-- Conteo y Ordenamiento -->
-                <div class="flex flex-col sm:flex-row items-center justify-between gap-4">
-                    <span class="text-xs font-bold text-slate-400 uppercase tracking-widest">
-                        Mostrando {{ students.data.length }} de {{ students.total }} registros
+                <!-- Fila Inferior: Conteo y Año Activo -->
+                <div class="flex items-center justify-between text-[11px] font-black text-slate-400 uppercase tracking-widest pt-2 border-t border-slate-100">
+                    <span>Mostrando {{ students.data.length }} de {{ students.total }} alumnos</span>
+                    <span v-if="activeYear" class="text-primary-600 font-extrabold flex items-center gap-1">
+                        <i class="fas fa-graduation-cap"></i> {{ activeYear.name }}
                     </span>
-
-                    <div class="relative w-full sm:w-64 shrink-0">
-                        <select v-model="sortCol" class="w-full bg-white border-2 border-slate-100 rounded-2xl px-4 py-2.5 text-slate-700 text-sm font-bold focus:border-primary-400 focus:ring-0 outline-none transition-all appearance-none shadow-sm cursor-pointer">
-                            <option value="last_name">Ordenar por Apellido</option>
-                            <option value="first_name">Ordenar por Nombre</option>
-                            <option value="cedula">Ordenar por Cédula</option>
-                            <option value="birth_date">Ordenar por Edad</option>
-                        </select>
-                        <i class="fas fa-sort absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none"></i>
-                    </div>
                 </div>
             </div>
 
@@ -321,8 +612,26 @@ function submit() {
                     </div>
 
                     <!-- Estatus y Acciones -->
-                    <div class="flex items-center justify-between md:justify-end gap-4 w-full md:w-auto">
+                    <div class="flex items-center justify-between md:justify-end gap-3 w-full md:w-auto">
                         
+                        <!-- Matriculation Badge (Año Activo) -->
+                        <div v-if="activeYear" class="shrink-0 flex items-center">
+                            <span v-if="student.enrollments && student.enrollments.length > 0" 
+                                class="px-2.5 py-1 text-[10px] font-bold rounded-lg border shadow-sm bg-primary-50 text-primary-700 border-primary-200 flex items-center gap-1.5"
+                                :title="'Matriculado en ' + (student.enrollments[0].section?.grade_level?.name || '') + ' ' + (student.enrollments[0].section?.name || '')"
+                            >
+                                <i class="fas fa-chalkboard text-[9px] text-primary-500"></i>
+                                <span>{{ student.enrollments[0].section?.grade_level?.name || '' }} "{{ student.enrollments[0].section?.name || '' }}"</span>
+                            </span>
+                            <span v-else 
+                                class="px-2.5 py-1 text-[10px] font-bold rounded-lg border shadow-sm bg-amber-50 text-amber-700 border-amber-200 flex items-center gap-1.5"
+                                title="Inscrito pero sin sección asignada para el año escolar activo"
+                            >
+                                <i class="fas fa-clock text-[9px] text-amber-500"></i>
+                                <span>Sin Sección</span>
+                            </span>
+                        </div>
+
                         <!-- Status Badge -->
                         <div class="shrink-0 flex justify-center">
                             <span v-if="student.status === 'regular'" class="px-2.5 py-1 text-[10px] font-black uppercase tracking-widest rounded-lg border shadow-sm bg-emerald-50 text-emerald-600 border-emerald-100">
@@ -392,30 +701,85 @@ function submit() {
                     </button>
                 </div>
 
-                <form @submit.prevent="submit" class="space-y-6">
+                <form novalidate @submit.prevent="submit" class="space-y-6">
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                         <div class="space-y-2">
                             <label class="text-[11px] font-black text-slate-400 uppercase tracking-widest ml-1">Nombres</label>
-                            <input v-model="form.first_name" type="text" class="w-full bg-slate-50 border-2 border-slate-200 rounded-2xl px-4 py-3 text-slate-700 text-sm font-bold focus:border-primary-400 focus:bg-white focus:ring-0 outline-none transition-all shadow-sm" required>
+                            <input 
+                                v-model="form.first_name" 
+                                @input="form.first_name = ($event.target.value || '').toUpperCase()"
+                                type="text" 
+                                placeholder="EJ: CARLOS JOSÉ"
+                                class="w-full bg-slate-50 border-2 border-slate-200 rounded-2xl px-4 py-3 text-slate-700 text-sm font-bold focus:border-primary-400 focus:bg-white focus:ring-0 outline-none transition-all shadow-sm uppercase" 
+                                required
+                            >
                             <p v-if="form.errors.first_name" class="text-xs text-red-500 font-bold mt-1 ml-1">{{ form.errors.first_name }}</p>
                         </div>
                         <div class="space-y-2">
                             <label class="text-[11px] font-black text-slate-400 uppercase tracking-widest ml-1">Apellidos</label>
-                            <input v-model="form.last_name" type="text" class="w-full bg-slate-50 border-2 border-slate-200 rounded-2xl px-4 py-3 text-slate-700 text-sm font-bold focus:border-primary-400 focus:bg-white focus:ring-0 outline-none transition-all shadow-sm" required>
+                            <input 
+                                v-model="form.last_name" 
+                                @input="form.last_name = ($event.target.value || '').toUpperCase()"
+                                type="text" 
+                                placeholder="EJ: PÉREZ GÓMEZ"
+                                class="w-full bg-slate-50 border-2 border-slate-200 rounded-2xl px-4 py-3 text-slate-700 text-sm font-bold focus:border-primary-400 focus:bg-white focus:ring-0 outline-none transition-all shadow-sm uppercase" 
+                                required
+                            >
                             <p v-if="form.errors.last_name" class="text-xs text-red-500 font-bold mt-1 ml-1">{{ form.errors.last_name }}</p>
                         </div>
                     </div>
 
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                         <div class="space-y-2">
-                            <label class="text-[11px] font-black text-slate-400 uppercase tracking-widest ml-1">Cédula Escolar</label>
-                            <input v-model="form.cedula" @input="form.cedula = formatCedula($event.target.value)" type="text" class="w-full bg-slate-50 border-2 border-slate-200 rounded-2xl px-4 py-3 text-slate-700 text-sm font-bold focus:border-primary-400 focus:bg-white focus:ring-0 outline-none transition-all shadow-sm" maxlength="12">
+                            <label class="text-[11px] font-black text-slate-400 uppercase tracking-widest ml-1">Documento de Identidad / Cédula</label>
+                            <div class="flex flex-col sm:flex-row gap-2">
+                                <div class="sm:w-40 shrink-0">
+                                    <select 
+                                        v-model="docType" 
+                                        @change="onDocTypeChange" 
+                                        class="w-full bg-slate-50 border-2 border-slate-200 rounded-2xl px-3 py-3 text-slate-700 text-xs font-bold focus:border-primary-400 focus:bg-white focus:ring-0 outline-none transition-all shadow-sm cursor-pointer"
+                                    >
+                                        <option value="V">V- (Venezolano)</option>
+                                        <option value="E">E- (Extranjero)</option>
+                                        <option value="CE">Cédula Escolar</option>
+                                        <option value="P">P- (Pasaporte)</option>
+                                        <option value="NONE">Sin documento</option>
+                                    </select>
+                                </div>
+                                <div class="flex-1">
+                                    <input 
+                                        v-model="docNumber" 
+                                        @input="onDocNumberInput"
+                                        type="text" 
+                                        :disabled="docType === 'NONE'"
+                                        :placeholder="docPlaceholder"
+                                        :maxlength="docMaxLength"
+                                        class="w-full bg-slate-50 border-2 border-slate-200 rounded-2xl px-4 py-3 text-slate-700 text-sm font-bold focus:border-primary-400 focus:bg-white focus:ring-0 outline-none transition-all shadow-sm disabled:opacity-50"
+                                    >
+                                </div>
+                            </div>
+                            <div v-if="docType === 'NONE'" class="mt-2 p-3 bg-amber-50 border border-amber-200 rounded-xl text-amber-800 text-xs flex items-start gap-2">
+                                <i class="fas fa-exclamation-triangle mt-0.5 text-amber-500 shrink-0"></i>
+                                <span>El alumno quedará registrado <strong>sin documento</strong>. Asegúrese de que sus datos sean exactos para evitar duplicados.</span>
+                            </div>
                             <p v-if="form.errors.cedula" class="text-xs text-red-500 font-bold mt-1 ml-1">{{ form.errors.cedula }}</p>
                         </div>
                         <div class="space-y-2">
-                            <label class="text-[11px] font-black text-slate-400 uppercase tracking-widest ml-1">Fecha de Nacimiento</label>
+                            <div class="flex items-center justify-between">
+                                <label class="text-[11px] font-black text-slate-400 uppercase tracking-widest ml-1">Fecha de Nacimiento</label>
+                                <span class="text-[10px] font-bold text-slate-400">10 a 20 años</span>
+                            </div>
                             <div class="relative">
-                                <input v-model="form.birth_date" type="date" class="w-full bg-slate-50 border-2 border-slate-200 rounded-2xl px-4 py-3 text-slate-700 text-sm font-bold focus:border-primary-400 focus:bg-white focus:ring-0 outline-none transition-all shadow-sm" required>
+                                <input 
+                                    v-model="form.birth_date" 
+                                    @input="validateBirthDate"
+                                    @change="validateBirthDate"
+                                    :min="minBirthDate"
+                                    :max="maxBirthDate"
+                                    type="date" 
+                                    class="w-full bg-slate-50 border-2 border-slate-200 rounded-2xl px-4 py-3 text-slate-700 text-sm font-bold focus:border-primary-400 focus:bg-white focus:ring-0 outline-none transition-all shadow-sm" 
+                                    required
+                                >
                             </div>
                             <p v-if="form.errors.birth_date" class="text-xs text-red-500 font-bold mt-1 ml-1">{{ form.errors.birth_date }}</p>
                         </div>
@@ -530,9 +894,14 @@ function submit() {
                         <p v-if="guardianFormErrors && guardianFormErrors.cedula" class="text-xs text-red-500 font-bold mt-1 ml-1">{{ guardianFormErrors.cedula[0] }}</p>
                     </div>
                     <div class="space-y-2">
-                        <label class="text-[11px] font-black text-slate-400 uppercase tracking-widest ml-1">Nombre Completo</label>
-                        <input v-model="guardianForm.name" type="text" class="w-full bg-slate-50 border-2 border-slate-200 rounded-xl px-4 py-2.5 text-slate-700 text-sm font-bold focus:border-primary-400 focus:bg-white focus:ring-0 outline-none transition-all shadow-sm">
-                        <p v-if="guardianFormErrors && guardianFormErrors.name" class="text-xs text-red-500 font-bold mt-1 ml-1">{{ guardianFormErrors.name[0] }}</p>
+                        <label class="text-[11px] font-black text-slate-400 uppercase tracking-widest ml-1">Nombres *</label>
+                        <input v-model="guardianForm.first_name" @input="guardianForm.first_name = ($event.target.value || '').toUpperCase()" type="text" placeholder="EJ: MARÍA ELENA" class="w-full bg-slate-50 border-2 border-slate-200 rounded-xl px-4 py-2.5 text-slate-700 text-sm font-bold focus:border-primary-400 focus:bg-white focus:ring-0 outline-none transition-all shadow-sm uppercase">
+                        <p v-if="guardianFormErrors && guardianFormErrors.first_name" class="text-xs text-red-500 font-bold mt-1 ml-1">{{ guardianFormErrors.first_name[0] }}</p>
+                    </div>
+                    <div class="space-y-2">
+                        <label class="text-[11px] font-black text-slate-400 uppercase tracking-widest ml-1">Apellidos *</label>
+                        <input v-model="guardianForm.last_name" @input="guardianForm.last_name = ($event.target.value || '').toUpperCase()" type="text" placeholder="EJ: PÉREZ GÓMEZ" class="w-full bg-slate-50 border-2 border-slate-200 rounded-xl px-4 py-2.5 text-slate-700 text-sm font-bold focus:border-primary-400 focus:bg-white focus:ring-0 outline-none transition-all shadow-sm uppercase">
+                        <p v-if="guardianFormErrors && guardianFormErrors.last_name" class="text-xs text-red-500 font-bold mt-1 ml-1">{{ guardianFormErrors.last_name[0] }}</p>
                     </div>
                     <div class="space-y-2">
                         <label class="text-[11px] font-black text-slate-400 uppercase tracking-widest ml-1">Teléfono</label>

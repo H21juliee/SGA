@@ -14,9 +14,15 @@ class Student extends Model
         'first_name',
         'last_name',
         'cedula',
+        'nationality',
         'birth_date',
+        'birth_place',
         'gender',
         'address',
+        'community_id',
+        'email',
+        'phone_home',
+        'phone_mobile',
         'guardian_id',
         'photo_url',
         'status',
@@ -39,6 +45,16 @@ class Student extends Model
     public function guardian(): \Illuminate\Database\Eloquent\Relations\BelongsTo
     {
         return $this->belongsTo(Guardian::class);
+    }
+
+    public function community(): \Illuminate\Database\Eloquent\Relations\BelongsTo
+    {
+        return $this->belongsTo(Community::class);
+    }
+
+    public function profile(): \Illuminate\Database\Eloquent\Relations\HasOne
+    {
+        return $this->hasOne(StudentProfile::class);
     }
 
     public function enrollments(): HasMany

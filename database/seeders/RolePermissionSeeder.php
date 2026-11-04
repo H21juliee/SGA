@@ -14,23 +14,21 @@ class RolePermissionSeeder extends Seeder
 
         $permissions = [
             'students.view', 'students.create', 'students.edit', 'students.delete', 'students.import',
-            'enrollments.update_status', 'enrollments.transfer',
-            'enrollments.view', 'enrollments.create', 'enrollments.edit', 'enrollments.delete',
+            'enrollments.view', 'enrollments.create', 'enrollments.edit', 'enrollments.delete', 'enrollments.update_status', 'enrollments.transfer',
             'attendance.view', 'attendance.manage', 'attendance.lock',
             'grades.view', 'grades.edit',
             'revisions.view', 'revisions.edit',
             'council.view', 'council.manage', 'council.batch_update',
-            'school_years.view', 'school_years.manage', 'school_years.toggle', 'school_years.promote', 'school_years.toggle_lapse',
+            'school_years.view', 'school_years.manage', 'school_years.toggle', 'school_years.toggle_lapse', 'school_years.promote',
             'sections.view', 'sections.manage',
             'subjects.view', 'subjects.manage', 'subjects.import',
             'academic_load.view', 'academic_load.manage', 'academic_load.assign',
-            'school_years.manage', 'school_years.toggle', 'school_years.promote', 'school_years.toggle_lapse', 'academic_load.assign',
             'reports.generate',
+            'teachers.import',
             'users.view', 'users.manage', 'users.reset_password',
             'roles.view', 'roles.manage',
             'settings.manage',
             'audit.view',
-            'teachers.import',
         ];
 
         foreach ($permissions as $permission) {
@@ -69,6 +67,22 @@ class RolePermissionSeeder extends Seeder
             'academic_load.view', 'academic_load.manage', 'academic_load.assign',
             'school_years.manage', 'school_years.toggle', 'school_years.promote', 'school_years.toggle_lapse', 'academic_load.assign',
             'reports.generate'
+        ]);
+
+        // Inscripción (Mesa de recepción de recaudos y registro de nuevos estudiantes)
+        $inscripcion = Role::firstOrCreate(['name' => 'Inscripción', 'guard_name' => 'web']);
+        $inscripcion->syncPermissions([
+            'students.view', 'students.create', 'students.edit',
+        ]);
+
+        // Coordinador de Año (Gestión de matrícula, cupos y secciones por año escolar)
+        $coordinador = Role::firstOrCreate(['name' => 'Coordinador de Año', 'guard_name' => 'web']);
+        $coordinador->syncPermissions([
+            'students.view', 'students.create', 'students.edit',
+            'enrollments.view', 'enrollments.create', 'enrollments.edit', 'enrollments.update_status', 'enrollments.transfer',
+            'sections.view',
+            'school_years.view',
+            // 'reports.generate',
         ]);
     }
 }

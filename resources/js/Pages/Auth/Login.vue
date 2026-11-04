@@ -1,26 +1,127 @@
 <script setup>
-import { ref } from 'vue'
-import { router, usePage } from '@inertiajs/vue3'
+import { ref, computed } from 'vue'
+import { useForm, usePage } from '@inertiajs/vue3'
 
 const page = usePage()
-const form = ref({
+
+const form = useForm({
     email: '',
     password: '',
     remember: false,
 })
-const loading = ref(false)
 
-const errors = ref({})
+const showPassword = ref(false)
+
+const clientErrors = ref({
+    email: '',
+    password: '',
+})
+
+const touched = ref({
+    email: false,
+    password: false,
+})
+
+// Regex que exige formato completo: usuario@dominio.extension (evita errores como usuario@gmailcom)
+const emailRegex = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/
+
+function validateEmail(showIfEmpty = true) {
+    const val = (form.email || '').trim()
+    if (!val) {
+        clientErrors.value.email = showIfEmpty ? 'Por favor, ingresa tu correo electrónico.' : ''
+        return false
+    }
+    if (!emailRegex.test(val)) {
+        clientErrors.value.email = 'Ingresa un correo electrónico válido (ej. usuario@colegio.com).'
+        return false
+    }
+    clientErrors.value.email = ''
+    return true
+}
+
+function validatePassword(showIfEmpty = true) {
+    const val = form.password || ''
+    if (!val) {
+        clientErrors.value.password = showIfEmpty ? 'Por favor, ingresa tu contraseña.' : ''
+        return false
+    }
+    clientErrors.value.password = ''
+    return true
+}
+
+function onEmailInput() {
+    form.clearErrors('email')
+    if (touched.value.email) {
+        validateEmail(false)
+    } else {
+        clientErrors.value.email = ''
+    }
+}
+
+function onEmailBlur() {
+    touched.value.email = true
+    validateEmail(true)
+}
+
+function onPasswordInput() {
+    form.clearErrors('password')
+    if (touched.value.password) {
+        validatePassword(false)
+    } else {
+        clientErrors.value.password = ''
+    }
+}
+
+function onPasswordBlur() {
+    touched.value.password = true
+    validatePassword(true)
+}
+
+// Errores combinados (frontend y backend)
+const emailError = computed(() => {
+    if (clientErrors.value.email) return clientErrors.value.email
+    // Si el backend arrojó un error específico de formato o campo requerido
+    if (form.errors.email && form.errors.email !== 'Las credenciales proporcionadas no coinciden con nuestros registros.') {
+        return form.errors.email
+    }
+    return ''
+})
+
+const passwordError = computed(() => {
+    return clientErrors.value.password || form.errors.password || ''
+})
+
+// Error global de autenticación fallida
+const authError = computed(() => {
+    return form.errors.email === 'Las credenciales proporcionadas no coinciden con nuestros registros.'
+        ? form.errors.email
+        : ''
+})
 
 function submit() {
-    loading.value = true
-    router.post('/login', form.value, {
-        onError: (e) => {
-            errors.value = e
-            loading.value = false
-        },
-        onSuccess: () => {
-            loading.value = false
+    touched.value.email = true
+    touched.value.password = true
+    form.clearErrors()
+
+    const isEmailValid = validateEmail(true)
+    const isPasswordValid = validatePassword(true)
+
+    if (!isEmailValid || !isPasswordValid) {
+        if (!isEmailValid) {
+            document.getElementById('email')?.focus()
+        } else if (!isPasswordValid) {
+            document.getElementById('password')?.focus()
+        }
+        return
+    }
+
+    form.email = form.email.trim()
+
+    form.post('/login', {
+        preserveScroll: true,
+        onFinish: () => {
+            form.password = ''
+            touched.value.password = false
         },
     })
 }
@@ -72,7 +173,15 @@ function submit() {
                         <p class="text-slate-400 font-bold text-xs mt-2 uppercase tracking-widest">Ingresa tus credenciales</p>
                     </div>
 
-                    <form @submit.prevent="submit" class="space-y-6">
+                    <!-- Banner de Alerta de Credenciales Incorrectas -->
+                    <div v-if="authError" class="mb-6 p-4 rounded-2xl bg-rose-50 border border-rose-200 text-rose-700 text-xs font-bold flex items-center gap-3 shadow-xs animate-fade-in-up">
+                        <div class="w-8 h-8 rounded-xl bg-rose-500 text-white flex items-center justify-center shrink-0 shadow-sm shadow-rose-500/30">
+                            <i class="fas fa-exclamation-triangle text-xs"></i>
+                        </div>
+                        <span class="leading-tight">{{ authError }}</span>
+                    </div>
+
+                    <form novalidate @submit.prevent="submit" class="space-y-6">
                         <!-- Email -->
                         <div class="space-y-2">
                             <label for="email" class="text-[11px] font-black text-slate-400 uppercase tracking-widest ml-1">Correo Electrónico</label>
@@ -81,14 +190,23 @@ function submit() {
                                     id="email"
                                     v-model="form.email"
                                     type="email"
-                                    required
                                     autofocus
-                                    class="w-full pl-12 pr-4 py-4 bg-slate-50 border-2 border-slate-50 rounded-2xl text-slate-700 text-sm font-bold focus:border-primary-400 focus:bg-white focus:ring-0 outline-none transition-all"
+                                    autocomplete="email"
+                                    @input="onEmailInput"
+                                    @blur="onEmailBlur"
+                                    class="w-full pl-12 pr-4 py-4 bg-slate-50 border-2 rounded-2xl text-slate-700 text-sm font-bold focus:ring-0 outline-none transition-all"
+                                    :class="emailError ? 'border-rose-300 bg-rose-50/20 text-rose-900 focus:border-rose-500 focus:bg-white' : 'border-slate-100 focus:border-primary-400 focus:bg-white'"
                                     placeholder="nombre@colegio.com"
                                 />
-                                <i class="fas fa-envelope absolute left-4 top-1/2 -translate-y-1/2 text-slate-300 group-focus-within:text-primary-500 transition-colors"></i>
+                                <i
+                                    class="fas fa-envelope absolute left-4 top-1/2 -translate-y-1/2 transition-colors"
+                                    :class="emailError ? 'text-rose-400' : 'text-slate-300 group-focus-within:text-primary-500'"
+                                ></i>
                             </div>
-                            <p v-if="errors.email" class="mt-1 text-xs font-bold text-red-500 ml-1">{{ errors.email }}</p>
+                            <p v-if="emailError" class="mt-1 text-xs font-bold text-rose-500 flex items-center gap-1.5 ml-1 animate-fade-in-up">
+                                <i class="fas fa-exclamation-circle text-[11px] shrink-0"></i>
+                                <span>{{ emailError }}</span>
+                            </p>
                         </div>
 
                         <!-- Password -->
@@ -98,13 +216,32 @@ function submit() {
                                 <input
                                     id="password"
                                     v-model="form.password"
-                                    type="password"
-                                    required
-                                    class="w-full pl-12 pr-4 py-4 bg-slate-50 border-2 border-slate-50 rounded-2xl text-slate-700 text-sm font-bold focus:border-primary-400 focus:bg-white focus:ring-0 outline-none transition-all"
+                                    :type="showPassword ? 'text' : 'password'"
+                                    autocomplete="current-password"
+                                    @input="onPasswordInput"
+                                    @blur="onPasswordBlur"
+                                    class="w-full pl-12 pr-12 py-4 bg-slate-50 border-2 rounded-2xl text-slate-700 text-sm font-bold focus:ring-0 outline-none transition-all"
+                                    :class="passwordError ? 'border-rose-300 bg-rose-50/20 text-rose-900 focus:border-rose-500 focus:bg-white' : 'border-slate-100 focus:border-primary-400 focus:bg-white'"
                                     placeholder="••••••••"
                                 />
-                                <i class="fas fa-lock absolute left-4 top-1/2 -translate-y-1/2 text-slate-300 group-focus-within:text-primary-500 transition-colors"></i>
+                                <i
+                                    class="fas fa-lock absolute left-4 top-1/2 -translate-y-1/2 transition-colors"
+                                    :class="passwordError ? 'text-rose-400' : 'text-slate-300 group-focus-within:text-primary-500'"
+                                ></i>
+                                <button
+                                    type="button"
+                                    @click="showPassword = !showPassword"
+                                    class="absolute right-4 top-1/2 -translate-y-1/2 text-slate-300 hover:text-slate-600 focus:text-primary-500 transition-colors p-1"
+                                    :title="showPassword ? 'Ocultar contraseña' : 'Ver contraseña'"
+                                    tabindex="-1"
+                                >
+                                    <i class="fas" :class="showPassword ? 'fa-eye-slash' : 'fa-eye'"></i>
+                                </button>
                             </div>
+                            <p v-if="passwordError" class="mt-1 text-xs font-bold text-rose-500 flex items-center gap-1.5 ml-1 animate-fade-in-up">
+                                <i class="fas fa-exclamation-circle text-[11px] shrink-0"></i>
+                                <span>{{ passwordError }}</span>
+                            </p>
                         </div>
 
                         <!-- Remember & Forgot -->
@@ -127,10 +264,10 @@ function submit() {
                         <!-- Submit -->
                         <button
                             type="submit"
-                            :disabled="loading"
+                            :disabled="form.processing"
                             class="w-full py-4.5 px-6 rounded-2xl text-[11px] font-black uppercase tracking-widest text-white bg-primary-600 hover:bg-primary-500 shadow-xl shadow-primary-600/20 hover:-translate-y-0.5 transition-all duration-300 disabled:opacity-50 mt-4 flex items-center justify-center gap-3"
                         >
-                            <template v-if="!loading">
+                            <template v-if="!form.processing">
                                 <span>Ingresar al Sistema</span>
                                 <i class="fas fa-arrow-right"></i>
                             </template>
@@ -155,3 +292,4 @@ function submit() {
         </div>
     </div>
 </template>
+

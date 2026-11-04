@@ -5,9 +5,17 @@ import axios from 'axios'
 import Swal from 'sweetalert2'
 import AppLayout from '@/Components/Layout/AppLayout.vue'
 import Modal from '@/Components/UI/Modal.vue'
+import SectionRepresentante from './Partials/SectionRepresentante.vue'
+import SectionPrincipal from './Partials/SectionPrincipal.vue'
+import SectionAdicional from './Partials/SectionAdicional.vue'
+import SectionMedica from './Partials/SectionMedica.vue'
+import SectionHabitacion from './Partials/SectionHabitacion.vue'
+import SectionComunidad from './Partials/SectionComunidad.vue'
+import SectionRecaudos from './Partials/SectionRecaudos.vue'
 
 const props = defineProps({
     student: Object,
+    communities: { type: Array, default: () => [] },
     enrollments: Array,
     subjectDebts: { type: Array, default: () => [] },
     allSubjects: { type: Array, default: () => [] },
@@ -27,14 +35,58 @@ function toggleYear(id) {
 
 // Student Edit Modal
 const showEditStudentModal = ref(false)
+const editTab = ref(1)
+const isProfileOpen = ref(false)
+const isEditHousingOpen = ref(true)
+const isEditCommunityOpen = ref(true)
+
 const studentForm = useForm({
     first_name: '',
     last_name: '',
+    nationality: 'V',
     cedula: '',
     birth_date: '',
+    birth_place: '',
     gender: 'M',
     status: 'regular',
-    guardian_id: '',
+    address: '',
+    community_id: '',
+    email: '',
+    phone_home: '',
+    phone_mobile: '',
+    guardian_id: null,
+    profile: {
+        lives_with: [],
+        family_group_count: null,
+        religion: '',
+        extracurricular_activities: false,
+        extracurricular_activities_detail: '',
+        has_canaima: false,
+        uses_canteen: false,
+        has_medical_condition: false,
+        medical_condition_detail: '',
+        has_allergies: false,
+        allergies_detail: '',
+        requires_pe_medication: false,
+        has_medical_certificate: false,
+        blood_type: '',
+        height: '',
+        weight: '',
+        doctor_visit_frequency: '',
+        housing_type: '',
+        housing_tenure: '',
+        housing_condition: '',
+        has_water: false,
+        has_electricity: false,
+        has_internet: false,
+        additional_services: '',
+        community_name: '',
+        belongs_to_communal_council: false,
+        functioning_services: [],
+        services_quality: '',
+        community_institutions: [],
+        documents_consignment: [],
+    },
 })
 
 const guardianSearchCedula = ref('')
@@ -46,7 +98,8 @@ const showGuardianModal = ref(false)
 const guardianFormErrors = ref({})
 const guardianForm = useForm({
     cedula: '',
-    name: '',
+    first_name: '',
+    last_name: '',
     phone: '',
     email: '',
 })
@@ -66,92 +119,279 @@ function formatPhone(value) {
     return val;
 }
 
-function formatCedula(value) {
-    if (!value) return '';
-    let val = value.toUpperCase().replace(/[^VEP0-9]/g, '');
-    if (val.length > 0 && !['V', 'E', 'P'].includes(val[0])) {
-        if (/[0-9]/.test(val[0])) {
-            val = 'V' + val;
-        } else {
-            val = val.substring(1);
+// Documento de identidad / Cédula Escolar
+const docType = ref('V')
+const docNumber = ref('')
+
+const docPlaceholder = computed(() => {
+    switch (docType.value) {
+        case 'V': return 'Ej: 30123456 (6-9 dígitos)'
+        case 'E': return 'Ej: 84550210 (6-9 dígitos)'
+        case 'CE': return 'Ej: V11214200350 (12 carac.)'
+        case 'P': return 'Ej: ABC123456'
+        default: return 'Sin documento registrado'
+    }
+})
+
+const docMaxLength = computed(() => {
+    switch (docType.value) {
+        case 'V':
+        case 'E': return 9
+        case 'CE': return 12
+        case 'P': return 15
+        default: return 0
+    }
+})
+
+function parseCedulaToDoc(cedula) {
+    if (!cedula) return { type: 'NONE', number: '' }
+    if (cedula.startsWith('V-')) return { type: 'V', number: cedula.replace('V-', '') }
+    if (cedula.startsWith('E-')) return { type: 'E', number: cedula.replace('E-', '') }
+    if (cedula.startsWith('P-')) return { type: 'P', number: cedula.replace('P-', '') }
+    if (/^[VE][1-9]\d{10}$/i.test(cedula)) return { type: 'CE', number: cedula.toUpperCase() }
+    if (cedula.startsWith('CE-')) return { type: 'CE', number: cedula.replace('CE-', '').toUpperCase() }
+    return { type: 'V', number: cedula }
+}
+
+function onDocTypeChange() {
+    studentForm.clearErrors('cedula')
+    if (docType.value === 'NONE') {
+        docNumber.value = ''
+    } else if (docType.value === 'V' || docType.value === 'E') {
+        docNumber.value = docNumber.value.replace(/[^0-9]/g, '').slice(0, 9)
+    } else if (docType.value === 'CE') {
+        docNumber.value = docNumber.value.toUpperCase().replace(/[^VE0-9]/g, '').slice(0, 12)
+    }
+}
+
+function onDocNumberInput(e) {
+    let val = (e.target.value || '').toUpperCase()
+    if (docType.value === 'V' || docType.value === 'E') {
+        val = val.replace(/[^0-9]/g, '').slice(0, 9)
+    } else if (docType.value === 'CE') {
+        val = val.replace(/[^VE0-9]/g, '').slice(0, 12)
+    } else if (docType.value === 'P') {
+        val = val.replace(/[^A-Z0-9]/g, '').slice(0, 15)
+    }
+    docNumber.value = val
+    validateDocNumber()
+}
+
+function validateDocNumber() {
+    if (docType.value === 'NONE' || !docNumber.value.trim()) {
+        studentForm.clearErrors('cedula')
+        return true
+    }
+    const num = docNumber.value.trim()
+    if (docType.value === 'V' || docType.value === 'E') {
+        if (!/^\d{6,9}$/.test(num)) {
+            studentForm.setError('cedula', 'La cédula debe contener entre 6 y 9 dígitos numéricos.')
+            return false
+        }
+    } else if (docType.value === 'CE') {
+        if (!/^[VE][1-9]\d{10}$/.test(num)) {
+            studentForm.setError('cedula', 'La cédula escolar debe tener 12 caracteres oficiales (ej: V11214200350).')
+            return false
+        }
+    } else if (docType.value === 'P') {
+        if (!/^[A-Z0-9]{6,15}$/.test(num)) {
+            studentForm.setError('cedula', 'El pasaporte debe tener entre 6 y 15 caracteres alfanuméricos.')
+            return false
         }
     }
-    if (val.length > 9) {
-        val = val.substring(0, 9);
+    studentForm.clearErrors('cedula')
+    return true
+}
+
+function buildCedulaValue() {
+    if (docType.value === 'NONE' || !docNumber.value.trim()) {
+        return null
     }
-    if (val.length > 1) {
-        val = val[0] + '-' + val.substring(1);
+    const clean = docNumber.value.trim().toUpperCase()
+    if (docType.value === 'V') return `V-${clean}`
+    if (docType.value === 'E') return `E-${clean}`
+    if (docType.value === 'P') return `P-${clean}`
+    if (docType.value === 'CE') return clean
+    return clean
+}
+
+// Rango de edad permitido: 10 a 20 años
+const minBirthDate = computed(() => {
+    const d = new Date()
+    d.setFullYear(d.getFullYear() - 20)
+    return d.toISOString().split('T')[0]
+})
+
+const maxBirthDate = computed(() => {
+    const d = new Date()
+    d.setFullYear(d.getFullYear() - 10)
+    return d.toISOString().split('T')[0]
+})
+
+function validateBirthDate() {
+    if (!studentForm.birth_date) {
+        studentForm.clearErrors('birth_date')
+        return true
     }
-    return val;
+    if (studentForm.birth_date > maxBirthDate.value) {
+        studentForm.setError('birth_date', 'El estudiante debe tener al menos 10 años de edad.')
+        return false
+    }
+    if (studentForm.birth_date < minBirthDate.value) {
+        studentForm.setError('birth_date', 'El estudiante no puede tener más de 20 años de edad.')
+        return false
+    }
+    studentForm.clearErrors('birth_date')
+    return true
 }
 
 function openEditStudentModal() {
     studentForm.clearErrors()
+    editTab.value = 1
     studentForm.first_name = props.student.first_name || ''
     studentForm.last_name = props.student.last_name || ''
+    studentForm.nationality = props.student.nationality || 'V'
     studentForm.cedula = props.student.cedula || ''
     studentForm.birth_date = props.student.birth_date ? props.student.birth_date.split('T')[0] : ''
+    studentForm.birth_place = props.student.birth_place || ''
     studentForm.gender = props.student.gender || 'M'
     studentForm.status = props.student.status || 'regular'
-    studentForm.guardian_id = props.student.guardian_id || ''
-    selectedGuardian.value = props.student.guardian || null
-    guardianSearchCedula.value = props.student.guardian?.cedula || ''
-    guardianNotFound.value = false
+    studentForm.address = props.student.address || ''
+    studentForm.community_id = props.student.community_id || ''
+    studentForm.email = props.student.email || ''
+    studentForm.phone_home = props.student.phone_home || ''
+    studentForm.phone_mobile = props.student.phone_mobile || ''
+    studentForm.guardian_id = props.student.guardian_id || null
+
+    const p = props.student.profile || {}
+    studentForm.profile = {
+        lives_with: p.lives_with ? [...p.lives_with] : [],
+        family_group_count: p.family_group_count ?? null,
+        religion: p.religion || '',
+        extracurricular_activities: Boolean(p.extracurricular_activities),
+        extracurricular_activities_detail: p.extracurricular_activities_detail || '',
+        has_canaima: Boolean(p.has_canaima),
+        uses_canteen: Boolean(p.uses_canteen),
+        has_medical_condition: Boolean(p.has_medical_condition),
+        medical_condition_detail: p.medical_condition_detail || '',
+        has_allergies: Boolean(p.has_allergies),
+        allergies_detail: p.allergies_detail || '',
+        requires_pe_medication: Boolean(p.requires_pe_medication),
+        has_medical_certificate: Boolean(p.has_medical_certificate),
+        blood_type: p.blood_type || '',
+        height: p.height || '',
+        weight: p.weight || '',
+        doctor_visit_frequency: p.doctor_visit_frequency || '',
+        housing_type: p.housing_type || '',
+        housing_tenure: p.housing_tenure || '',
+        housing_condition: p.housing_condition || '',
+        has_water: Boolean(p.has_water),
+        has_electricity: Boolean(p.has_electricity),
+        has_internet: Boolean(p.has_internet),
+        additional_services: p.additional_services || '',
+        community_name: p.community_name || '',
+        belongs_to_communal_council: Boolean(p.belongs_to_communal_council),
+        functioning_services: p.functioning_services ? [...p.functioning_services] : [],
+        services_quality: p.services_quality || '',
+        community_institutions: p.community_institutions ? [...p.community_institutions] : [],
+        documents_consignment: p.documents_consignment ? JSON.parse(JSON.stringify(p.documents_consignment)) : [],
+    }
+
     showEditStudentModal.value = true
 }
 
-function searchGuardian() {
-    if (!guardianSearchCedula.value) return
-    searchingGuardian.value = true
-    guardianNotFound.value = false
-    selectedGuardian.value = null
-    studentForm.guardian_id = ''
-
-    axios.get('/admin/guardians/search', { params: { cedula: guardianSearchCedula.value } })
-        .then(response => {
-            if (response.data.guardian) {
-                selectedGuardian.value = response.data.guardian
-                studentForm.guardian_id = response.data.guardian.id
-            } else {
-                guardianNotFound.value = true
-            }
-        })
-        .finally(() => {
-            searchingGuardian.value = false
-        })
-}
-
-function openCreateGuardian() {
-    guardianForm.cedula = guardianSearchCedula.value
-    guardianForm.name = ''
-    guardianForm.phone = ''
-    guardianForm.email = ''
-    guardianFormErrors.value = {}
-    showGuardianModal.value = true
-}
-
-function submitGuardian() {
-    axios.post('/admin/guardians', guardianForm.data())
-        .then(response => {
-            showGuardianModal.value = false
-            selectedGuardian.value = response.data.guardian
-            studentForm.guardian_id = response.data.guardian.id
-            guardianSearchCedula.value = response.data.guardian.cedula
-            guardianNotFound.value = false
-        })
-        .catch(error => {
-            if (error.response && error.response.status === 422) {
-                guardianFormErrors.value = error.response.data.errors
-            }
-        })
-}
-
 function submitStudentEdit() {
+    studentForm.clearErrors()
+    const venezuelanPhoneRegex = /^(0412|0414|0424|0416|0426|02\d{2})-\d{7}$/
+    let valid = true
+
+    if (!validateBirthDate()) valid = false
+
+    if (studentForm.phone_mobile && studentForm.phone_mobile.trim()) {
+        if (!venezuelanPhoneRegex.test(studentForm.phone_mobile.trim())) {
+            studentForm.setError('phone_mobile', 'El teléfono móvil debe tener un formato válido en Venezuela (ej: 0412-1234567, 0414-1234567).')
+            valid = false
+        }
+    }
+
+    if (studentForm.phone_home && studentForm.phone_home.trim()) {
+        if (!venezuelanPhoneRegex.test(studentForm.phone_home.trim())) {
+            studentForm.setError('phone_home', 'El teléfono fijo debe tener un código de área válido (ej: 0212-1234567).')
+            valid = false
+        }
+    }
+
+    // Talla (estatura en cm, máx. 2 decimales)
+    if (studentForm.profile?.height !== '' && studentForm.profile?.height !== null && studentForm.profile?.height !== undefined) {
+        const rawH = String(studentForm.profile.height).trim().replace(',', '.')
+        if (rawH.includes('.')) {
+            const dec = rawH.split('.')[1]
+            if (dec && dec.length > 2) {
+                studentForm.setError('profile.height', 'La estatura solo permite hasta 2 cifras decimales (ej: 165.50 cm).')
+                editTab.value = 4
+                valid = false
+            }
+        }
+        const h = parseFloat(rawH)
+        if (isNaN(h)) {
+            studentForm.setError('profile.height', 'La estatura debe ser un valor numérico.')
+            editTab.value = 4
+            valid = false
+        } else if (h > 0 && h <= 2.5) {
+            studentForm.setError('profile.height', 'Indique la estatura en centímetros (ej: 165 cm).')
+            editTab.value = 4
+            valid = false
+        } else if (h < 90 || h > 230) {
+            studentForm.setError('profile.height', 'La estatura debe estar entre 90 y 230 cm.')
+            editTab.value = 4
+            valid = false
+        }
+    }
+
+    // Peso corporal (en kg, máx. 2 decimales)
+    if (studentForm.profile?.weight !== '' && studentForm.profile?.weight !== null && studentForm.profile?.weight !== undefined) {
+        const rawW = String(studentForm.profile.weight).trim().replace(',', '.')
+        if (rawW.includes('.')) {
+            const dec = rawW.split('.')[1]
+            if (dec && dec.length > 2) {
+                studentForm.setError('profile.weight', 'El peso solo permite hasta 2 cifras decimales (ej: 63.75 kg).')
+                editTab.value = 4
+                valid = false
+            }
+        }
+        const w = parseFloat(rawW)
+        if (isNaN(w)) {
+            studentForm.setError('profile.weight', 'El peso debe ser un valor numérico.')
+            editTab.value = 4
+            valid = false
+        } else if (w < 20 || w > 200) {
+            studentForm.setError('profile.weight', 'El peso corporal debe estar entre 20 y 200 kg.')
+            editTab.value = 4
+            valid = false
+        }
+    }
+
+    if (!valid) return
+
     studentForm.put(`/admin/students/${props.student.id}`, {
         preserveScroll: true,
         onSuccess: () => {
             showEditStudentModal.value = false
-        }
+        },
+        onError: (errs) => {
+            const keys = Object.keys(errs)
+            if (keys.some(k => k === 'guardian_id')) {
+                editTab.value = 1
+            } else if (keys.some(k => ['first_name', 'last_name', 'cedula', 'birth_date', 'birth_place', 'address', 'community_id', 'nationality', 'phone_mobile', 'phone_home', 'email'].includes(k))) {
+                editTab.value = 2
+            } else if (keys.some(k => k.startsWith('profile.extracurricular') || k.startsWith('profile.lives_with') || k.startsWith('profile.family_group_count'))) {
+                editTab.value = 3
+            } else if (keys.some(k => k.startsWith('profile.medical') || k.startsWith('profile.allergies') || k.startsWith('profile.blood_type') || k.startsWith('profile.height') || k.startsWith('profile.weight'))) {
+                editTab.value = 4
+            } else if (keys.some(k => k.startsWith('profile.housing') || k.startsWith('profile.community') || k.startsWith('profile.has_'))) {
+                editTab.value = 5
+            }
+        },
     })
 }
 
@@ -442,6 +682,197 @@ const studentStatusMap = {
                     </div>
                 </div>
             <!-- Profile Card End -->
+            </div>
+
+            <!-- Ficha Socioeducativa y Médica del Alumno (Accordion) -->
+            <div class="glass-card rounded-3xl overflow-hidden shadow-xl border border-white/40 animate-fade-in-up" style="animation-delay: 120ms">
+                <div @click="isProfileOpen = !isProfileOpen"
+                     class="bg-slate-50/90 hover:bg-slate-100/80 px-5 sm:px-6 py-4 flex items-center justify-between gap-3 cursor-pointer transition-all select-none"
+                     :class="{ 'border-b border-slate-100/60': isProfileOpen }">
+                    <div class="flex items-center gap-3.5">
+                        <div class="w-10 h-10 rounded-xl flex items-center justify-center font-bold text-sm shadow-sm shrink-0 transition-colors"
+                             :class="isProfileOpen ? 'bg-primary-600 text-white shadow-primary-500/30' : 'bg-primary-50 text-primary-600'">
+                            <i class="fas fa-file-medical-alt text-sm"></i>
+                        </div>
+                        <div>
+                            <div class="flex flex-wrap items-center gap-2">
+                                <h3 class="text-base sm:text-lg font-black text-slate-800">Ficha Socioeducativa, Médica y Comunitaria</h3>
+                                <span v-if="student.profile" class="px-2.5 py-0.5 rounded-full text-xs font-black bg-emerald-100 text-emerald-800 border border-emerald-200">
+                                    Completa
+                                </span>
+                                <span v-else class="px-2.5 py-0.5 rounded-full text-xs font-black bg-slate-100 text-slate-500 border border-slate-200">
+                                    Básica
+                                </span>
+                            </div>
+                            <p class="text-xs text-slate-400 font-medium">Datos de convivencia, salud, vivienda y entorno social</p>
+                        </div>
+                    </div>
+
+                    <div class="w-8 h-8 rounded-xl bg-white border border-slate-200 flex items-center justify-center text-slate-400 shadow-sm transition-transform duration-200"
+                         :class="{ 'rotate-180': isProfileOpen }">
+                        <i class="fas fa-chevron-down text-xs"></i>
+                    </div>
+                </div>
+
+                <!-- Contenido de la Ficha -->
+                <div v-show="isProfileOpen" class="p-6 sm:p-8 space-y-6 bg-white/60">
+                    <!-- Grid de 4 Bloques -->
+                    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+                        <!-- 1. Identidad y Contacto -->
+                        <div class="bg-slate-50/70 border border-slate-200/80 rounded-2xl p-4 space-y-2.5">
+                            <h4 class="text-xs font-black text-slate-700 uppercase tracking-wider flex items-center gap-2">
+                                <i class="fas fa-id-card text-primary-500"></i> Filiación y Contacto
+                            </h4>
+                            <div class="space-y-1.5 text-xs">
+                                <div><span class="text-slate-400 font-bold">Nacionalidad:</span> <span class="font-bold text-slate-700">{{ student.nationality === 'E' ? 'Extranjera (E)' : 'Venezolana (V)' }}</span></div>
+                                <div><span class="text-slate-400 font-bold">Lugar Nac.:</span> <span class="font-bold text-slate-700">{{ student.birth_place || 'No especificado' }}</span></div>
+                                <div><span class="text-slate-400 font-bold">Comunidad:</span> <span class="font-bold text-slate-700">{{ student.community?.name || 'No asignada' }}</span></div>
+                                <div><span class="text-slate-400 font-bold">Dirección:</span> <span class="font-bold text-slate-700">{{ student.address || 'No registrada' }}</span></div>
+                                <div><span class="text-slate-400 font-bold">Móvil:</span> <span class="font-bold text-slate-700">{{ student.phone_mobile || '—' }}</span></div>
+                                <div><span class="text-slate-400 font-bold">Fijo:</span> <span class="font-bold text-slate-700">{{ student.phone_home || '—' }}</span></div>
+                                <div><span class="text-slate-400 font-bold">Correo:</span> <span class="font-bold text-slate-700">{{ student.email || '—' }}</span></div>
+                            </div>
+                        </div>
+
+                        <!-- 2. Entorno Familiar -->
+                        <div class="bg-slate-50/70 border border-slate-200/80 rounded-2xl p-4 space-y-2.5">
+                            <h4 class="text-xs font-black text-slate-700 uppercase tracking-wider flex items-center gap-2">
+                                <i class="fas fa-users text-primary-500"></i> Familiar y Social
+                            </h4>
+                            <div class="space-y-1.5 text-xs">
+                                <div><span class="text-slate-400 font-bold">Vive con:</span> <span class="font-bold text-slate-700">{{ student.profile?.lives_with?.length ? student.profile.lives_with.join(', ') : 'No especificado' }}</span></div>
+                                <div><span class="text-slate-400 font-bold">Grupo familiar:</span> <span class="font-bold text-slate-700">{{ student.profile?.family_group_count ? student.profile.family_group_count + ' personas' : '—' }}</span></div>
+                                <div><span class="text-slate-400 font-bold">Religión:</span> <span class="font-bold text-slate-700">{{ student.profile?.religion || '—' }}</span></div>
+                                <div><span class="text-slate-400 font-bold">Extraescolar:</span> <span class="font-bold text-slate-700">{{ student.profile?.extracurricular_activities ? student.profile.extracurricular_activities_detail || 'Sí' : 'No' }}</span></div>
+                                <div><span class="text-slate-400 font-bold">Canaima:</span> <span class="font-bold" :class="student.profile?.has_canaima ? 'text-emerald-600' : 'text-slate-500'">{{ student.profile?.has_canaima ? 'Sí posee' : 'No' }}</span></div>
+                                <div><span class="text-slate-400 font-bold">Comedor:</span> <span class="font-bold" :class="student.profile?.uses_canteen ? 'text-emerald-600' : 'text-slate-500'">{{ student.profile?.uses_canteen ? 'Sí usa' : 'No' }}</span></div>
+                            </div>
+                        </div>
+
+                        <!-- 3. Salud y Médica -->
+                        <div class="bg-slate-50/70 border border-slate-200/80 rounded-2xl p-4 space-y-2.5">
+                            <h4 class="text-xs font-black text-slate-700 uppercase tracking-wider flex items-center gap-2">
+                                <i class="fas fa-heartbeat text-rose-500"></i> Salud y Médica
+                            </h4>
+                            <div class="space-y-1.5 text-xs">
+                                <div><span class="text-slate-400 font-bold">Tratamiento:</span> <span class="font-bold" :class="student.profile?.has_medical_condition ? 'text-rose-600' : 'text-slate-700'">{{ student.profile?.has_medical_condition ? student.profile.medical_condition_detail || 'Sí' : 'Ninguno' }}</span></div>
+                                <div><span class="text-slate-400 font-bold">Alergias:</span> <span class="font-bold" :class="student.profile?.has_allergies ? 'text-amber-600' : 'text-slate-700'">{{ student.profile?.has_allergies ? student.profile.allergies_detail || 'Sí' : 'No' }}</span></div>
+                                <div><span class="text-slate-400 font-bold">Grupo Sang.:</span> <span class="font-bold text-slate-700">{{ student.profile?.blood_type || '—' }}</span></div>
+                                <div><span class="text-slate-400 font-bold">Talla / Peso:</span> <span class="font-bold text-slate-700">{{ student.profile?.height ? `${student.profile.height} cm` : '—' }} / {{ student.profile?.weight ? `${student.profile.weight} kg` : '—' }}</span></div>
+                                <div><span class="text-slate-400 font-bold">Medic. Ed. Física:</span> <span class="font-bold">{{ student.profile?.requires_pe_medication ? 'Sí requiere' : 'No' }}</span></div>
+                                <div><span class="text-slate-400 font-bold">Constancia Médica:</span> <span class="font-bold">{{ student.profile?.has_medical_certificate ? 'Consignada' : 'No' }}</span></div>
+                            </div>
+                        </div>
+
+                        <!-- 4. Vivienda y Comunidad -->
+                        <div class="bg-slate-50/70 border border-slate-200/80 rounded-2xl p-4 space-y-2.5">
+                            <h4 class="text-xs font-black text-slate-700 uppercase tracking-wider flex items-center gap-2">
+                                <i class="fas fa-home text-primary-500"></i> Vivienda y Comunidad
+                            </h4>
+                            <div class="space-y-1.5 text-xs">
+                                <div><span class="text-slate-400 font-bold">Vivienda:</span> <span class="font-bold text-slate-700">{{ student.profile?.housing_type || '—' }} ({{ student.profile?.housing_tenure || '—' }})</span></div>
+                                <div><span class="text-slate-400 font-bold">Estado:</span> <span class="font-bold text-slate-700">{{ student.profile?.housing_condition || '—' }}</span></div>
+                                <div>
+                                    <span class="text-slate-400 font-bold">Servicios:</span>
+                                    <div class="flex flex-wrap gap-1 mt-1">
+                                        <span v-if="student.profile?.has_water" class="px-2 py-0.5 bg-cyan-100 text-cyan-800 rounded text-[10px] font-bold">Agua</span>
+                                        <span v-if="student.profile?.has_electricity" class="px-2 py-0.5 bg-amber-100 text-amber-800 rounded text-[10px] font-bold">Luz</span>
+                                        <span v-if="student.profile?.has_internet" class="px-2 py-0.5 bg-indigo-100 text-indigo-800 rounded text-[10px] font-bold">Internet</span>
+                                    </div>
+                                </div>
+                                <div class="pt-1"><span class="text-slate-400 font-bold">Consejo Comunal:</span> <span class="font-bold">{{ student.profile?.belongs_to_communal_council ? 'Sí' : 'No' }}</span></div>
+                                <div><span class="text-slate-400 font-bold">Instituciones:</span> <span class="font-bold text-slate-700">{{ student.profile?.community_institutions?.length ? student.profile.community_institutions.join(', ') : '—' }}</span></div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Ficha Ampliada del Representante Legal -->
+                    <div v-if="student.guardian" class="bg-slate-50/70 border border-slate-200/80 rounded-2xl p-5 space-y-3">
+                        <div class="flex flex-wrap items-center justify-between gap-2 border-b border-slate-200/60 pb-3">
+                            <h4 class="text-xs font-black text-slate-800 uppercase tracking-wider flex items-center gap-2">
+                                <i class="fas fa-user-tie text-primary-500"></i> Ficha del Representante Legal
+                            </h4>
+                            <span v-if="student.guardian.relationship" class="px-2.5 py-1 rounded-lg text-[10px] font-black bg-primary-50 text-primary-700 border border-primary-100 uppercase">
+                                Parentesco: {{ student.guardian.relationship }}
+                            </span>
+                        </div>
+                        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 text-xs">
+                            <div>
+                                <span class="text-slate-400 font-bold block text-[10px] uppercase">Nombres y Apellidos</span>
+                                <span class="font-black text-slate-800 text-sm">{{ student.guardian.name || (student.guardian.first_name + ' ' + student.guardian.last_name) }}</span>
+                            </div>
+                            <div>
+                                <span class="text-slate-400 font-bold block text-[10px] uppercase">Cédula de Identidad</span>
+                                <span class="font-black text-slate-800 text-sm">{{ student.guardian.cedula }}</span>
+                            </div>
+                            <div>
+                                <span class="text-slate-400 font-bold block text-[10px] uppercase">Teléfono Móvil</span>
+                                <span class="font-bold text-slate-700">{{ student.guardian.phone || '—' }}</span>
+                            </div>
+                            <div>
+                                <span class="text-slate-400 font-bold block text-[10px] uppercase">Teléfono Fijo</span>
+                                <span class="font-bold text-slate-700">{{ student.guardian.phone_home || '—' }}</span>
+                            </div>
+                            <div>
+                                <span class="text-slate-400 font-bold block text-[10px] uppercase">Nivel de Instrucción</span>
+                                <span class="font-bold text-slate-700">{{ student.guardian.education_level || '—' }}</span>
+                            </div>
+                            <div>
+                                <span class="text-slate-400 font-bold block text-[10px] uppercase">Profesión u Ocupación</span>
+                                <span class="font-bold text-slate-700">{{ student.guardian.occupation || '—' }}</span>
+                            </div>
+                            <div>
+                                <span class="text-slate-400 font-bold block text-[10px] uppercase">Situación Laboral</span>
+                                <span class="font-bold text-slate-700">{{ student.guardian.is_working ? `Trabaja (${student.guardian.work_sector || 'N/E'} - ${student.guardian.work_type || 'N/E'})` : 'No trabaja' }}</span>
+                            </div>
+                            <div>
+                                <span class="text-slate-400 font-bold block text-[10px] uppercase">Dirección de Habitación</span>
+                                <span class="font-bold text-slate-700">{{ student.guardian.address || '—' }}</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Expediente de Recaudos y Consignación -->
+                    <div class="bg-slate-50/70 border border-slate-200/80 rounded-2xl p-5 space-y-3">
+                        <div class="flex flex-wrap items-center justify-between gap-2 border-b border-slate-200/60 pb-3">
+                            <h4 class="text-xs font-black text-slate-800 uppercase tracking-wider flex items-center gap-2">
+                                <i class="fas fa-folder-open text-primary-500"></i> Expediente de Recaudos y Consignación
+                            </h4>
+                            <span
+                                v-if="student.profile?.documents_consignment?.length"
+                                class="px-2.5 py-1 rounded-lg text-[10px] font-black uppercase"
+                                :class="student.profile.documents_consignment.filter(d => d.is_mandatory && !d.delivered).length === 0 ? 'bg-emerald-100 text-emerald-800 border border-emerald-200' : 'bg-amber-100 text-amber-800 border border-amber-200'"
+                            >
+                                {{ student.profile.documents_consignment.filter(d => d.is_mandatory && !d.delivered).length === 0 ? 'Expediente Completo' : 'Recaudos Pendientes' }}
+                            </span>
+                        </div>
+                        <div v-if="student.profile?.documents_consignment?.length" class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3 text-xs">
+                            <div
+                                v-for="doc in student.profile.documents_consignment"
+                                :key="doc.code"
+                                class="p-3 rounded-xl border bg-white flex flex-col justify-between gap-2 shadow-2xs"
+                                :class="doc.delivered ? 'border-emerald-200' : 'border-slate-200'"
+                            >
+                                <div class="flex items-start justify-between gap-2">
+                                    <span class="font-bold text-slate-800 text-[11px]">{{ doc.name }}</span>
+                                    <span
+                                        class="px-2 py-0.5 rounded text-[9px] font-black uppercase shrink-0"
+                                        :class="doc.delivered ? 'bg-emerald-100 text-emerald-800' : (doc.is_mandatory ? 'bg-rose-100 text-rose-800' : 'bg-slate-100 text-slate-600')"
+                                    >
+                                        {{ doc.delivered ? 'Consignado' : (doc.is_mandatory ? 'Debe' : 'Opcional') }}
+                                    </span>
+                                </div>
+                                <div v-if="doc.delivered" class="text-[10px] text-slate-500">
+                                    <span>Entregado: {{ doc.delivered_at }}</span>
+                                    <span v-if="doc.notes" class="block italic text-slate-400 truncate">{{ doc.notes }}</span>
+                                </div>
+                            </div>
+                        </div>
+                        <div v-else class="text-xs text-slate-400 italic">
+                            No se registraron recaudos consignados para este estudiante.
+                        </div>
+                    </div>
+                </div>
             </div>
 
             <!-- Materias Pendientes / Arrastre Académico (Accordion) -->
@@ -980,179 +1411,228 @@ const studentStatusMap = {
             </div>
         </div>
 
-        <!-- Modal Editar Estudiante -->
-        <Modal :show="showEditStudentModal" @close="showEditStudentModal = false" max-width="2xl">
-            <div class="p-8 max-h-[90vh] overflow-y-auto custom-scrollbar">
-                <div class="flex items-center justify-between mb-8">
+        <!-- Modal Editar Estudiante (5 Secciones Completas) -->
+        <Modal :show="showEditStudentModal" @close="showEditStudentModal = false" max-width="4xl">
+            <div class="p-6 sm:p-8 max-h-[90vh] overflow-y-auto custom-scrollbar">
+                <div class="flex items-center justify-between mb-6">
                     <div>
                         <h3 class="text-2xl font-black text-slate-800">
-                            Editar <span class="text-primary-500">Estudiante</span>
+                            Editar Ficha de <span class="gradient-text">{{ student.first_name }} {{ student.last_name }}</span>
                         </h3>
-                        <p class="text-sm font-medium text-slate-400 mt-1">Completa los datos del expediente académico</p>
+                        <p class="text-xs font-bold text-slate-400 mt-1">Expediente personal, familiar, médico, habitacional y comunitario</p>
                     </div>
                     <button @click="showEditStudentModal = false" class="w-10 h-10 rounded-full bg-slate-50 text-slate-400 hover:bg-slate-100 transition-all shadow-sm">
                         <i class="fas fa-times"></i>
                     </button>
                 </div>
 
-                <form @submit.prevent="submitStudentEdit" class="space-y-6">
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                        <div class="space-y-2">
-                            <label class="text-[11px] font-black text-slate-400 uppercase tracking-widest ml-1">Nombres</label>
-                            <input v-model="studentForm.first_name" type="text" class="w-full bg-slate-50 border-2 border-slate-200 rounded-2xl px-4 py-3 text-slate-700 text-sm font-bold focus:border-primary-400 focus:bg-white focus:ring-0 outline-none transition-all shadow-sm" required>
-                            <p v-if="studentForm.errors.first_name" class="text-xs text-red-500 font-bold mt-1 ml-1">{{ studentForm.errors.first_name }}</p>
-                        </div>
-                        <div class="space-y-2">
-                            <label class="text-[11px] font-black text-slate-400 uppercase tracking-widest ml-1">Apellidos</label>
-                            <input v-model="studentForm.last_name" type="text" class="w-full bg-slate-50 border-2 border-slate-200 rounded-2xl px-4 py-3 text-slate-700 text-sm font-bold focus:border-primary-400 focus:bg-white focus:ring-0 outline-none transition-all shadow-sm" required>
-                            <p v-if="studentForm.errors.last_name" class="text-xs text-red-500 font-bold mt-1 ml-1">{{ studentForm.errors.last_name }}</p>
-                        </div>
+                <!-- Tabs de navegación entre las 5 secciones -->
+                <div class="flex flex-wrap gap-2 border-b border-slate-100 pb-4 mb-6">
+                    <button
+                        type="button"
+                        @click="editTab = 1"
+                        :class="editTab === 1 ? 'bg-primary-600 text-white shadow-md shadow-primary-600/20' : 'bg-slate-100 text-slate-600 hover:bg-slate-200'"
+                        class="px-4 py-2 rounded-xl text-xs font-black uppercase tracking-wider transition-all"
+                    >
+                        1. Representante
+                    </button>
+                    <button
+                        type="button"
+                        @click="editTab = 2"
+                        :class="editTab === 2 ? 'bg-primary-600 text-white shadow-md shadow-primary-600/20' : 'bg-slate-100 text-slate-600 hover:bg-slate-200'"
+                        class="px-4 py-2 rounded-xl text-xs font-black uppercase tracking-wider transition-all"
+                    >
+                        2. Estudiante
+                    </button>
+                    <button
+                        type="button"
+                        @click="editTab = 3"
+                        :class="editTab === 3 ? 'bg-primary-600 text-white shadow-md shadow-primary-600/20' : 'bg-slate-100 text-slate-600 hover:bg-slate-200'"
+                        class="px-4 py-2 rounded-xl text-xs font-black uppercase tracking-wider transition-all"
+                    >
+                        3. Familiar
+                    </button>
+                    <button
+                        type="button"
+                        @click="editTab = 4"
+                        :class="editTab === 4 ? 'bg-primary-600 text-white shadow-md shadow-primary-600/20' : 'bg-slate-100 text-slate-600 hover:bg-slate-200'"
+                        class="px-4 py-2 rounded-xl text-xs font-black uppercase tracking-wider transition-all"
+                    >
+                        4. Salud
+                    </button>
+                    <button
+                        type="button"
+                        @click="editTab = 5"
+                        :class="editTab === 5 ? 'bg-primary-600 text-white shadow-md shadow-primary-600/20' : 'bg-slate-100 text-slate-600 hover:bg-slate-200'"
+                        class="px-4 py-2 rounded-xl text-xs font-black uppercase tracking-wider transition-all"
+                    >
+                        5. Vivienda y Comunidad
+                    </button>
+                    <button
+                        type="button"
+                        @click="editTab = 6"
+                        :class="editTab === 6 ? 'bg-primary-600 text-white shadow-md shadow-primary-600/20' : 'bg-slate-100 text-slate-600 hover:bg-slate-200'"
+                        class="px-4 py-2 rounded-xl text-xs font-black uppercase tracking-wider transition-all"
+                    >
+                        6. Recaudos
+                    </button>
+                </div>
+
+                <form novalidate @submit.prevent="submitStudentEdit" class="space-y-6">
+                    <!-- Tab 1: Representante Legal -->
+                    <div v-show="editTab === 1">
+                        <SectionRepresentante
+                            v-model="studentForm.guardian_id"
+                            :initial-guardian="student.guardian"
+                            :error="studentForm.errors.guardian_id"
+                            @update:guardian="selectedGuardian = $event"
+                        />
                     </div>
 
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                        <div class="space-y-2">
-                            <label class="text-[11px] font-black text-slate-400 uppercase tracking-widest ml-1">Cédula Escolar</label>
-                            <input v-model="studentForm.cedula" @input="studentForm.cedula = formatCedula($event.target.value)" type="text" class="w-full bg-slate-50 border-2 border-slate-200 rounded-2xl px-4 py-3 text-slate-700 text-sm font-bold focus:border-primary-400 focus:bg-white focus:ring-0 outline-none transition-all shadow-sm" maxlength="12">
-                            <p v-if="studentForm.errors.cedula" class="text-xs text-red-500 font-bold mt-1 ml-1">{{ studentForm.errors.cedula }}</p>
+                    <!-- Tab 2: Información del Estudiante -->
+                    <div v-show="editTab === 2" class="space-y-5">
+                        <div class="space-y-1.5 p-4 bg-slate-50 border-2 border-slate-200/80 rounded-2xl">
+                            <label class="text-[11px] font-black text-slate-500 uppercase tracking-wider ml-1">Estatus del Alumno</label>
+                            <select
+                                v-model="studentForm.status"
+                                class="w-full bg-white border-2 border-slate-200 rounded-xl px-4 py-2.5 text-slate-800 text-xs font-bold focus:border-primary-400 outline-none"
+                            >
+                                <option value="regular">Regular</option>
+                                <option value="withdrawn">Retirado</option>
+                                <option value="suspended">Suspendido</option>
+                                <option value="graduated">Graduado</option>
+                            </select>
                         </div>
-                        <div class="space-y-2">
-                            <label class="text-[11px] font-black text-slate-400 uppercase tracking-widest ml-1">Fecha de Nacimiento</label>
-                            <div class="relative">
-                                <input v-model="studentForm.birth_date" type="date" class="w-full bg-slate-50 border-2 border-slate-200 rounded-2xl px-4 py-3 text-slate-700 text-sm font-bold focus:border-primary-400 focus:bg-white focus:ring-0 outline-none transition-all shadow-sm" required>
-                            </div>
-                            <p v-if="studentForm.errors.birth_date" class="text-xs text-red-500 font-bold mt-1 ml-1">{{ studentForm.errors.birth_date }}</p>
-                        </div>
+                        <SectionPrincipal
+                            :form="studentForm"
+                            :communities="communities"
+                            :guardian="selectedGuardian || student.guardian"
+                            :student-id="student.id"
+                        />
                     </div>
 
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                        <div class="space-y-2">
-                            <label class="text-[11px] font-black text-slate-400 uppercase tracking-widest ml-1">Género</label>
-                            <div class="relative">
-                                <select v-model="studentForm.gender" class="w-full bg-slate-50 border-2 border-slate-200 rounded-2xl px-4 py-3 text-slate-700 text-sm font-bold focus:border-primary-400 focus:bg-white focus:ring-0 outline-none transition-all appearance-none cursor-pointer shadow-sm">
-                                    <option value="M">Masculino</option>
-                                    <option value="F">Femenino</option>
-                                </select>
-                                <i class="fas fa-chevron-down absolute right-4 top-1/2 -translate-y-1/2 text-slate-300 pointer-events-none"></i>
-                            </div>
-                        </div>
-                        <div class="space-y-2">
-                            <label class="text-[11px] font-black text-slate-400 uppercase tracking-widest ml-1">Estatus</label>
-                            <div class="relative">
-                                <select v-model="studentForm.status" class="w-full bg-slate-50 border-2 border-slate-200 rounded-2xl px-4 py-3 text-slate-700 text-sm font-bold focus:border-primary-400 focus:bg-white focus:ring-0 outline-none transition-all appearance-none cursor-pointer shadow-sm">
-                                    <option value="regular">Regular</option>
-                                    <option value="withdrawn">Retirado</option>
-                                    <option value="suspended">Suspendido</option>
-                                </select>
-                                <i class="fas fa-chevron-down absolute right-4 top-1/2 -translate-y-1/2 text-slate-300 pointer-events-none"></i>
-                            </div>
-                        </div>
+                    <!-- Tab 3: Familiar -->
+                    <div v-show="editTab === 3">
+                        <SectionAdicional :form="studentForm" />
                     </div>
 
-                    <!-- Guardian Section -->
-                    <div class="pt-6 border-t border-slate-100">
-                        <h4 class="text-sm font-black text-slate-800 uppercase tracking-widest mb-4">Representante</h4>
-                        
-                        <div class="bg-slate-50 border border-slate-200 rounded-2xl p-6 relative shadow-sm">
-                            <div v-if="selectedGuardian" class="flex items-center justify-between">
-                                <div class="flex items-center gap-4">
-                                    <div class="w-10 h-10 bg-primary-50 text-primary-500 rounded-full flex items-center justify-center shadow-sm">
-                                        <i class="fas fa-user-tie"></i>
+                    <!-- Tab 4: Salud -->
+                    <div v-show="editTab === 4">
+                        <SectionMedica :form="studentForm" />
+                    </div>
+
+                    <!-- Tab 5: Vivienda y Comunidad (Acordeón) -->
+                    <div v-show="editTab === 5" class="space-y-6">
+                        <!-- Acordeón 1: Habitación y Vivienda -->
+                        <div class="border-2 border-slate-200/80 rounded-3xl overflow-hidden bg-white shadow-sm transition-all">
+                            <button
+                                type="button"
+                                @click="isEditHousingOpen = !isEditHousingOpen"
+                                class="w-full text-left bg-slate-50/80 hover:bg-slate-100/80 px-4 sm:px-6 py-3.5 sm:py-4 flex items-center justify-between gap-3 transition-colors select-none"
+                                :class="{ 'border-b-2 border-slate-100': isEditHousingOpen }"
+                            >
+                                <div class="flex items-center gap-3.5 min-w-0">
+                                    <div
+                                        class="hidden sm:flex w-10 h-10 rounded-2xl items-center justify-center font-black text-sm shadow-sm shrink-0 transition-colors"
+                                        :class="isEditHousingOpen ? 'bg-primary-600 text-white shadow-primary-500/20' : 'bg-slate-200 text-slate-500'"
+                                    >
+                                        <i class="fas fa-home"></i>
                                     </div>
-                                    <div>
-                                        <p class="font-bold text-slate-800">{{ selectedGuardian.name }}</p>
-                                        <p class="text-xs text-slate-500 font-medium">C.I: {{ selectedGuardian.cedula || 'N/A' }} | Tel: {{ selectedGuardian.phone || 'N/A' }}</p>
-                                    </div>
-                                </div>
-                                <button type="button" @click="selectedGuardian = null; studentForm.guardian_id = ''; guardianSearchCedula = '';" class="text-[10px] font-black text-red-500 hover:text-white uppercase tracking-widest bg-red-50 hover:bg-red-500 px-3 py-2 rounded-lg border border-red-100 transition-colors shadow-sm">
-                                    Cambiar
-                                </button>
-                            </div>
-                            
-                            <div v-else class="space-y-4">
-                                <div>
-                                    <label class="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1 mb-2 block">Buscar por Cédula</label>
-                                    <div class="flex gap-3">
-                                        <div class="relative flex-1">
-                                            <input v-model="guardianSearchCedula" @input="guardianSearchCedula = formatCedula($event.target.value)" @keyup.enter="searchGuardian" type="text" placeholder="Ej: V-12345678" class="w-full bg-white border-2 border-slate-200 rounded-xl px-4 py-2.5 text-slate-700 text-sm font-bold focus:border-primary-400 focus:ring-0 outline-none transition-all shadow-sm" maxlength="12">
+                                    <div class="min-w-0">
+                                        <div class="flex flex-wrap items-center gap-2">
+                                            <h4 class="text-sm sm:text-base font-black text-slate-800">5.1 Habitación y Servicios Básicos</h4>
+                                            <span
+                                                class="text-[10px] font-black uppercase tracking-wider px-2 py-0.5 rounded-lg shrink-0"
+                                                :class="isEditHousingOpen ? 'bg-primary-50 text-primary-600' : 'bg-slate-200 text-slate-600'"
+                                            >
+                                                {{ isEditHousingOpen ? 'Abierto' : 'Plegado' }}
+                                            </span>
                                         </div>
-                                        <button type="button" @click="searchGuardian" :disabled="searchingGuardian || !guardianSearchCedula" class="px-5 py-2.5 bg-primary-600 text-white text-xs font-black uppercase tracking-widest rounded-xl shadow-md shadow-primary-600/20 hover:bg-primary-500 hover:-translate-y-0.5 transition-all disabled:opacity-50 disabled:translate-y-0">
-                                            <i v-if="searchingGuardian" class="fas fa-spinner fa-spin"></i>
-                                            <i v-else class="fas fa-search"></i>
-                                        </button>
+                                        <p class="text-xs text-slate-400 font-bold mt-0.5">Tipo de inmueble, tenencia, condición física y agua/luz/internet</p>
                                     </div>
-                                    <p v-if="studentForm.errors.guardian_id" class="text-xs text-red-500 font-bold mt-1 ml-1">{{ studentForm.errors.guardian_id }}</p>
                                 </div>
-                                
-                                <div v-if="guardianNotFound" class="bg-amber-50 border border-amber-200 rounded-xl p-4 flex items-center justify-between animate-fade-in-up shadow-sm">
-                                    <p class="text-[11px] font-bold text-amber-700">No se encontró representante con esta cédula.</p>
-                                    <button type="button" @click="openCreateGuardian" class="px-4 py-2 bg-amber-600 text-white text-[10px] font-black uppercase tracking-widest rounded-lg shadow-sm hover:bg-amber-500 transition-all">
-                                        Registrar
-                                    </button>
+
+                                <div
+                                    class="w-8 h-8 rounded-xl bg-white border border-slate-200 flex items-center justify-center text-slate-400 shadow-sm transition-transform duration-200 shrink-0"
+                                    :class="{ 'rotate-180': isEditHousingOpen }"
+                                >
+                                    <i class="fas fa-chevron-down text-xs"></i>
                                 </div>
+                            </button>
+
+                            <div v-show="isEditHousingOpen" class="p-3.5 sm:p-7">
+                                <SectionHabitacion :form="studentForm" :hide-header="true" />
+                            </div>
+                        </div>
+
+                        <!-- Acordeón 2: Comunidad y Entorno Social -->
+                        <div class="border-2 border-slate-200/80 rounded-3xl overflow-hidden bg-white shadow-sm transition-all">
+                            <button
+                                type="button"
+                                @click="isEditCommunityOpen = !isEditCommunityOpen"
+                                class="w-full text-left bg-slate-50/80 hover:bg-slate-100/80 px-4 sm:px-6 py-3.5 sm:py-4 flex items-center justify-between gap-3 transition-colors select-none"
+                                :class="{ 'border-b-2 border-slate-100': isEditCommunityOpen }"
+                            >
+                                <div class="flex items-center gap-3.5 min-w-0">
+                                    <div
+                                        class="hidden sm:flex w-10 h-10 rounded-2xl items-center justify-center font-black text-sm shadow-sm shrink-0 transition-colors"
+                                        :class="isEditCommunityOpen ? 'bg-primary-600 text-white shadow-primary-500/20' : 'bg-slate-200 text-slate-500'"
+                                    >
+                                        <i class="fas fa-city"></i>
+                                    </div>
+                                    <div class="min-w-0">
+                                        <div class="flex flex-wrap items-center gap-2">
+                                            <h4 class="text-sm sm:text-base font-black text-slate-800">5.2 Comunidad y Entorno Social</h4>
+                                            <span
+                                                class="text-[10px] font-black uppercase tracking-wider px-2 py-0.5 rounded-lg shrink-0"
+                                                :class="isEditCommunityOpen ? 'bg-primary-50 text-primary-600' : 'bg-slate-200 text-slate-600'"
+                                            >
+                                                {{ isEditCommunityOpen ? 'Abierto' : 'Plegado' }}
+                                            </span>
+                                        </div>
+                                        <p class="text-xs text-slate-400 font-bold mt-0.5">Consejo comunal, servicios comunitarios e instituciones del entorno</p>
+                                    </div>
+                                </div>
+
+                                <div
+                                    class="w-8 h-8 rounded-xl bg-white border border-slate-200 flex items-center justify-center text-slate-400 shadow-sm transition-transform duration-200 shrink-0"
+                                    :class="{ 'rotate-180': isEditCommunityOpen }"
+                                >
+                                    <i class="fas fa-chevron-down text-xs"></i>
+                                </div>
+                            </button>
+
+                            <div v-show="isEditCommunityOpen" class="p-3.5 sm:p-7">
+                                <SectionComunidad :form="studentForm" :hide-header="true" />
                             </div>
                         </div>
                     </div>
 
-                    <div class="flex items-center justify-end gap-4 mt-8 pt-4">
-                        <button type="button" @click="showEditStudentModal = false" class="px-6 py-3 text-sm font-black uppercase tracking-widest text-slate-400 hover:text-slate-600 transition-all">
+                    <!-- Tab 6: Recaudos y Consignación -->
+                    <div v-show="editTab === 6">
+                        <SectionRecaudos :form="studentForm" />
+                    </div>
+
+                    <div class="flex items-center justify-between gap-4 pt-6 border-t border-slate-100">
+                        <button
+                            type="button"
+                            @click="showEditStudentModal = false"
+                            class="px-6 py-3 text-xs font-black uppercase tracking-widest text-slate-400 hover:text-slate-600 transition-all"
+                        >
                             Cancelar
                         </button>
-                        <button 
-                            type="submit" 
-                            :disabled="studentForm.processing" 
-                            class="px-10 py-3.5 bg-primary-600 text-white text-[11px] font-black uppercase tracking-widest rounded-2xl shadow-lg shadow-primary-600/20 hover:bg-primary-500 hover:-translate-y-0.5 transition-all disabled:opacity-50 disabled:translate-y-0"
+
+                        <button
+                            type="submit"
+                            :disabled="studentForm.processing"
+                            class="px-8 py-3 bg-primary-600 text-white text-xs font-black uppercase tracking-widest rounded-2xl shadow-lg shadow-primary-600/20 hover:bg-primary-500 transition-all disabled:opacity-50 flex items-center gap-2"
                         >
-                            <i class="fas fa-save mr-2"></i>
+                            <i v-if="studentForm.processing" class="fas fa-circle-notch fa-spin"></i>
+                            <i v-else class="fas fa-save"></i>
                             Guardar Cambios
                         </button>
                     </div>
                 </form>
-            </div>
-        </Modal>
-
-        <!-- Guardian Create Modal -->
-        <Modal :show="showGuardianModal" @close="showGuardianModal = false" max-width="md">
-            <div class="p-8">
-                <div class="flex items-center justify-between mb-8">
-                    <div>
-                        <h3 class="text-xl font-black text-slate-800">
-                            Nuevo <span class="text-primary-500">Representante</span>
-                        </h3>
-                        <p class="text-xs font-medium text-slate-400 mt-1">Ingresa los datos para registrar un nuevo apoderado.</p>
-                    </div>
-                    <button @click="showGuardianModal = false" class="w-8 h-8 rounded-full bg-slate-50 text-slate-400 hover:bg-slate-100 transition-all shadow-sm">
-                        <i class="fas fa-times"></i>
-                    </button>
-                </div>
-                
-                <div class="space-y-4">
-                    <div class="space-y-2">
-                        <label class="text-[11px] font-black text-slate-400 uppercase tracking-widest ml-1">Cédula</label>
-                        <input v-model="guardianForm.cedula" @input="guardianForm.cedula = formatCedula($event.target.value)" type="text" class="w-full bg-slate-50 border-2 border-slate-200 rounded-xl px-4 py-2.5 text-slate-700 text-sm font-bold focus:border-primary-400 focus:bg-white focus:ring-0 outline-none transition-all shadow-sm" maxlength="12">
-                        <p v-if="guardianFormErrors && guardianFormErrors.cedula" class="text-xs text-red-500 font-bold mt-1 ml-1">{{ guardianFormErrors.cedula[0] }}</p>
-                    </div>
-                    <div class="space-y-2">
-                        <label class="text-[11px] font-black text-slate-400 uppercase tracking-widest ml-1">Nombre Completo</label>
-                        <input v-model="guardianForm.name" type="text" class="w-full bg-slate-50 border-2 border-slate-200 rounded-xl px-4 py-2.5 text-slate-700 text-sm font-bold focus:border-primary-400 focus:bg-white focus:ring-0 outline-none transition-all shadow-sm">
-                        <p v-if="guardianFormErrors && guardianFormErrors.name" class="text-xs text-red-500 font-bold mt-1 ml-1">{{ guardianFormErrors.name[0] }}</p>
-                    </div>
-                    <div class="space-y-2">
-                        <label class="text-[11px] font-black text-slate-400 uppercase tracking-widest ml-1">Teléfono</label>
-                        <input v-model="guardianForm.phone" @input="guardianForm.phone = formatPhone($event.target.value)" type="tel" placeholder="0414-1234567" maxlength="12" class="w-full bg-slate-50 border-2 border-slate-200 rounded-xl px-4 py-2.5 text-slate-700 text-sm font-bold focus:border-primary-400 focus:bg-white focus:ring-0 outline-none transition-all shadow-sm">
-                        <p v-if="guardianFormErrors && guardianFormErrors.phone" class="text-xs text-red-500 font-bold mt-1 ml-1">{{ guardianFormErrors.phone[0] }}</p>
-                    </div>
-                    <div class="space-y-2">
-                        <label class="text-[11px] font-black text-slate-400 uppercase tracking-widest ml-1">Correo Electrónico</label>
-                        <input v-model="guardianForm.email" type="email" class="w-full bg-slate-50 border-2 border-slate-200 rounded-xl px-4 py-2.5 text-slate-700 text-sm font-bold focus:border-primary-400 focus:bg-white focus:ring-0 outline-none transition-all shadow-sm">
-                        <p v-if="guardianFormErrors && guardianFormErrors.email" class="text-xs text-red-500 font-bold mt-1 ml-1">{{ guardianFormErrors.email[0] }}</p>
-                    </div>
-                    
-                    <div class="flex justify-end pt-6">
-                        <button type="button" @click="submitGuardian" class="px-6 py-3 bg-primary-600 text-white text-[11px] font-black uppercase tracking-widest rounded-xl shadow-lg shadow-primary-600/20 hover:bg-primary-500 hover:-translate-y-0.5 transition-all">
-                            Guardar y Seleccionar
-                        </button>
-                    </div>
-                </div>
             </div>
         </Modal>
 

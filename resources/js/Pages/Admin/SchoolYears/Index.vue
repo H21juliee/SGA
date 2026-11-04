@@ -177,21 +177,21 @@ function toggleLapse(lapse, year) {
 </script>
 
 <template>
-    <AppLayout title="Años Escolares">
+    <AppLayout title="Períodos Escolares">
         <div class="space-y-8 max-w-12xl mx-auto">
             <!-- Header Section -->
             <div class="flex flex-col sm:flex-row justify-between items-center animate-fade-in-up">
                 <div>
                     <h2 class="text-3xl font-extrabold text-slate-800">
-                        Gestión de <span class="gradient-text">Años Escolares</span>
+                        Gestión de <span class="gradient-text">Períodos Escolares</span>
                     </h2>
-                    <p class="text-slate-400 font-medium mt-2">Administra los periodos académicos y lapsos escolares</p>
+                    <p class="text-slate-400 font-medium mt-2">Administra los períodos académicos (ej. 2024-2025) y lapsos escolares</p>
                 </div>
                 <button v-if="$can('school_years.manage')" @click="openCreateModal"
                     class="flex items-center justify-center gap-2 px-6 py-3.5 bg-primary-600 text-white text-[11px] font-black uppercase tracking-widest rounded-2xl shadow-lg shadow-primary-600/20 hover:bg-primary-500 hover:-translate-y-0.5 transition-all w-full sm:w-auto"
                 >
                     <i class="fas fa-plus"></i>
-                    Nuevo Año Escolar
+                    Nuevo Período Escolar
                 </button>
             </div>
 

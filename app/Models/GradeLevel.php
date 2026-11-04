@@ -28,6 +28,11 @@ class GradeLevel extends Model
         return $this->hasMany(Subject::class);
     }
 
+    public function coordinators(): HasMany
+    {
+        return $this->hasMany(GradeLevelCoordinator::class);
+    }
+
     /* ---- Helpers ---- */
 
     public function isLast(): bool

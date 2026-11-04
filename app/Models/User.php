@@ -45,4 +45,30 @@ class User extends Authenticatable
     {
         return $this->hasMany(SecurityQuestion::class);
     }
+
+    public function coordinatedGradeLevels(): HasMany
+    {
+        return $this->hasMany(GradeLevelCoordinator::class);
+    }
+
+    public function isYearCoordinatorOnly(): bool
+    {
+        return $this->hasRole('Coordinador de Año') && !$this->hasAnyRole(['SuperAdmin', 'Administrador']);
+    }
+
+    public function coordinatedGradeLevelIds(?int $schoolYearId = null): array
+    {
+        if ($schoolYearId === null) {
+            $schoolYearId = SchoolYear::active()->first()?->id;
+        }
+
+        if (!$schoolYearId) {
+            return [];
+        }
+
+        return $this->coordinatedGradeLevels()
+            ->where('school_year_id', $schoolYearId)
+            ->pluck('grade_level_id')
+            ->toArray();
+    }
 }

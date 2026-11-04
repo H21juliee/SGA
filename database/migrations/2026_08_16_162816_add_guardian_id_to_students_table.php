@@ -16,12 +16,21 @@ return new class extends Migration
         // Data migration
         $students = DB::table('students')->whereNotNull('guardian_name')->get();
         foreach ($students as $student) {
-            if (empty(trim($student->guardian_name))) continue;
-            
-            $guardian = DB::table('guardians')->where('name', $student->guardian_name)->first();
+            if (empty(trim((string) $student->guardian_name))) continue;
+
+            $parts = explode(' ', preg_replace('/\s+/', ' ', trim((string) $student->guardian_name)), 2);
+            $firstName = $parts[0] ?? $student->guardian_name;
+            $lastName = $parts[1] ?? ' ';
+
+            $guardian = DB::table('guardians')
+                ->where('first_name', $firstName)
+                ->where('last_name', $lastName)
+                ->first();
+
             if (!$guardian) {
                 $guardianId = DB::table('guardians')->insertGetId([
-                    'name' => $student->guardian_name,
+                    'first_name' => $firstName,
+                    'last_name' => $lastName,
                     'phone' => $student->guardian_phone,
                     'email' => $student->guardian_email,
                     'created_at' => now(),
@@ -52,7 +61,7 @@ return new class extends Migration
             $guardian = DB::table('guardians')->where('id', $student->guardian_id)->first();
             if ($guardian) {
                 DB::table('students')->where('id', $student->id)->update([
-                    'guardian_name' => $guardian->name,
+                    'guardian_name' => trim("{$guardian->first_name} {$guardian->last_name}"),
                     'guardian_phone' => $guardian->phone,
                     'guardian_email' => $guardian->email,
                 ]);

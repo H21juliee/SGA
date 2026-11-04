@@ -1,6 +1,6 @@
 <script setup>
 import { ref, computed } from 'vue'
-import { router, useForm } from '@inertiajs/vue3'
+import { router, useForm, Link } from '@inertiajs/vue3'
 import AppLayout from '@/Components/Layout/AppLayout.vue'
 import Modal from '@/Components/UI/Modal.vue'
 import Swal from 'sweetalert2'
@@ -166,25 +166,34 @@ function destroy(id) {
 </script>
 
 <template>
-    <AppLayout title="Inscripciones">
+    <AppLayout title="Matriculación y Secciones">
         <div class="space-y-6 max-w-7xl mx-auto pb-10">
             <!-- Header Section -->
             <div class="flex flex-col lg:flex-row gap-6 items-center justify-between animate-fade-in-up">
                 <div>
                     <div class="flex items-center gap-3">
                         <h2 class="text-3xl font-extrabold text-slate-800">
-                            Inscripciones y <span class="gradient-text">Matriculación</span>
+                            Matriculación y <span class="gradient-text">Secciones</span>
                         </h2>
                     </div>
                     <div class="flex items-center gap-2 mt-2">
-                        <span class="text-slate-400 font-bold text-sm">Gestiona la matrícula de estudiantes.</span>
+                        <span class="text-slate-400 font-bold text-sm">Asigna y gestiona la matrícula de estudiantes por sección académica.</span>
                         <span class="px-3 py-1 bg-primary-50 text-primary-600 rounded-lg text-[10px] font-black uppercase tracking-widest border border-primary-100 shadow-sm ml-2 hidden sm:block">
                             {{ activeYear ? activeYear.name : 'Sin Año Activo' }}
                         </span>
                     </div>
                 </div>
                 
-                <div v-if="activeYear" class="flex flex-col sm:flex-row gap-4 w-full lg:w-auto">
+                <div v-if="activeYear" class="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 w-full lg:w-auto">
+                    <Link
+                        v-if="$can('students.create')"
+                        href="/admin/students/create"
+                        class="px-5 py-3.5 bg-primary-600 hover:bg-primary-500 text-white rounded-2xl text-[11px] font-black uppercase tracking-widest shadow-lg shadow-primary-600/20 transition-all flex items-center justify-center gap-2 shrink-0"
+                    >
+                        <i class="fas fa-user-plus"></i>
+                        Nuevo Estudiante
+                    </Link>
+
                     <div class="relative flex-1 sm:min-w-[180px]">
                         <label class="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1 absolute -top-5">Año (Nivel)</label>
                         <select 
@@ -233,16 +242,21 @@ function destroy(id) {
 
             <div v-else class="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start mt-8">
                 
-                <!-- Columna Izquierda: Matricular (3/12 de ancho) -->
+                <!-- Columna Izquierda: Matricular (4/12 de ancho) -->
                 <div class="lg:col-span-4 glass-card rounded-3xl p-6 flex flex-col h-[700px] animate-fade-in-up shadow-xl" style="animation-delay: 100ms">
-                    <div class="flex items-center gap-3 mb-6">
-                        <div class="w-10 h-10 bg-primary-50 text-primary-600 rounded-xl flex items-center justify-center text-lg shadow-sm">
-                            <i class="fas fa-user-plus"></i>
+                    <div class="flex items-center justify-between gap-3 mb-6">
+                        <div class="flex items-center gap-3">
+                            <div class="w-10 h-10 bg-amber-50 text-amber-600 rounded-xl flex items-center justify-center text-lg shadow-sm">
+                                <i class="fas fa-user-clock"></i>
+                            </div>
+                            <div>
+                                <h3 class="text-lg font-black text-slate-800 leading-tight">Por Matricular</h3>
+                                <p class="text-xs font-medium text-slate-400">Estudiantes sin sección</p>
+                            </div>
                         </div>
-                        <div>
-                            <h3 class="text-lg font-black text-slate-800 leading-tight">Buscar Alumno</h3>
-                            <p class="text-xs font-medium text-slate-400">Para inscribir en la sección</p>
-                        </div>
+                        <span class="px-2.5 py-1 bg-amber-50 text-amber-700 rounded-lg text-[10px] font-black uppercase tracking-wider border border-amber-200 shadow-sm" :title="availableStudents.length + ' estudiantes disponibles para matricular'">
+                            {{ availableStudents.length }}
+                        </span>
                     </div>
 
                     <div class="relative group mb-4">
@@ -275,7 +289,7 @@ function destroy(id) {
                                 @click="enroll(student.id)" 
                                 :disabled="form.processing"
                                 class="w-8 h-8 shrink-0 rounded-xl bg-primary-50 text-primary-600 flex items-center justify-center transition-all hover:bg-primary-600 hover:text-white shadow-sm disabled:opacity-50"
-                                title="Inscribir"
+                                title="Matricular en esta sección"
                             >
                                 <i class="fas fa-plus text-[10px]"></i>
                             </button>
@@ -284,19 +298,19 @@ function destroy(id) {
                             <div class="w-12 h-12 bg-slate-50 rounded-full flex items-center justify-center mx-auto mb-3 text-slate-200">
                                 <i class="fas fa-user-slash text-xl"></i>
                             </div>
-                            <p class="text-xs font-bold text-slate-400">Sin resultados</p>
+                            <p class="text-xs font-bold text-slate-400">Sin estudiantes pendientes</p>
                         </div>
                     </div>
                 </div>
 
-                <!-- Columna Derecha: Inscritos (8/12 de ancho) -->
+                <!-- Columna Derecha: Matriculados en Sección (8/12 de ancho) -->
                 <div class="lg:col-span-8 flex flex-col h-[700px] animate-fade-in-up" style="animation-delay: 200ms">
                     
                     <!-- Barra Superior Listado -->
                     <div class="flex flex-col sm:flex-row items-center justify-between gap-4 mb-4">
                         <div class="flex items-center gap-3">
                             <span class="px-3 py-1.5 bg-emerald-50 text-emerald-600 text-[10px] font-black uppercase tracking-widest rounded-lg border border-emerald-100 shadow-sm flex items-center gap-2">
-                                <i class="fas fa-users opacity-50"></i> {{ enrollments.length }} Registrados
+                                <i class="fas fa-users opacity-50"></i> {{ enrollments.length }} Matriculados en Sección
                             </span>
                         </div>
                         
@@ -307,7 +321,7 @@ function destroy(id) {
                                 <input 
                                     v-model="searchEnrolled" 
                                     type="text" 
-                                    placeholder="Buscar inscrito..." 
+                                    placeholder="Buscar matriculado..." 
                                     class="w-full bg-white border-2 border-slate-100 rounded-2xl pl-10 pr-4 py-2.5 text-sm text-slate-700 placeholder:text-slate-400 focus:border-primary-400 focus:ring-0 outline-none transition-all shadow-sm"
                                 >
                             </div>
@@ -329,7 +343,7 @@ function destroy(id) {
                                 <i class="fas fa-users-slash text-2xl"></i>
                             </div>
                             <h3 class="text-lg font-bold text-slate-400">Sección Vacía</h3>
-                            <p class="text-slate-300 text-sm mt-1">Aún no hay estudiantes matriculados o no coinciden con la búsqueda.</p>
+                            <p class="text-slate-300 text-sm mt-1">Aún no hay estudiantes matriculados en esta sección o no coinciden con la búsqueda.</p>
                         </div>
 
                         <div 

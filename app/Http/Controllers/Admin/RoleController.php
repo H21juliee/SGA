@@ -23,22 +23,22 @@ class RoleController extends Controller implements \Illuminate\Routing\Controlle
     private function groupedPermissions(): array
     {
         $groups = [
-            'Estudiantes — Directorio'    => ['students.view', 'students.create', 'students.edit', 'students.delete'],
-            'Estudiantes — Inscripciones' => ['enrollments.view', 'enrollments.create', 'enrollments.edit', 'enrollments.delete', 'enrollments.update_status', 'enrollments.transfer'],
-            'Asistencia'                  => ['attendance.view', 'attendance.manage', 'attendance.lock'],
-            'Calificaciones — Notas'      => ['grades.view', 'grades.edit'],
-            'Calificaciones — Revisiones' => ['revisions.view', 'revisions.edit'],
-            'Calificaciones — Consejo'    => ['council.view', 'council.manage', 'council.batch_update'],
-            'Planif. — Años Escolares'    => ['school_years.view', 'school_years.manage', 'school_years.toggle', 'school_years.promote', 'school_years.toggle_lapse'],
-            'Planif. — Secciones'         => ['sections.view', 'sections.manage'],
-            'Planif. — Materias'          => ['subjects.view', 'subjects.manage'],
-            'Planif. — Carga Académica'   => ['academic_load.view', 'academic_load.manage', 'academic_load.assign'],
-            'Reportes'                    => ['reports.generate'],
-            'Importación'                 => ['students.import'],
-            'Auditoría'                  => ['audit.view'],
-            'Admin — Usuarios'            => ['users.view', 'users.manage', 'users.reset_password'],
-            'Admin — Roles y Permisos'    => ['roles.view', 'roles.manage'],
-            'Admin — Configuración'       => ['settings.manage'],
+            'Estudiantes — Directorio y Registro' => ['students.view', 'students.create', 'students.edit', 'students.delete'],
+            'Estudiantes — Matriculación'         => ['enrollments.view', 'enrollments.create', 'enrollments.edit', 'enrollments.delete', 'enrollments.update_status', 'enrollments.transfer'],
+            'Asistencia'                          => ['attendance.view', 'attendance.manage', 'attendance.lock'],
+            'Calificaciones — Notas'              => ['grades.view', 'grades.edit'],
+            'Calificaciones — Revisiones'         => ['revisions.view', 'revisions.edit'],
+            'Calificaciones — Ajuste de Consejo'  => ['council.view', 'council.manage', 'council.batch_update'],
+            'Planificación — Períodos Escolares'  => ['school_years.view', 'school_years.manage', 'school_years.toggle', 'school_years.toggle_lapse', 'school_years.promote'],
+            'Planificación — Años y Secciones'    => ['sections.view', 'sections.manage'],
+            'Planificación — Materias'            => ['subjects.view', 'subjects.manage'],
+            'Planificación — Carga Académica'     => ['academic_load.view', 'academic_load.manage', 'academic_load.assign'],
+            'Reportes y Estadísticas'             => ['reports.generate'],
+            'Importación Masiva'                  => ['students.import', 'subjects.import', 'teachers.import'],
+            'Administración — Usuarios'           => ['users.view', 'users.manage', 'users.reset_password'],
+            'Administración — Roles y Permisos'   => ['roles.view', 'roles.manage'],
+            'Administración — Configuración'      => ['settings.manage'],
+            'Administración — Auditoría'          => ['audit.view'],
         ];
 
         $allPerms = Permission::orderBy('name')->pluck('name')->toArray();
@@ -54,65 +54,65 @@ class RoleController extends Controller implements \Illuminate\Routing\Controlle
     private function permissionLabels(): array
     {
         return [
-            // Estudiantes
-            'students.view' => 'Ver estudiantes',
-            'students.create' => 'Crear estudiante',
-            'students.edit' => 'Editar estudiante',
-            'students.delete' => 'Eliminar estudiante',
+            // Estudiantes — Directorio y Registro
+            'students.view' => 'Ver directorio de estudiantes',
+            'students.create' => 'Registrar nuevo estudiante (Inscripción)',
+            'students.edit' => 'Editar datos del estudiante',
+            'students.delete' => 'Retirar / Eliminar estudiante',
             
-            // Inscripciones
-            'enrollments.view' => 'Ver inscripciones',
-            'enrollments.create' => 'Crear inscripción',
-            'enrollments.edit' => 'Editar inscripción',
-            'enrollments.delete' => 'Eliminar inscripción',
-            'enrollments.update_status' => 'Cambiar estado (retirado, etc)',
+            // Estudiantes — Matriculación
+            'enrollments.view' => 'Ver matriculación por sección',
+            'enrollments.create' => 'Matricular estudiante en sección',
+            'enrollments.edit' => 'Editar matrícula',
+            'enrollments.delete' => 'Eliminar matrícula',
+            'enrollments.update_status' => 'Cambiar estado de matrícula (retirado, etc)',
             'enrollments.transfer' => 'Transferir de sección',
             
             // Asistencia
             'attendance.view' => 'Ver asistencia',
-            'attendance.manage' => 'Registrar/Editar asistencia',
+            'attendance.manage' => 'Registrar / Editar asistencia',
             'attendance.lock' => 'Bloquear asistencia',
             
             // Calificaciones
             'grades.view' => 'Ver notas',
-            'grades.edit' => 'Editar notas',
+            'grades.edit' => 'Cargar / Editar notas',
             'revisions.view' => 'Ver revisiones',
-            'revisions.edit' => 'Editar revisiones',
+            'revisions.edit' => 'Cargar / Editar revisiones',
             'council.view' => 'Ver ajuste de consejo',
-            'council.manage' => 'Ajustar nota',
-            'council.batch_update' => 'Guardado masivo de ajustes',
+            'council.manage' => 'Ajustar nota de consejo',
+            'council.batch_update' => 'Guardado masivo de ajustes de consejo',
             
             // Planificación
-            'school_years.view' => 'Ver años escolares',
-            'school_years.manage' => 'Crear/Editar/Eliminar años',
-            'school_years.toggle' => 'Cambiar año activo',
-            'school_years.promote' => 'Cierre y Promoción masiva',
-            'school_years.toggle_lapse' => 'Abrir/Cerrar lapsos',
+            'school_years.view' => 'Ver períodos escolares',
+            'school_years.manage' => 'Crear / Editar períodos escolares',
+            'school_years.toggle' => 'Cambiar período escolar activo',
+            'school_years.toggle_lapse' => 'Abrir / Cerrar lapsos académicos',
+            'school_years.promote' => 'Cierre de período y promoción masiva',
             
-            'sections.view' => 'Ver secciones',
-            'sections.manage' => 'Crear/Editar/Eliminar secciones',
+            'sections.view' => 'Ver años, secciones y coordinadores',
+            'sections.manage' => 'Gestionar secciones y coordinadores de año',
             'subjects.view' => 'Ver materias',
-            'subjects.manage' => 'Crear/Editar/Eliminar materias',
-            'academic_load.view' => 'Ver carga académica',
-            'academic_load.manage' => 'Crear/Editar/Eliminar carga',
-            'academic_load.assign' => 'Asignación rápida de carga',
+            'subjects.manage' => 'Crear / Editar materias',
+            'academic_load.view' => 'Ver carga académica docente',
+            'academic_load.manage' => 'Crear / Editar carga académica',
+            'academic_load.assign' => 'Asignación rápida de carga docente',
             
             // Reportes
-            'reports.generate' => 'Generar y descargar reportes',
+            'reports.generate' => 'Generar y descargar reportes y estadísticas',
 
-            // Importación
+            // Importación Masiva
             'students.import' => 'Importar estudiantes desde Excel/CSV',
+            'subjects.import' => 'Importar materias desde Excel/CSV',
+            'teachers.import' => 'Importar docentes desde Excel/CSV',
 
-            // Auditoría
-            'audit.view' => 'Ver registro de auditoría y trazabilidad (solo SuperAdmin)',
-
-            // Admin
+            // Administración
             'users.view' => 'Ver usuarios',
-            'users.manage' => 'Crear/Editar/Eliminar usuarios',
-            'users.reset_password' => 'Restablecer contraseña',
+            'users.manage' => 'Crear / Editar usuarios',
+            'users.reset_password' => 'Restablecer contraseña de usuarios',
             'roles.view' => 'Ver roles y permisos',
-            'roles.manage' => 'Administrar roles',
-            'settings.manage' => 'Configuración institucional',
+            'roles.manage' => 'Crear / Editar / Eliminar roles',
+            'settings.manage' => 'Configuración institucional del plantel',
+            'audit.view' => 'Ver registro de auditoría y trazabilidad',
         ];
     }
 

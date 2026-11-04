@@ -81,6 +81,15 @@ trait LogsActivity
                 $afterVal = $afterVal->name;
             }
 
+            // Manejar arrays o colecciones (ej. relaciones, campos JSON)
+            if (is_array($beforeVal) || is_array($afterVal)) {
+                if (json_encode($beforeVal) !== json_encode($afterVal)) {
+                    $old[$key] = $beforeVal;
+                    $new[$key] = $afterVal;
+                }
+                continue;
+            }
+
             // Comparamos como string para manejar null y tipos mixtos
             if ((string)$beforeVal !== (string)$afterVal) {
                 $old[$key] = $before[$key] ?? null; // guardamos el objeto original si es necesario, o el valor

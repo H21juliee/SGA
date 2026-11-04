@@ -38,7 +38,7 @@
                                 :href="item.href"
                                 @click="isSidebarOpen = false"
                                 class="flex items-center gap-3 px-5 py-3 rounded-xl font-medium transition-all duration-300"
-                                :class="$page.url.startsWith(item.href)
+                                :class="isStandardActive(item)
                                     ? 'nav-link-active'
                                     : 'text-slate-500 hover:bg-primary-50 hover:text-primary-600 hover:translate-x-1'"
                             >
@@ -51,7 +51,10 @@
                         <div v-else class="space-y-1">
                             <button
                                 @click="toggleMenu(item.name)"
-                                class="w-full flex items-center justify-between gap-3 px-5 py-3 rounded-xl text-slate-500 font-medium hover:bg-primary-50 hover:text-primary-600 transition-all duration-300"
+                                class="w-full flex items-center justify-between gap-3 px-5 py-3 rounded-xl transition-all duration-300"
+                                :class="isParentActive(item)
+                                    ? 'nav-link-active'
+                                    : 'text-slate-500 font-medium hover:bg-primary-50 hover:text-primary-600'"
                             >
                                 <div class="flex items-center gap-3">
                                     <i :class="getIcon(item.icon)" class="w-6 text-center"></i>
@@ -67,7 +70,7 @@
                                     :href="child.href"
                                     @click="isSidebarOpen = false"
                                     class="block px-3 py-2 rounded-lg text-sm font-medium transition-all duration-200"
-                                    :class="$page.url.startsWith(child.href)
+                                    :class="isChildActive(child, item)
                                         ? 'text-primary-600 bg-primary-50 font-bold'
                                         : 'text-slate-400 hover:text-slate-600 hover:bg-slate-50'"
                                 >
@@ -165,7 +168,7 @@
 </template>
 
 <script setup>
-import { computed, ref } from 'vue'
+import { computed, ref, watch } from 'vue'
 import { usePage, router, Link } from '@inertiajs/vue3'
 import Swal from 'sweetalert2'
 import PwaInstallBanner from '@/Components/UI/PwaInstallBanner.vue'
@@ -184,10 +187,11 @@ const navigation = computed(() => {
         {
             name: 'Estudiantes',
             icon: 'students',
-            show: can('students.view') || can('enrollments.view'),
+            show: can('students.view') || can('students.create') || can('enrollments.view'),
             children: [
                 { name: 'Directorio', href: '/admin/students', show: can('students.view') },
-                { name: 'Inscripciones', href: '/admin/enrollments', show: can('enrollments.view') },
+                { name: 'Nueva Inscripción', href: '/admin/students/create', show: can('students.create') },
+                { name: 'Matriculación', href: '/admin/enrollments', show: can('enrollments.view') },
             ]
         },
         { name: 'Asistencia', href: '/attendance', icon: 'attendance', show: can('attendance.view') },
@@ -206,8 +210,8 @@ const navigation = computed(() => {
             icon: 'calendar',
             show: can('school_years.view') || can('sections.view') || can('subjects.view') || can('academic_load.view'),
             children: [
-                { name: 'Años Escolares', href: '/admin/school-years', show: can('school_years.view') },
-                { name: 'Secciones', href: '/admin/sections', show: can('sections.manage') || can('sections.view') },
+                { name: 'Períodos Escolares', href: '/admin/school-years', show: can('school_years.view') },
+                { name: 'Años y Secciones', href: '/admin/sections', show: can('sections.manage') || can('sections.view') },
                 { name: 'Materias', href: '/admin/subjects', show: can('subjects.manage') || can('subjects.view') },
                 { name: 'Carga Académica', href: '/admin/academic-loads', show: can('academic_load.view') },
             ]
@@ -298,11 +302,43 @@ const flash = computed(() => page.props.flash ?? {})
 const isSidebarOpen = ref(false)
 const openMenu = ref(null)
 
-import { watch } from 'vue'
-watch(() => page.url, (newUrl) => {
-    const parentItem = navigation.value.find(item => 
-        item.children?.some(child => newUrl.startsWith(child.href))
-    )
+function getCurrentPath() {
+    return page.url.split('?')[0].split('#')[0]
+}
+
+function isStandardActive(item) {
+    const current = getCurrentPath()
+    if (item.href === '/dashboard' && (current === '/' || current === '/dashboard')) {
+        return true
+    }
+    return current === item.href || current.startsWith(item.href + '/')
+}
+
+function isChildActive(child, parentItem) {
+    const current = getCurrentPath()
+    if (current === child.href) {
+        return true
+    }
+    if (current.startsWith(child.href + '/')) {
+        const hasMoreSpecificSibling = parentItem.children?.some(sibling => 
+            sibling.href !== child.href &&
+            sibling.href.length > child.href.length &&
+            (current === sibling.href || current.startsWith(sibling.href + '/'))
+        )
+        return !hasMoreSpecificSibling
+    }
+    return false
+}
+
+function isParentActive(item) {
+    if (!item.children) {
+        return isStandardActive(item)
+    }
+    return item.children.some(child => isChildActive(child, item))
+}
+
+watch(() => page.url, () => {
+    const parentItem = navigation.value.find(item => item.children && isParentActive(item))
     if (parentItem) {
         openMenu.value = parentItem.name
     }

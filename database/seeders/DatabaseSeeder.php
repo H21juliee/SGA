@@ -14,6 +14,7 @@ class DatabaseSeeder extends Seeder
             GradeLevelSeeder::class,
             SubjectSeeder::class,
             LargeDataSeeder::class,
+            CommunitySeeder::class,
         ]);
 
         // Crear SuperAdmin por defecto
