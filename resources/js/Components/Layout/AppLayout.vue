@@ -236,12 +236,20 @@ const navigation = computed(() => {
         {
             name: 'Administración',
             icon: 'admin',
-            show: can('users.view') || can('roles.view') || can('settings.manage') || can('audit.view'),
+            show: can('users.view') || can('roles.view') || can('audit.view'),
             children: [
                 { name: 'Usuarios', href: '/admin/users', show: can('users.manage') || can('users.view') },
                 { name: 'Roles y Permisos', href: '/admin/roles', show: can('roles.manage') || can('roles.view') },
-                { name: 'Configuración', href: '/admin/settings', show: can('settings.manage') },
                 { name: 'Auditoría', href: '/admin/audit', show: can('audit.view') },
+            ]
+        },
+        {
+            name: 'Configuración',
+            icon: 'settings',
+            show: can('settings.manage'),
+            children: [
+                { name: 'Plantel', href: '/admin/settings', show: can('settings.manage') },
+                { name: 'Comunidades y Sectores', href: '/admin/communities', show: can('settings.manage') },
             ]
         }
     ].filter(i => {
@@ -267,7 +275,8 @@ function getIcon(name) {
         'attendance': 'fas fa-check-circle',
         'reports': 'fas fa-chart-bar',
         'analytics': 'fas fa-chart-line',
-        'admin': 'fas fa-cog',
+        'admin': 'fas fa-user-shield',
+        'settings': 'fas fa-cog',
         'students': 'fas fa-user-graduate',
         'calendar': 'fas fa-calendar-alt',
         'import': 'fas fa-file-import',

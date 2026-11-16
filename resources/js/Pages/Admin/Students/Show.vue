@@ -16,6 +16,7 @@ import SectionRecaudos from './Partials/SectionRecaudos.vue'
 const props = defineProps({
     student: Object,
     communities: { type: Array, default: () => [] },
+    gradeLevels: { type: Array, default: () => [] },
     enrollments: Array,
     subjectDebts: { type: Array, default: () => [] },
     allSubjects: { type: Array, default: () => [] },
@@ -55,6 +56,9 @@ const studentForm = useForm({
     phone_home: '',
     phone_mobile: '',
     guardian_id: null,
+    entry_type: 'new',
+    target_grade_level_id: '',
+    origin_school: '',
     profile: {
         lives_with: [],
         family_group_count: null,
@@ -262,6 +266,9 @@ function openEditStudentModal() {
     studentForm.phone_home = props.student.phone_home || ''
     studentForm.phone_mobile = props.student.phone_mobile || ''
     studentForm.guardian_id = props.student.guardian_id || null
+    studentForm.entry_type = props.student.entry_type || 'new'
+    studentForm.target_grade_level_id = props.student.target_grade_level_id || props.gradeLevels?.[0]?.id || ''
+    studentForm.origin_school = props.student.origin_school || ''
 
     const p = props.student.profile || {}
     studentForm.profile = {
@@ -1506,8 +1513,10 @@ const studentStatusMap = {
                         <SectionPrincipal
                             :form="studentForm"
                             :communities="communities"
+                            :grade-levels="gradeLevels"
                             :guardian="selectedGuardian || student.guardian"
                             :student-id="student.id"
+                            :has-enrollments="Boolean(enrollments && enrollments.length > 0)"
                         />
                     </div>
 

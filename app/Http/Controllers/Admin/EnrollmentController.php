@@ -71,17 +71,26 @@ class EnrollmentController extends Controller implements \Illuminate\Routing\Con
                 ->get();
         }
 
-        if ($activeYear) {
-            // Estudiantes disponibles: no inscritos en el año activo o cuya inscripción previa esté retirada
+        if ($activeYear && $gradeLevelId) {
+            // Estudiantes disponibles: no inscritos en el año activo o cuya inscripción previa esté retirada,
+            // y que además les corresponda cursar el nivel académico ($gradeLevelId) seleccionado.
             $activeEnrolledStudentIds = Enrollment::where('school_year_id', $activeYear->id)
                 ->where('status', '!=', EnrollmentStatus::WITHDRAWN->value)
                 ->pluck('student_id');
-            
+
+            $firstGradeLevelId = \App\Models\GradeLevel::orderBy('order_num')->value('id');
+            $selectedGradeId = (int) $gradeLevelId;
+
             $availableStudents = Student::active()
-                ->with(['guardian', 'community'])
+                ->with(['guardian', 'community', 'targetGradeLevel', 'enrollments.section.gradeLevel'])
                 ->whereNotIn('id', $activeEnrolledStudentIds)
                 ->orderBy('last_name')
-                ->get();
+                ->get()
+                ->filter(function (Student $student) use ($selectedGradeId, $firstGradeLevelId) {
+                    $eligibleLevelId = $student->resolveEligibleGradeLevelId($firstGradeLevelId ? (int) $firstGradeLevelId : null);
+                    return $eligibleLevelId === $selectedGradeId;
+                })
+                ->values();
         }
 
         return Inertia::render('Admin/Enrollments/Index', [
@@ -135,10 +144,21 @@ class EnrollmentController extends Controller implements \Illuminate\Routing\Con
 
             // Se bloquea también al alumno: evita que dos inscripciones simultáneas del mismo
             // alumno lleguen a la restricción única (student_id, school_year_id) y den error 500.
-            $student = Student::lockForUpdate()->findOrFail($validated['student_id']);
+            $student = Student::with('enrollments.section.gradeLevel')->lockForUpdate()->findOrFail($validated['student_id']);
 
             if ($student->status !== StudentStatus::REGULAR) {
                 return ['error' => 'El estudiante no está activo y no puede ser inscrito.'];
+            }
+
+            // Candado de elegibilidad de año: validar que la sección corresponda al año que debe cursar el estudiante
+            $firstGradeLevelId = \App\Models\GradeLevel::orderBy('order_num')->value('id');
+            $eligibleGradeLevelId = $student->resolveEligibleGradeLevelId($firstGradeLevelId ? (int) $firstGradeLevelId : null);
+
+            if ($eligibleGradeLevelId && (int) $section->grade_level_id !== (int) $eligibleGradeLevelId) {
+                $targetLevelName = \App\Models\GradeLevel::find($eligibleGradeLevelId)?->name ?? 'otro año';
+                return [
+                    'error' => "El estudiante {$student->full_name} solo está habilitado para matricularse en {$targetLevelName}.",
+                ];
             }
 
             // Verificar si ya tiene inscripción en el año activo

@@ -38,14 +38,15 @@ class HandleInertiaRequests extends Middleware
         return [
             ...parent::share($request),
             'auth' => [
-                'user' => $request->user() ? $request->user()->only('id', 'name', 'email', 'cedula') : null,
+                'user' => $request->user() ? $request->user()->only('id', 'name', 'first_name', 'last_name', 'email', 'cedula') : null,
                 'roles' => $request->user() ? $request->user()->getRoleNames() : [],
                 'permissions' => $request->user() ? $request->user()->getAllPermissions()->pluck('name') : [],
             ],
             'flash' => [
-                'success'       => fn () => $request->session()->get('success'),
-                'error'         => fn () => $request->session()->get('error'),
-                'import_result' => fn () => $request->session()->get('import_result'),
+                'success'          => fn () => $request->session()->get('success'),
+                'error'            => fn () => $request->session()->get('error'),
+                'import_result'    => fn () => $request->session()->get('import_result'),
+                'temp_credentials' => fn () => $request->session()->get('temp_credentials'),
             ],
             'school' => [
                 'logo_path' => \App\Models\SchoolSetting::get('logo_path'),

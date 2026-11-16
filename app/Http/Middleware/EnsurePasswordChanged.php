@@ -15,6 +15,11 @@ class EnsurePasswordChanged
         }
         $user = $request->user();
 
+        // El SuperAdmin tiene privilegios máximos y nunca debe ser forzado a restablecer contraseña
+        if ($user && $user->hasRole('SuperAdmin')) {
+            return $next($request);
+        }
+
         if ($user && $user->must_change_password) {
             // Allow access to password setup and logout routes only
             $allowedRoutes = ['password.setup', 'logout'];

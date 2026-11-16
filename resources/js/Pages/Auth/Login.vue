@@ -10,8 +10,6 @@ const form = useForm({
     remember: false,
 })
 
-const showPassword = ref(false)
-
 const clientErrors = ref({
     email: '',
     password: '',
@@ -216,11 +214,11 @@ function submit() {
                                 <input
                                     id="password"
                                     v-model="form.password"
-                                    :type="showPassword ? 'text' : 'password'"
+                                    type="password"
                                     autocomplete="current-password"
                                     @input="onPasswordInput"
                                     @blur="onPasswordBlur"
-                                    class="w-full pl-12 pr-12 py-4 bg-slate-50 border-2 rounded-2xl text-slate-700 text-sm font-bold focus:ring-0 outline-none transition-all"
+                                    class="w-full pl-12 pr-4 py-4 bg-slate-50 border-2 rounded-2xl text-slate-700 text-sm font-bold focus:ring-0 outline-none transition-all"
                                     :class="passwordError ? 'border-rose-300 bg-rose-50/20 text-rose-900 focus:border-rose-500 focus:bg-white' : 'border-slate-100 focus:border-primary-400 focus:bg-white'"
                                     placeholder="••••••••"
                                 />
@@ -228,15 +226,6 @@ function submit() {
                                     class="fas fa-lock absolute left-4 top-1/2 -translate-y-1/2 transition-colors"
                                     :class="passwordError ? 'text-rose-400' : 'text-slate-300 group-focus-within:text-primary-500'"
                                 ></i>
-                                <button
-                                    type="button"
-                                    @click="showPassword = !showPassword"
-                                    class="absolute right-4 top-1/2 -translate-y-1/2 text-slate-300 hover:text-slate-600 focus:text-primary-500 transition-colors p-1"
-                                    :title="showPassword ? 'Ocultar contraseña' : 'Ver contraseña'"
-                                    tabindex="-1"
-                                >
-                                    <i class="fas" :class="showPassword ? 'fa-eye-slash' : 'fa-eye'"></i>
-                                </button>
                             </div>
                             <p v-if="passwordError" class="mt-1 text-xs font-bold text-rose-500 flex items-center gap-1.5 ml-1 animate-fade-in-up">
                                 <i class="fas fa-exclamation-circle text-[11px] shrink-0"></i>

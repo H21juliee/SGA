@@ -432,7 +432,7 @@ function submitCreate() {
                                 type="tel"
                                 inputmode="numeric"
                                 maxlength="12"
-                                placeholder="0414-1234567"
+                                placeholder="Ej: 0414-1234567"
                                 class="w-full bg-white border-2 rounded-xl px-3 py-2 text-xs font-bold text-slate-700 focus:border-primary-400 outline-none mt-0.5"
                                 :class="createErrors.phone ? 'border-red-300 bg-red-50/20' : 'border-slate-200'"
                             />
@@ -470,7 +470,7 @@ function submitCreate() {
                             <input
                                 v-model="createForm.email"
                                 type="email"
-                                placeholder="correo@ejemplo.com"
+                                placeholder="Ej: correo@ejemplo.com"
                                 class="w-full bg-white border-2 border-slate-200 rounded-xl px-3 py-2 text-xs font-bold text-slate-700 focus:border-primary-400 outline-none"
                             />
                             <p v-if="createErrors.email" class="text-[11px] text-red-500 font-bold mt-1 ml-1">{{ createErrors.email[0] }}</p>

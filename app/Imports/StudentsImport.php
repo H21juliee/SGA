@@ -46,6 +46,7 @@ class StudentsImport implements
     public function collection(Collection $rows): void
     {
         $activeYear = SchoolYear::active()->first();
+        $firstGradeLevelId = GradeLevel::orderBy('order_num')->value('id');
 
         foreach ($rows as $index => $row) {
             $cedula = $this->normalizeCedula($row['cedula_escolar'] ?? null);
@@ -63,42 +64,47 @@ class StudentsImport implements
 
             $birthDate = $this->parseBirthDate($row['fecha_nacimiento'] ?? null);
 
-            $student = Student::create([
-                'first_name' => trim($row['nombres']),
-                'last_name'  => trim($row['apellidos']),
-                'cedula'     => $cedula,
-                'birth_date' => $birthDate,
-                'gender'     => strtoupper(trim($row['genero'])),
-                'status'     => StudentStatus::REGULAR,
-            ]);
-
             // Asignación e inscripción opcional a Grado y Sección
             $gradoNombre = trim((string) ($row['grado'] ?? $row['ano'] ?? ''));
             $seccionNombre = strtoupper(trim((string) ($row['seccion'] ?? '')));
+            $gradeLevel = null;
 
-            if (!empty($gradoNombre) && !empty($seccionNombre) && $activeYear) {
+            if (!empty($gradoNombre)) {
                 $gradeLevel = GradeLevel::where('name', $gradoNombre)
                     ->orWhere('name', 'like', "%{$gradoNombre}%")
                     ->first();
+            }
 
-                if ($gradeLevel) {
-                    $section = Section::firstOrCreate([
-                        'school_year_id' => $activeYear->id,
-                        'grade_level_id' => $gradeLevel->id,
-                        'name'           => $seccionNombre,
-                    ], [
-                        'capacity'       => 40,
-                    ]);
+            $targetLevelId = $gradeLevel?->id ?? $firstGradeLevelId;
 
-                    Enrollment::firstOrCreate([
-                        'student_id'     => $student->id,
-                        'school_year_id' => $activeYear->id,
-                    ], [
-                        'section_id'     => $section->id,
-                        'status'         => EnrollmentStatus::ACTIVE,
-                        'enrolled_at'    => $activeYear->start_date ?? now(),
-                    ]);
-                }
+            $student = Student::create([
+                'first_name'            => trim($row['nombres']),
+                'last_name'             => trim($row['apellidos']),
+                'cedula'                => $cedula,
+                'birth_date'            => $birthDate,
+                'gender'                => strtoupper(trim($row['genero'])),
+                'status'                => StudentStatus::REGULAR,
+                'entry_type'            => ($targetLevelId && $firstGradeLevelId && (int) $targetLevelId !== (int) $firstGradeLevelId) ? 'transfer' : 'new',
+                'target_grade_level_id' => $targetLevelId,
+            ]);
+
+            if ($gradeLevel && !empty($seccionNombre) && $activeYear) {
+                $section = Section::firstOrCreate([
+                    'school_year_id' => $activeYear->id,
+                    'grade_level_id' => $gradeLevel->id,
+                    'name'           => $seccionNombre,
+                ], [
+                    'capacity'       => 40,
+                ]);
+
+                Enrollment::firstOrCreate([
+                    'student_id'     => $student->id,
+                    'school_year_id' => $activeYear->id,
+                ], [
+                    'section_id'     => $section->id,
+                    'status'         => EnrollmentStatus::ACTIVE,
+                    'enrolled_at'    => $activeYear->start_date ?? now(),
+                ]);
             }
 
             $this->created++;

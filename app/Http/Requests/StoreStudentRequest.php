@@ -54,6 +54,10 @@ class StoreStudentRequest extends FormRequest
         if ($this->has('phone_mobile')) {
             $merge['phone_mobile'] = $this->formatPhone($this->input('phone_mobile'));
         }
+        if ($this->has('origin_school')) {
+            $rawOrigin = trim((string) $this->input('origin_school'));
+            $merge['origin_school'] = $rawOrigin === '' ? null : mb_strtoupper($rawOrigin, 'UTF-8');
+        }
 
         if ($this->has('profile') && is_array($this->input('profile'))) {
             $profile = $this->input('profile');
@@ -145,6 +149,9 @@ class StoreStudentRequest extends FormRequest
             'phone_home'   => ['nullable', 'string', 'regex:/^(02\d{2}-\d{7}|0[24]\d{2}-\d{7})$/'],
             'phone_mobile' => ['nullable', 'string', 'regex:/^(0412|0414|0424|0416|0426|02\d{2})-\d{7}$/'],
             'guardian_id'  => ['required', 'exists:guardians,id'],
+            'entry_type'   => ['nullable', 'string', 'in:new,transfer'],
+            'target_grade_level_id' => ['nullable', 'integer', 'exists:grade_levels,id', 'required_if:entry_type,transfer'],
+            'origin_school'         => ['nullable', 'string', 'max:255', 'required_if:entry_type,transfer'],
 
             // Inf. Adicional
             'profile.lives_with'                        => ['nullable', 'array'],
@@ -208,6 +215,8 @@ class StoreStudentRequest extends FormRequest
             'phone_mobile.regex'    => 'El teléfono móvil debe tener un formato válido en Venezuela (ej: 0412-1234567, 0414-1234567, 0424-1234567).',
             'guardian_id.required'  => 'Debe asociar un representante legal al estudiante.',
             'guardian_id.exists'    => 'El representante seleccionado no existe.',
+            'target_grade_level_id.required_if' => 'Debe seleccionar el Año a cursar para el estudiante de otra institución.',
+            'origin_school.required_if'         => 'Debe indicar el nombre de la institución o plantel de procedencia.',
             'profile.extracurricular_activities_detail.required_if' => 'Indique qué actividad extraescolar practica.',
             'profile.medical_condition_detail.required_if'          => 'Indique qué enfermedad o tratamiento posee.',
             'profile.allergies_detail.required_if'                  => 'Indique a qué es alérgico el estudiante.',

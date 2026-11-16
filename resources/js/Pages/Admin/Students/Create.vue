@@ -15,6 +15,7 @@ import ConfirmationModal from './Partials/ConfirmationModal.vue'
 
 const props = defineProps({
     communities: { type: Array, default: () => [] },
+    gradeLevels: { type: Array, default: () => [] },
 })
 
 const currentStep = ref(1)
@@ -47,6 +48,9 @@ const form = useForm({
     phone_home: '',
     phone_mobile: '',
     guardian_id: null,
+    entry_type: 'new',
+    target_grade_level_id: props.gradeLevels?.[0]?.id || '',
+    origin_school: '',
 
     // Perfil completo
     profile: {
@@ -136,6 +140,16 @@ function validateCurrentStep() {
         if (!form.community_id) {
             form.setError('community_id', 'Debe seleccionar una comunidad para el estudiante.')
             valid = false
+        }
+        if (form.entry_type === 'transfer') {
+            if (!form.target_grade_level_id) {
+                form.setError('target_grade_level_id', 'Debe seleccionar el Año a cursar para el estudiante de otra institución.')
+                valid = false
+            }
+            if (!form.origin_school?.trim()) {
+                form.setError('origin_school', 'Debe indicar el nombre de la institución o plantel de procedencia.')
+                valid = false
+            }
         }
 
         const venezuelanPhoneRegex = /^(0412|0414|0424|0416|0426|02\d{2})-\d{7}$/
@@ -715,6 +729,7 @@ function submit() {
                             v-show="currentStep === 2"
                             :form="form"
                             :communities="communities"
+                            :grade-levels="gradeLevels"
                             :guardian="selectedGuardian"
                         />
                     </transition>

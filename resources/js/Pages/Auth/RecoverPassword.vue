@@ -1,5 +1,5 @@
 <script setup>
-import { ref } from 'vue'
+import { ref, computed } from 'vue'
 import { router, usePage, useForm } from '@inertiajs/vue3'
 
 const page = usePage()
@@ -13,29 +13,95 @@ const props = defineProps({
 
 const currentStep = ref(props.step || 1)
 
-// Step 1: Find user by cedula
+// Step 1: Find user by cedula (Homologado con Usuarios / Estudiantes / Representantes)
+const docType = ref('V')
+const docNumber = ref('')
+const docError = ref('')
+
+const docPlaceholder = computed(() => {
+    switch (docType.value) {
+        case 'V': return 'Ej: 18456789 (6-9 dígitos)'
+        case 'E': return 'Ej: 84550210 (6-9 dígitos)'
+        case 'P': return 'Ej: AB1234567 (6-15 caracteres)'
+        default: return 'Ej: 18456789'
+    }
+})
+
+const docMaxLength = computed(() => (docType.value === 'P' ? 15 : 9))
+
 const cedulaForm = useForm({ cedula: '' })
 
-function formatCedula(value) {
-    if (!value) return '';
-    let val = value.toUpperCase().replace(/[^VEP0-9]/g, '');
-    if (val.length > 0 && !['V', 'E', 'P'].includes(val[0])) {
-        if (/[0-9]/.test(val[0])) {
-            val = 'V' + val;
-        } else {
-            val = val.substring(1);
+function syncCedulaField() {
+    const cleanNum = docNumber.value.trim()
+    cedulaForm.cedula = cleanNum ? `${docType.value}-${cleanNum}` : ''
+}
+
+function allowOnlyDocKey(e) {
+    if (['Backspace', 'Delete', 'Tab', 'Escape', 'Enter', 'ArrowLeft', 'ArrowRight', 'ArrowUp', 'ArrowDown', 'Home', 'End'].includes(e.key)) {
+        return
+    }
+    if (e.ctrlKey || e.metaKey) {
+        return
+    }
+    if (docType.value === 'P') {
+        if (!/^[a-zA-Z0-9]$/.test(e.key)) e.preventDefault()
+    } else {
+        if (!/^[0-9]$/.test(e.key)) e.preventDefault()
+    }
+}
+
+function onDocTypeChange() {
+    docError.value = ''
+    if (docType.value !== 'P') {
+        docNumber.value = docNumber.value.replace(/[^0-9]/g, '').slice(0, 9)
+    } else {
+        docNumber.value = docNumber.value.toUpperCase().replace(/[^A-Z0-9]/g, '').slice(0, 15)
+    }
+    syncCedulaField()
+}
+
+function onDocNumberInput(e) {
+    let val = (e.target.value || '').toUpperCase()
+    if (docType.value === 'P') {
+        val = val.replace(/[^A-Z0-9]/g, '').slice(0, 15)
+    } else {
+        val = val.replace(/[^0-9]/g, '').slice(0, 9)
+    }
+    docNumber.value = val
+    e.target.value = val
+    docError.value = ''
+    if (cedulaForm.errors.cedula) cedulaForm.clearErrors('cedula')
+    syncCedulaField()
+}
+
+function validateDocNumber() {
+    const num = docNumber.value.trim()
+    if (!num) {
+        docError.value = 'El número de documento es obligatorio.'
+        return false
+    }
+    if (docType.value === 'P') {
+        if (!/^[A-Z0-9]{6,15}$/.test(num)) {
+            docError.value = 'El pasaporte debe tener entre 6 y 15 caracteres alfanuméricos.'
+            return false
+        }
+    } else {
+        if (!/^\d{6,9}$/.test(num)) {
+            docError.value = 'La cédula debe contener entre 6 y 9 dígitos numéricos.'
+            return false
         }
     }
-    if (val.length > 9) {
-        val = val.substring(0, 9);
-    }
-    if (val.length > 1) {
-        val = val[0] + '-' + val.substring(1);
-    }
-    return val;
+    docError.value = ''
+    return true
 }
 
 function findUser() {
+    syncCedulaField()
+    if (!validateDocNumber()) {
+        cedulaForm.setError('cedula', docError.value)
+        return
+    }
+
     cedulaForm.post('/password/recover/find', {
         preserveState: true,
     })
@@ -96,22 +162,48 @@ function submitReset() {
                         <p class="text-xs text-slate-400 font-medium mt-1">Ingresa tu cédula para buscar tu cuenta.</p>
                     </div>
 
-                    <form @submit.prevent="findUser" class="space-y-5">
+                    <form @submit.prevent="findUser" novalidate class="space-y-5">
                         <div class="space-y-2">
-                            <label class="text-[11px] font-black text-slate-400 uppercase tracking-widest ml-1">Cédula de Identidad</label>
-                            <div class="relative group">
-                                <input v-model="cedulaForm.cedula"
-                                       @input="cedulaForm.cedula = formatCedula($event.target.value)"
-                                       type="text" required maxlength="12"
-                                       class="w-full pl-12 pr-4 py-4 bg-slate-50 border-2 border-slate-50 rounded-2xl text-slate-700 text-sm font-bold focus:border-primary-400 focus:bg-white focus:ring-0 outline-none transition-all"
-                                       placeholder="Ej: V-12345678">
-                                <i class="fas fa-id-card absolute left-4 top-1/2 -translate-y-1/2 text-slate-300 group-focus-within:text-primary-500 transition-colors"></i>
+                            <label class="text-[11px] font-black text-slate-400 uppercase tracking-widest ml-1">
+                                Cédula de Identidad <span class="text-rose-500">*</span>
+                            </label>
+                            <div class="flex gap-2">
+                                <select
+                                    v-model="docType"
+                                    @change="onDocTypeChange"
+                                    class="w-24 shrink-0 bg-slate-50 border-2 border-slate-200 rounded-2xl px-3 py-3.5 text-slate-700 text-sm font-black focus:border-primary-400 focus:bg-white outline-none transition-all shadow-sm cursor-pointer"
+                                >
+                                    <option value="V">V -</option>
+                                    <option value="E">E -</option>
+                                    <option value="P">P -</option>
+                                </select>
+                                <div class="relative flex-1">
+                                    <input
+                                        :value="docNumber"
+                                        @keydown="allowOnlyDocKey"
+                                        @input="onDocNumberInput"
+                                        @blur="validateDocNumber"
+                                        type="text"
+                                        :maxlength="docMaxLength"
+                                        :placeholder="docPlaceholder"
+                                        class="w-full pl-11 pr-4 py-3.5 bg-slate-50 border-2 rounded-2xl text-slate-700 text-sm font-bold focus:bg-white focus:ring-0 outline-none transition-all shadow-sm"
+                                        :class="(docError || cedulaForm.errors.cedula) ? 'border-rose-300 focus:border-rose-400' : 'border-slate-200 focus:border-primary-400'"
+                                    >
+                                    <i class="fas fa-id-card absolute left-4 top-1/2 -translate-y-1/2 text-slate-300 pointer-events-none"></i>
+                                </div>
                             </div>
-                            <p v-if="cedulaForm.errors.cedula" class="text-xs text-red-500 font-bold mt-1 ml-1">{{ cedulaForm.errors.cedula }}</p>
+                            <div class="flex items-center justify-between px-1">
+                                <p v-if="docError || cedulaForm.errors.cedula" class="text-xs font-bold text-rose-500">
+                                    {{ docError || cedulaForm.errors.cedula }}
+                                </p>
+                                <p v-else class="text-[10px] font-bold text-slate-400">
+                                    Formato: <span class="text-slate-600">{{ cedulaForm.cedula || `${docType}-XXXXXXXX` }}</span>
+                                </p>
+                            </div>
                         </div>
 
                         <button type="submit" :disabled="cedulaForm.processing"
-                                class="w-full py-4 px-6 rounded-2xl text-[11px] font-black uppercase tracking-widest text-white bg-primary-600 hover:bg-primary-500 shadow-xl shadow-primary-600/20 hover:-translate-y-0.5 transition-all duration-300 disabled:opacity-50 flex items-center justify-center gap-3">
+                                class="w-full py-4 px-6 rounded-2xl text-[11px] font-black uppercase tracking-widest text-white bg-primary-600 hover:bg-primary-500 shadow-xl shadow-primary-600/20 hover:-translate-y-0.5 transition-all duration-300 disabled:opacity-50 flex items-center justify-center gap-3 cursor-pointer">
                             <template v-if="!cedulaForm.processing">
                                 <i class="fas fa-search"></i>
                                 <span>Buscar mi cuenta</span>

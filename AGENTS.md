@@ -1,6 +1,6 @@
-# [AGENTS.md](http://AGENTS.md) — Sistema de Gestión Escolar (SGE)
+# [AGENTS.md](http://AGENTS.md) — Sistema de Gestión Académica (SGA)
 
-Plataforma de gestión escolar desarrollada con una arquitectura robusta, estable y en gran parte ya probada.
+Plataforma de gestión Académica desarrollada con una arquitectura robusta, estable y en gran parte ya probada.
 
 ## Stack y estructura
 

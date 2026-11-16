@@ -5,9 +5,93 @@ import axios from 'axios'
 const props = defineProps({
     form: { type: Object, required: true },
     communities: { type: Array, default: () => [] },
+    gradeLevels: { type: Array, default: () => [] },
     guardian: { type: Object, default: null },
     studentId: { type: [Number, String, null], default: null },
+    hasEnrollments: { type: Boolean, default: false },
 })
+
+const localCommunities = ref([...props.communities])
+watch(() => props.communities, (list) => {
+    const existingIds = new Set(list.map(c => c.id))
+    const extras = localCommunities.value.filter(c => !existingIds.has(c.id))
+    localCommunities.value = [...list, ...extras].sort((a, b) => a.name.localeCompare(b.name, 'es'))
+}, { deep: true })
+
+const showQuickCommunity = ref(false)
+const quickCommunityName = ref('')
+const quickCommunityError = ref('')
+const quickCommunityNotice = ref('')
+const savingQuickCommunity = ref(false)
+
+const normalizeText = (text) => String(text || '')
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .trim()
+    .toLowerCase()
+
+const similarCommunity = computed(() => {
+    const q = normalizeText(quickCommunityName.value)
+    if (q.length < 3) return null
+    return localCommunities.value.find(c => normalizeText(c.name) === q) || null
+})
+
+const createQuickCommunity = async () => {
+    const trimmed = quickCommunityName.value.trim()
+    if (!trimmed) {
+        quickCommunityError.value = 'Escriba el nombre de la comunidad o sector.'
+        return
+    }
+    savingQuickCommunity.value = true
+    quickCommunityError.value = ''
+    quickCommunityNotice.value = ''
+
+    try {
+        const { data } = await axios.post('/admin/communities/quick', { name: trimmed })
+        const community = data.community
+        if (community && !localCommunities.value.some(c => c.id === community.id)) {
+            localCommunities.value = [...localCommunities.value, community]
+                .sort((a, b) => a.name.localeCompare(b.name, 'es'))
+        }
+        if (community) {
+            props.form.community_id = community.id
+        }
+        quickCommunityName.value = ''
+        showQuickCommunity.value = false
+        quickCommunityNotice.value = data.message || 'Comunidad seleccionada.'
+        setTimeout(() => { quickCommunityNotice.value = '' }, 4000)
+    } catch (error) {
+        quickCommunityError.value =
+            error.response?.data?.errors?.name?.[0] ||
+            error.response?.data?.message ||
+            'No se pudo registrar la comunidad.'
+    } finally {
+        savingQuickCommunity.value = false
+    }
+}
+
+const firstGradeLevel = computed(() => {
+    if (!props.gradeLevels || props.gradeLevels.length === 0) return null
+    return [...props.gradeLevels].sort((a, b) => (a.order_num || 0) - (b.order_num || 0))[0]
+})
+
+function setEntryType(type) {
+    props.form.entry_type = type
+    if (type === 'new') {
+        props.form.target_grade_level_id = firstGradeLevel.value ? firstGradeLevel.value.id : ''
+        props.form.origin_school = ''
+        if (props.form.clearErrors) {
+            props.form.clearErrors('target_grade_level_id')
+            props.form.clearErrors('origin_school')
+        }
+    }
+}
+
+watch(() => props.gradeLevels, () => {
+    if ((!props.form.entry_type || props.form.entry_type === 'new') && !props.form.target_grade_level_id && firstGradeLevel.value) {
+        props.form.target_grade_level_id = firstGradeLevel.value.id
+    }
+}, { immediate: true })
 
 // Rango de edad permitido: 10 a 20 años
 const maxBirthDate = computed(() => {
@@ -403,7 +487,104 @@ function validatePhoneHome() {
                 <span class="w-8 h-8 rounded-xl bg-primary-100 text-primary-600 flex items-center justify-center text-sm font-black">2</span>
                 Información Principal del Estudiante
             </h3>
-            <p class="text-xs text-slate-400 font-bold mt-1 ml-10">Datos de filiación, documento de identidad y contacto</p>
+            <p class="text-xs text-slate-400 font-bold mt-1 ml-10">Datos de filiación, condición de ingreso, documento de identidad y contacto</p>
+        </div>
+
+        <!-- Condición de Ingreso y Año a Cursar (Elegibilidad de Matriculación) -->
+        <div class="p-4 sm:p-5 rounded-3xl bg-slate-50/90 border-2 border-slate-200/80 space-y-4">
+            <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+                <div>
+                    <h4 class="text-xs font-black uppercase tracking-wider text-slate-700 flex items-center gap-2">
+                        <i class="fas fa-graduation-cap text-primary-600"></i>
+                        Condición de Ingreso y Año a Cursar <span class="text-red-500">*</span>
+                    </h4>
+                    <p class="text-[11px] text-slate-400 font-semibold mt-0.5">
+                        Define en qué Año estará habilitado el estudiante al momento de matricularlo en una sección.
+                    </p>
+                </div>
+                <span v-if="hasEnrollments" class="px-3 py-1 rounded-xl bg-amber-50 border border-amber-200 text-amber-700 text-[10px] font-black uppercase tracking-wider">
+                    <i class="fas fa-lock mr-1"></i> Nivel controlado por historial académico
+                </span>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+                <button
+                    type="button"
+                    :disabled="hasEnrollments"
+                    @click="setEntryType('new')"
+                    class="p-3.5 rounded-2xl border-2 text-left transition-all flex items-start gap-3 cursor-pointer disabled:opacity-60 disabled:cursor-not-allowed"
+                    :class="(!form.entry_type || form.entry_type === 'new')
+                        ? 'bg-white border-primary-500 shadow-md shadow-primary-500/10'
+                        : 'bg-white/60 border-slate-200 hover:border-slate-300'"
+                >
+                    <div class="w-9 h-9 rounded-xl flex items-center justify-center shrink-0 mt-0.5"
+                         :class="(!form.entry_type || form.entry_type === 'new') ? 'bg-primary-600 text-white' : 'bg-slate-100 text-slate-400'">
+                        <i class="fas fa-user-plus text-xs"></i>
+                    </div>
+                    <div>
+                        <p class="text-xs font-black text-slate-800 uppercase tracking-wider">Nuevo Ingreso Regular (1er Año)</p>
+                        <p class="text-[11px] font-semibold text-slate-500 mt-0.5">
+                            El estudiante inicia en la institución y solo podrá matricularse en <strong>{{ firstGradeLevel?.name || '1er Año' }}</strong>.
+                        </p>
+                    </div>
+                </button>
+
+                <button
+                    type="button"
+                    :disabled="hasEnrollments"
+                    @click="setEntryType('transfer')"
+                    class="p-3.5 rounded-2xl border-2 text-left transition-all flex items-start gap-3 cursor-pointer disabled:opacity-60 disabled:cursor-not-allowed"
+                    :class="form.entry_type === 'transfer'
+                        ? 'bg-white border-primary-500 shadow-md shadow-primary-500/10'
+                        : 'bg-white/60 border-slate-200 hover:border-slate-300'"
+                >
+                    <div class="w-9 h-9 rounded-xl flex items-center justify-center shrink-0 mt-0.5"
+                         :class="form.entry_type === 'transfer' ? 'bg-primary-600 text-white' : 'bg-slate-100 text-slate-400'">
+                        <i class="fas fa-exchange-alt text-xs"></i>
+                    </div>
+                    <div>
+                        <p class="text-xs font-black text-slate-800 uppercase tracking-wider">Procedente de Otra Institución (Traslado)</p>
+                        <p class="text-[11px] font-semibold text-slate-500 mt-0.5">
+                            Permite seleccionar el Año específico (1ro a 5to Año) que le corresponde cursar por equivalencia/certificación.
+                        </p>
+                    </div>
+                </button>
+            </div>
+
+            <!-- Campos adicionales cuando proviene de otra institución -->
+            <div v-if="form.entry_type === 'transfer'" class="grid grid-cols-1 md:grid-cols-2 gap-4 pt-2 border-t border-slate-200/80 animate-fade-in">
+                <div class="space-y-1.5">
+                    <label class="text-[11px] font-black text-slate-500 uppercase tracking-wider ml-1">
+                        Año a Cursar en el Plantel <span class="text-red-500">*</span>
+                    </label>
+                    <select
+                        v-model="form.target_grade_level_id"
+                        :disabled="hasEnrollments"
+                        @change="form.clearErrors && form.clearErrors('target_grade_level_id')"
+                        class="w-full bg-white border-2 border-slate-200 rounded-2xl px-4 py-3 text-slate-800 text-sm font-bold focus:border-primary-400 outline-none transition-all cursor-pointer disabled:bg-slate-100"
+                    >
+                        <option value="" disabled>Seleccione el Año a cursar...</option>
+                        <option v-for="level in gradeLevels" :key="level.id" :value="level.id">
+                            {{ level.name }}
+                        </option>
+                    </select>
+                    <p v-if="form.errors.target_grade_level_id" class="text-xs text-red-500 font-bold ml-1">{{ form.errors.target_grade_level_id }}</p>
+                </div>
+
+                <div class="space-y-1.5">
+                    <label class="text-[11px] font-black text-slate-500 uppercase tracking-wider ml-1">
+                        Plantel / Institución de Procedencia <span class="text-red-500">*</span>
+                    </label>
+                    <input
+                        v-model="form.origin_school"
+                        @input="form.origin_school = ($event.target.value || '').toUpperCase(); form.clearErrors && form.clearErrors('origin_school')"
+                        type="text"
+                        placeholder="EJ: U.E.N. SIMÓN BOLÍVAR"
+                        class="w-full bg-white border-2 border-slate-200 rounded-2xl px-4 py-3 text-slate-800 text-sm font-bold focus:border-primary-400 outline-none transition-all uppercase"
+                    />
+                    <p v-if="form.errors.origin_school" class="text-xs text-red-500 font-bold ml-1">{{ form.errors.origin_school }}</p>
+                </div>
+            </div>
         </div>
 
         <!-- Campos de Identificación -->
@@ -605,7 +786,7 @@ function validatePhoneHome() {
                     v-model="form.birth_place"
                     @input="form.birth_place = ($event.target.value || '').toUpperCase()"
                     type="text"
-                    placeholder="EJ: CARACAS, DISTRITO CAPITAL"
+                    placeholder="EJ: LAGUNILLAS, ESTADO MÉRIDA"
                     class="w-full bg-slate-50 border-2 border-slate-200 rounded-2xl px-4 py-3 text-slate-800 text-sm font-bold focus:border-primary-400 focus:bg-white focus:ring-0 outline-none transition-all uppercase"
                     required
                 />
@@ -617,16 +798,64 @@ function validatePhoneHome() {
                 <label class="text-[11px] font-black text-slate-500 uppercase tracking-wider ml-1">
                     Comunidad / Sector <span class="text-red-500">*</span>
                 </label>
-                <select
-                    v-model="form.community_id"
-                    class="w-full bg-slate-50 border-2 border-slate-200 rounded-2xl px-4 py-3 text-slate-800 text-sm font-bold focus:border-primary-400 focus:bg-white focus:ring-0 outline-none transition-all cursor-pointer"
-                    required
-                >
-                    <option value="" disabled>Seleccione comunidad...</option>
-                    <option v-for="c in communities" :key="c.id" :value="c.id">
-                        {{ c.name }}
-                    </option>
-                </select>
+                <div class="flex items-center gap-2">
+                    <select
+                        v-model="form.community_id"
+                        class="flex-1 bg-slate-50 border-2 border-slate-200 rounded-2xl px-4 py-3 text-slate-800 text-sm font-bold focus:border-primary-400 focus:bg-white focus:ring-0 outline-none transition-all cursor-pointer"
+                        required
+                    >
+                        <option value="" disabled>Seleccione comunidad...</option>
+                        <option v-for="c in localCommunities" :key="c.id" :value="c.id">
+                            {{ c.name }}
+                        </option>
+                    </select>
+                    <button
+                        v-if="$can('students.create') || $can('students.edit') || $can('settings.manage')"
+                        type="button"
+                        @click="showQuickCommunity = !showQuickCommunity; quickCommunityError = ''"
+                        :title="showQuickCommunity ? 'Cerrar' : 'Agregar nueva comunidad o sector'"
+                        class="shrink-0 w-11 h-11 rounded-2xl border-2 border-primary-200 bg-primary-50 text-primary-700 hover:bg-primary-600 hover:text-white hover:border-primary-600 transition-all flex items-center justify-center font-black"
+                    >
+                        <i class="fas" :class="showQuickCommunity ? 'fa-times' : 'fa-plus'"></i>
+                    </button>
+                </div>
+
+                <!-- Alta rápida inline -->
+                <div v-if="showQuickCommunity" class="mt-2 p-3 bg-primary-50/70 border border-primary-200 rounded-2xl space-y-2">
+                    <p class="text-[10px] font-black text-primary-700 uppercase tracking-wider">
+                        Registrar nueva comunidad / sector (Lagunillas - Mérida)
+                    </p>
+                    <div class="flex items-center gap-2">
+                        <input
+                            v-model="quickCommunityName"
+                            @keydown.enter.prevent="createQuickCommunity"
+                            type="text"
+                            maxlength="120"
+                            placeholder="Ej: Sector El Molino / La Vega"
+                            class="flex-1 bg-white border-2 border-primary-200 rounded-xl px-3 py-2 text-xs font-bold text-slate-800 focus:border-primary-500 focus:ring-0 outline-none"
+                        />
+                        <button
+                            type="button"
+                            @click="createQuickCommunity"
+                            :disabled="savingQuickCommunity || !quickCommunityName.trim()"
+                            class="px-4 py-2 bg-primary-600 text-white rounded-xl text-[11px] font-black uppercase tracking-wider hover:bg-primary-700 disabled:opacity-50 transition-all flex items-center gap-1.5"
+                        >
+                            <i class="fas" :class="savingQuickCommunity ? 'fa-spinner fa-spin' : 'fa-check'"></i>
+                            Guardar
+                        </button>
+                    </div>
+                    <p v-if="similarCommunity" class="text-[11px] font-bold text-amber-700">
+                        <i class="fas fa-info-circle mr-1"></i>
+                        Ya existe «{{ similarCommunity.name }}». Al guardar se seleccionará automáticamente.
+                    </p>
+                    <p v-if="quickCommunityError" class="text-[11px] font-bold text-red-600">
+                        {{ quickCommunityError }}
+                    </p>
+                </div>
+
+                <p v-if="quickCommunityNotice" class="text-xs text-emerald-600 font-bold ml-1">
+                    <i class="fas fa-check-circle mr-1"></i>{{ quickCommunityNotice }}
+                </p>
                 <p v-if="form.errors.community_id" class="text-xs text-red-500 font-bold ml-1">{{ form.errors.community_id }}</p>
             </div>
         </div>
@@ -640,7 +869,7 @@ function validatePhoneHome() {
                 v-model="form.address"
                 @input="form.address = ($event.target.value || '').toUpperCase()"
                 rows="2"
-                placeholder="Calle, avenida, edificio/casa, piso, número..."
+                placeholder="EJ: AV. PRINCIPAL, SECTOR PUEBLO VIEJO, CASA N° 12"
                 class="w-full bg-slate-50 border-2 border-slate-200 rounded-2xl px-4 py-3 text-slate-800 text-sm font-bold focus:border-primary-400 focus:bg-white focus:ring-0 outline-none transition-all resize-none uppercase"
                 required
             ></textarea>
@@ -661,7 +890,7 @@ function validatePhoneHome() {
                     type="tel"
                     inputmode="numeric"
                     maxlength="12"
-                    placeholder="0412-1234567"
+                    placeholder="Ej: 0412-1234567"
                     class="w-full bg-slate-50 border-2 rounded-2xl px-4 py-3 text-slate-800 text-sm font-bold focus:border-primary-400 focus:bg-white focus:ring-0 outline-none transition-all"
                     :class="(phoneMobileError || form.errors.phone_mobile) ? 'border-red-300 bg-red-50/20' : 'border-slate-200'"
                 />
@@ -681,7 +910,7 @@ function validatePhoneHome() {
                     type="tel"
                     inputmode="numeric"
                     maxlength="12"
-                    placeholder="0212-1234567"
+                    placeholder="Ej: 0274-1234567"
                     class="w-full bg-slate-50 border-2 rounded-2xl px-4 py-3 text-slate-800 text-sm font-bold focus:border-primary-400 focus:bg-white focus:ring-0 outline-none transition-all"
                     :class="(phoneHomeError || form.errors.phone_home) ? 'border-red-300 bg-red-50/20' : 'border-slate-200'"
                 />
@@ -695,7 +924,7 @@ function validatePhoneHome() {
                     v-model="form.email"
                     @input="form.email = ($event.target.value || '').toLowerCase()"
                     type="email"
-                    placeholder="estudiante@ejemplo.com"
+                    placeholder="Ej: estudiante@ejemplo.com"
                     class="w-full bg-slate-50 border-2 border-slate-200 rounded-2xl px-4 py-3 text-slate-800 text-sm font-bold focus:border-primary-400 focus:bg-white focus:ring-0 outline-none transition-all lowercase"
                 />
                 <p v-if="form.errors.email" class="text-xs text-red-500 font-bold ml-1">{{ form.errors.email }}</p>

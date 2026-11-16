@@ -58,20 +58,22 @@ function handleEditStep(stepNumber) {
                 @click.stop
             >
                 <!-- Cabecera del Modal -->
-                <div class="bg-gradient-to-r from-slate-900 via-primary-950 to-slate-900 px-6 py-5 text-white flex items-center justify-between shrink-0">
-                    <div class="flex items-center gap-3">
-                        <div class="w-10 h-10 rounded-2xl bg-white/10 flex items-center justify-center text-primary-400 text-lg">
+                <div class="bg-white border-b border-slate-100 px-6 py-5 flex items-center justify-between shrink-0">
+                    <div class="flex items-center gap-3.5">
+                        <div class="w-11 h-11 rounded-2xl bg-primary-50 text-primary-600 border border-primary-100 flex items-center justify-center text-lg shadow-sm">
                             <i class="fas fa-clipboard-check"></i>
                         </div>
                         <div>
-                            <h3 class="text-base font-black tracking-tight">Revisión de Ficha de Inscripción</h3>
+                            <h3 class="text-lg font-black text-slate-800 tracking-tight">
+                                Revisión de <span class="text-primary-600">Ficha de Inscripción</span>
+                            </h3>
                             <p class="text-xs text-slate-400 font-medium mt-0.5">Verifica los datos suministrados antes del registro definitivo</p>
                         </div>
                     </div>
                     <button
                         type="button"
                         @click="emit('close')"
-                        class="w-9 h-9 rounded-xl bg-white/10 hover:bg-white/20 text-slate-300 hover:text-white flex items-center justify-center transition-colors"
+                        class="w-9 h-9 rounded-full bg-slate-50 hover:bg-slate-100 text-slate-400 hover:text-slate-600 flex items-center justify-center transition-colors cursor-pointer"
                     >
                         <i class="fas fa-times"></i>
                     </button>

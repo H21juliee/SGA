@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Actions\Students;
 
+use App\Models\GradeLevel;
 use App\Models\Student;
 use App\Models\StudentProfile;
 use Illuminate\Support\Facades\DB;
@@ -16,21 +17,36 @@ final class SaveStudentAction
     public function execute(array $data, ?Student $student = null): Student
     {
         return DB::transaction(function () use ($data, $student) {
+            $firstGradeLevelId = GradeLevel::orderBy('order_num')->value('id');
+            $entryType = $data['entry_type'] ?? ($student?->entry_type ?? 'new');
+
+            $targetGradeLevelId = isset($data['target_grade_level_id']) && $data['target_grade_level_id'] !== ''
+                ? (int) $data['target_grade_level_id']
+                : ($student?->target_grade_level_id ?? $firstGradeLevelId);
+
+            // Si es nuevo ingreso regular (no traslado) y aún no tiene matrículas previas, forzar 1er Año
+            if ($entryType === 'new' && (!$student || !$student->enrollments()->exists()) && $firstGradeLevelId) {
+                $targetGradeLevelId = (int) $firstGradeLevelId;
+            }
+
             // 1. Extraer campos propios de students
             $studentData = [
-                'first_name'   => $data['first_name'],
-                'last_name'    => $data['last_name'],
-                'cedula'       => $data['cedula'] ?? null,
-                'nationality'  => $data['nationality'] ?? 'V',
-                'birth_date'   => $data['birth_date'] ?? null,
-                'birth_place'  => $data['birth_place'] ?? null,
-                'gender'       => $data['gender'],
-                'address'      => $data['address'] ?? null,
-                'community_id' => $data['community_id'] ?? null,
-                'email'        => $data['email'] ?? null,
-                'phone_home'   => $data['phone_home'] ?? null,
-                'phone_mobile' => $data['phone_mobile'] ?? null,
-                'guardian_id'  => $data['guardian_id'] ?? null,
+                'first_name'            => $data['first_name'],
+                'last_name'             => $data['last_name'],
+                'cedula'                => $data['cedula'] ?? null,
+                'nationality'           => $data['nationality'] ?? 'V',
+                'birth_date'            => $data['birth_date'] ?? null,
+                'birth_place'           => $data['birth_place'] ?? null,
+                'gender'                => $data['gender'],
+                'address'               => $data['address'] ?? null,
+                'community_id'          => $data['community_id'] ?? null,
+                'email'                 => $data['email'] ?? null,
+                'phone_home'            => $data['phone_home'] ?? null,
+                'phone_mobile'          => $data['phone_mobile'] ?? null,
+                'guardian_id'           => $data['guardian_id'] ?? null,
+                'entry_type'            => $entryType,
+                'target_grade_level_id' => $targetGradeLevelId,
+                'origin_school'         => $entryType === 'transfer' ? ($data['origin_school'] ?? null) : null,
             ];
 
             if (isset($data['status'])) {

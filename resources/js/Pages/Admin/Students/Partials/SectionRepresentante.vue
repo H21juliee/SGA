@@ -822,7 +822,7 @@ function submitCreate() {
                                 type="tel"
                                 inputmode="numeric"
                                 maxlength="12"
-                                placeholder="0414-1234567"
+                                placeholder="Ej: 0414-1234567"
                                 class="w-full bg-slate-50 border-2 border-slate-200 rounded-2xl px-4 py-2.5 text-xs font-bold text-slate-800 focus:border-primary-400 focus:bg-white outline-none transition-all"
                                 :class="createErrors.phone ? 'border-red-300 bg-red-50/20' : ''"
                             />
@@ -842,7 +842,7 @@ function submitCreate() {
                                 type="tel"
                                 inputmode="numeric"
                                 maxlength="12"
-                                placeholder="0212-1234567"
+                                placeholder="Ej: 0274-1234567"
                                 class="w-full bg-slate-50 border-2 border-slate-200 rounded-2xl px-4 py-2.5 text-xs font-bold text-slate-800 focus:border-primary-400 focus:bg-white outline-none transition-all"
                                 :class="createErrors.phone_home ? 'border-red-300 bg-red-50/20' : ''"
                             />
@@ -858,7 +858,7 @@ function submitCreate() {
                                 v-model="form.email"
                                 @input="form.email = ($event.target.value || '').toLowerCase()"
                                 type="email"
-                                placeholder="representante@ejemplo.com"
+                                placeholder="Ej: representante@ejemplo.com"
                                 class="w-full bg-slate-50 border-2 border-slate-200 rounded-2xl px-4 py-2.5 text-xs font-bold text-slate-800 focus:border-primary-400 focus:bg-white outline-none transition-all lowercase"
                                 :class="createErrors.email ? 'border-red-300 bg-red-50/20' : ''"
                             />
@@ -874,7 +874,7 @@ function submitCreate() {
                                 v-model="form.address"
                                 @input="form.address = ($event.target.value || '').toUpperCase(); delete createErrors.address"
                                 rows="2"
-                                placeholder="Calle, avenida, edificio/casa, piso, número de residencia del representante..."
+                                placeholder="EJ: CALLE 4, SECTOR EL MOLINO, CASA N° 12"
                                 class="w-full bg-slate-50 border-2 border-slate-200 rounded-2xl px-4 py-2.5 text-xs font-bold text-slate-800 uppercase focus:border-primary-400 focus:bg-white outline-none transition-all resize-none"
                                 :class="createErrors.address ? 'border-red-300 bg-red-50/20' : ''"
                             ></textarea>

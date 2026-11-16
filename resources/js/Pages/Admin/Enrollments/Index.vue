@@ -280,7 +280,12 @@ function destroy(id) {
                                     {{ student.last_name?.charAt(0) }}
                                 </div>
                                 <div class="min-w-0 truncate">
-                                    <p class="text-xs font-black text-slate-700 truncate group-hover:text-primary-700 transition-colors">{{ student.last_name }}, {{ student.first_name }}</p>
+                                    <div class="flex items-center gap-1.5">
+                                        <p class="text-xs font-black text-slate-700 truncate group-hover:text-primary-700 transition-colors">{{ student.last_name }}, {{ student.first_name }}</p>
+                                        <span v-if="student.entry_type === 'transfer'" class="px-1.5 py-0.5 rounded bg-sky-50 text-sky-600 border border-sky-200 text-[8px] font-black uppercase tracking-wider shrink-0" :title="student.origin_school ? `Procedente de: ${student.origin_school}` : 'Traslado de otra institución'">
+                                            Traslado
+                                        </span>
+                                    </div>
                                     <p class="text-[10px] font-bold text-slate-400 flex items-center gap-1 mt-0.5"><i class="fas fa-id-card text-[8px] opacity-50"></i> {{ student.cedula || 'Sin cédula' }}</p>
                                 </div>
                             </div>

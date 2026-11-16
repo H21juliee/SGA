@@ -24,13 +24,14 @@ class PasswordSetupController extends Controller
 
     public function show()
     {
-        if (!auth()->user()->must_change_password) {
+        $user = auth()->user();
+        if ($user->hasRole('SuperAdmin') || !$user->must_change_password) {
             return redirect('/dashboard');
         }
 
         return Inertia::render('Auth/PasswordSetup', [
             'questions' => $this->availableQuestions,
-            'userName' => auth()->user()->name,
+            'userName' => $user->name,
         ]);
     }
 

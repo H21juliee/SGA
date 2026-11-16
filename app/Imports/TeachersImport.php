@@ -77,8 +77,24 @@ class TeachersImport implements
             // Contraseña inicial = cédula del docente
             $password = Hash::make($cedula);
 
+            $parts = preg_split('/\s+/', $nombre) ?: [];
+            $count = count($parts);
+            if ($count <= 1) {
+                $firstName = $nombre;
+                $lastName  = '';
+            } elseif ($count === 2) {
+                $firstName = $parts[0];
+                $lastName  = $parts[1];
+            } else {
+                $half      = (int) ceil($count / 2);
+                $firstName = implode(' ', array_slice($parts, 0, $half));
+                $lastName  = implode(' ', array_slice($parts, $half));
+            }
+
             $user = User::create([
                 'name'                => $nombre,
+                'first_name'          => $firstName,
+                'last_name'           => $lastName,
                 'email'               => $email,
                 'cedula'              => $cedula,
                 'phone'               => trim($row['telefono'] ?? '') ?: null,

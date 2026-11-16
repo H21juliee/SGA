@@ -18,8 +18,20 @@ class PasswordRecoveryController extends Controller
 
     public function findUser(Request $request)
     {
+        $request->merge([
+            'cedula' => strtoupper(trim((string) $request->input('cedula', ''))),
+        ]);
+
         $request->validate([
-            'cedula' => 'required|string|max:20',
+            'cedula' => [
+                'required',
+                'string',
+                'max:20',
+                'regex:/^(?:[VE]-\d{6,9}|P-[A-Z0-9]{6,15})$/',
+            ],
+        ], [
+            'cedula.required' => 'La cédula o documento de identidad es obligatorio.',
+            'cedula.regex'    => 'El formato del documento es inválido (6 a 9 dígitos para V/E o 6 a 15 caracteres para Pasaporte).',
         ]);
 
         $user = User::where('cedula', $request->cedula)->first();

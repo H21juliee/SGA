@@ -657,12 +657,14 @@ function submit() {
                             >
                                 <i class="fas fa-folder-open text-[11px]"></i>
                             </Link>
+                            <!-- Oculto: la edición completa del estudiante se realiza desde su ficha/expediente
                             <button v-if="$can('students.edit')" @click="openEditModal(student)" 
                                 class="w-9 h-9 rounded-lg bg-white text-slate-500 hover:text-primary-600 hover:bg-primary-50 hover:border-primary-200 hover:shadow-sm transition-all border border-slate-200 flex items-center justify-center"
                                 title="Editar Estudiante"
                             >
                                 <i class="fas fa-edit text-[11px]"></i>
                             </button>
+                            -->
                         </div>
                     </div>
                 </div>
@@ -905,7 +907,7 @@ function submit() {
                     </div>
                     <div class="space-y-2">
                         <label class="text-[11px] font-black text-slate-400 uppercase tracking-widest ml-1">Teléfono</label>
-                        <input v-model="guardianForm.phone" @input="guardianForm.phone = formatPhone($event.target.value)" type="tel" placeholder="0414-1234567" maxlength="12" class="w-full bg-slate-50 border-2 border-slate-200 rounded-xl px-4 py-2.5 text-slate-700 text-sm font-bold focus:border-primary-400 focus:bg-white focus:ring-0 outline-none transition-all shadow-sm">
+                        <input v-model="guardianForm.phone" @input="guardianForm.phone = formatPhone($event.target.value)" type="tel" placeholder="Ej: 0414-1234567" maxlength="12" class="w-full bg-slate-50 border-2 border-slate-200 rounded-xl px-4 py-2.5 text-slate-700 text-sm font-bold focus:border-primary-400 focus:bg-white focus:ring-0 outline-none transition-all shadow-sm">
                         <p v-if="guardianFormErrors && guardianFormErrors.phone" class="text-xs text-red-500 font-bold mt-1 ml-1">{{ guardianFormErrors.phone[0] }}</p>
                     </div>
                     <div class="space-y-2">

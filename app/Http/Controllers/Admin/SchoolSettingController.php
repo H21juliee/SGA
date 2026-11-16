@@ -20,7 +20,6 @@ class SchoolSettingController extends Controller implements \Illuminate\Routing\
     }
     public function index()
     {
-
         return Inertia::render('Admin/Settings/Index', [
             'settings' => SchoolSetting::allAsArray(),
         ]);

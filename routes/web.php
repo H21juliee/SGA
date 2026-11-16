@@ -95,6 +95,7 @@ Route::middleware(['auth', 'password.changed'])->group(function () {
     Route::prefix('admin')->name('admin.')->group(function () {
         Route::resource('users', \App\Http\Controllers\Admin\UserController::class)->except(['create', 'edit']);
         Route::post('users/{user}/reset-password', [\App\Http\Controllers\Admin\UserController::class, 'resetPassword'])->name('users.reset-password');
+        Route::post('users/{user}/transfer-superadmin', [\App\Http\Controllers\Admin\UserController::class, 'transferSuperAdmin'])->name('users.transfer-superadmin');
         Route::get('guardians/search', [\App\Http\Controllers\GuardianController::class, 'search'])->name('guardians.search');
         Route::post('guardians', [\App\Http\Controllers\GuardianController::class, 'store'])->name('guardians.store');
         Route::get('students/check-cedula', [\App\Http\Controllers\Admin\StudentController::class, 'checkCedula'])->name('students.check-cedula');
@@ -120,6 +121,13 @@ Route::middleware(['auth', 'password.changed'])->group(function () {
         Route::get('settings', [SchoolSettingController::class, 'index'])->name('settings.index');
         Route::put('settings', [SchoolSettingController::class, 'update'])->name('settings.update');
         Route::post('settings/logo', [SchoolSettingController::class, 'uploadLogo'])->name('settings.logo');
+
+        // Catálogo de Comunidades y Sectores
+        Route::get('communities', [\App\Http\Controllers\Admin\CommunityController::class, 'index'])->name('communities.index');
+        Route::post('communities/quick', [\App\Http\Controllers\Admin\CommunityController::class, 'quickStore'])->name('communities.quick');
+        Route::post('communities', [\App\Http\Controllers\Admin\CommunityController::class, 'store'])->name('communities.store');
+        Route::put('communities/{community}', [\App\Http\Controllers\Admin\CommunityController::class, 'update'])->name('communities.update');
+        Route::patch('communities/{community}/toggle', [\App\Http\Controllers\Admin\CommunityController::class, 'toggle'])->name('communities.toggle');
 
         // Roles y Permisos
         Route::resource('roles', RoleController::class)->except(['create', 'edit']);

@@ -25,6 +25,7 @@ class DatabaseSeeder extends Seeder
                 'password' => bcrypt('password'),
                 'cedula' => 'V-00000000',
                 'is_active' => true,
+                'must_change_password' => false,
             ]
         );
         $admin->assignRole('SuperAdmin');

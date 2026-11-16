@@ -202,9 +202,11 @@ class StudentController extends Controller implements \Illuminate\Routing\Contro
     public function create(): Response
     {
         $communities = Community::where('is_active', true)->orderBy('name')->get();
+        $gradeLevels = GradeLevel::orderBy('order_num')->get();
 
         return Inertia::render('Admin/Students/Create', [
             'communities' => $communities,
+            'gradeLevels' => $gradeLevels,
         ]);
     }
 
@@ -232,6 +234,7 @@ class StudentController extends Controller implements \Illuminate\Routing\Contro
             'guardian',
             'community',
             'profile',
+            'targetGradeLevel',
             'subjectDebts.subject.gradeLevel',
             'subjectDebts.originSchoolYear',
         ]);
@@ -255,10 +258,12 @@ class StudentController extends Controller implements \Illuminate\Routing\Contro
 
         $schoolYears = SchoolYear::orderByDesc('start_date')->get();
         $communities = Community::where('is_active', true)->orderBy('name')->get();
+        $gradeLevels = GradeLevel::orderBy('order_num')->get();
 
         return Inertia::render('Admin/Students/Show', [
             'student'      => $student,
             'communities'  => $communities,
+            'gradeLevels'  => $gradeLevels,
             'enrollments'  => $enrollments,
             'subjectDebts' => $student->subjectDebts,
             'allSubjects'  => $allSubjects,
